@@ -1,0 +1,30 @@
+name: WordPress Quality
+on:
+  push:
+    branches: [main, feat/agent-abilities-foundation]
+  pull_request:
+jobs:
+  coding-standards:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+          tools: composer
+      - name: Install QA dependencies (no runtime dependencies)
+        run: composer install --no-interaction --prefer-dist
+      - name: Check WordPress Coding Standards
+        run: composer lint
+  plugin-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: wordpress/plugin-check-action@v1.0.6
+        with:
+          slug: bc-mcp-abilities
