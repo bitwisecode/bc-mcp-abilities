@@ -25,4 +25,11 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+      - name: Stage release files
+        run: |
+          mkdir -p dist/bc-mcp-abilities/includes
+          cp bc-mcp-abilities.php readme.txt LICENSE dist/bc-mcp-abilities/
+          cp includes/*.php dist/bc-mcp-abilities/includes/
       - uses: wordpress/plugin-check-action@v1
+        with:
+          build-dir: './dist/bc-mcp-abilities'
