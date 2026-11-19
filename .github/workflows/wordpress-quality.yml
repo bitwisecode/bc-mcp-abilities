@@ -1,8 +1,12 @@
 name: WordPress Quality
 on:
   push:
-    branches: [main, feat/agent-abilities-foundation]
+    branches: [main]
   pull_request:
+    branches: [main]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
   coding-standards:
     runs-on: ubuntu-latest
@@ -28,7 +32,7 @@ jobs:
       - name: Stage release files
         run: |
           mkdir -p dist/bc-mcp-abilities/includes
-          cp bc-mcp-abilities.php readme.txt LICENSE dist/bc-mcp-abilities/
+          cp bc-mcp-abilities.php readme.txt LICENSE uninstall.php dist/bc-mcp-abilities/
           cp includes/*.php dist/bc-mcp-abilities/includes/
       - uses: wordpress/plugin-check-action@v1
         with:
