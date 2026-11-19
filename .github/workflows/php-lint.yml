@@ -1,8 +1,12 @@
 name: PHP syntax checks
 on:
   push:
-    branches: [main, feat/agent-abilities-foundation]
+    branches: [main]
   pull_request:
+    branches: [main]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
   php-lint:
     runs-on: ubuntu-latest
