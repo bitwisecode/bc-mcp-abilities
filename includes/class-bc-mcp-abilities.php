@@ -98,6 +98,12 @@ final class BC_MCP_Abilities {
 			'content' => $string,
 			'excerpt' => $string,
 		), array( 'post_id', 'revision' ) ), 'update_content', false );
+		self::add( 'list-revisions', 'List Post Revisions', 'List recent content revisions for a post or page.', self::schema( array( 'post_id' => $integer ), array( 'post_id' ) ), 'list_revisions' );
+		self::add( 'restore-revision', 'Restore Post Revision', 'Restore an existing revision only when the current content matches the supplied revision token.', self::schema( array(
+			'post_id' => $integer,
+			'revision_id' => $integer,
+			'expected_revision' => $string,
+		), array( 'post_id', 'revision_id', 'expected_revision' ) ), 'restore_revision', false );
 		self::add( 'list-media', 'List Media', 'List recent WordPress Media Library files without downloading bytes.', self::schema( array(
 			'search' => $string,
 			'per_page' => array( 'type' => 'integer', 'minimum' => 1, 'maximum' => 50 ),
@@ -219,6 +225,59 @@ final class BC_MCP_Abilities {
 		}
 		$id = wp_update_post( wp_slash( $updates ), true );
 		return is_wp_error( $id ) ? $id : self::ok( self::post_data( get_post( $id ) ) );
+	}
+
+	/**
+	 * List previous revisions of a permitted WordPress post or page.
+	 *
+	 * @param array $input Validated ability input.
+	 * @return array|WP_Error
+	 */
+	public static function list_revisions( $input ) {
+		$post = self::permitted_post( $input['post_id'] );
+		if ( is_wp_error( $post ) ) {
+			return $post;
+		}
+		$revisions = wp_get_post_revisions( $post->ID, array( 'posts_per_page' => 20 ) );
+		$items = array();
+		foreach ( $revisions as $revision ) {
+			$items[] = array(
+				'id' => (int) $revision->ID,
+				'date_gmt' => $revision->post_date_gmt,
+				'author_id' => (int) $revision->post_author,
+				'title' => $revision->post_title,
+			);
+		}
+		return self::ok( array( 'post_id' => $post->ID, 'items' => $items, 'current_revision' => self::revision( $post ) ) );
+	}
+
+	/**
+	 * Restore a prior post revision only if no intervening update occurred.
+	 *
+	 * @param array $input Validated ability input.
+	 * @return array|WP_Error
+	 */
+	public static function restore_revision( $input ) {
+		$post = self::permitted_post( $input['post_id'] );
+		if ( is_wp_error( $post ) ) {
+			return $post;
+		}
+		if ( ! current_user_can( 'edit_post', $post->ID ) ) {
+			return new WP_Error( 'bc_mcp_restore_forbidden', __( 'Not allowed to restore this post.', 'bc-mcp-abilities' ) );
+		}
+		if ( ! hash_equals( self::revision( $post ), (string) $input['expected_revision'] ) ) {
+			return new WP_Error( 'bc_mcp_revision_conflict', __( 'Post changed since it was read. Read the post again.', 'bc-mcp-abilities' ) );
+		}
+		$revision_id = absint( $input['revision_id'] );
+		$revision = wp_get_post_revision( $revision_id );
+		if ( ! $revision || (int) $revision->post_parent !== (int) $post->ID ) {
+			return new WP_Error( 'bc_mcp_revision_missing', __( 'Revision does not belong to this post.', 'bc-mcp-abilities' ) );
+		}
+		$restored_id = wp_restore_post_revision( $revision_id );
+		if ( ! $restored_id || is_wp_error( $restored_id ) ) {
+			return new WP_Error( 'bc_mcp_restore_failed', __( 'WordPress could not restore the revision.', 'bc-mcp-abilities' ) );
+		}
+		return self::ok( self::post_data( get_post( $post->ID ) ) );
 	}
 
 	public static function list_media( $input ) {
