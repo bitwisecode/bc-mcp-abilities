@@ -6,12 +6,25 @@
  */
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Core WordPress ability registration and secure operations.
+ */
 final class BC_MCP_Abilities {
+	/**
+	 * Init using the native WordPress Abilities API.
+	 *
+	 * @return void
+	 */
 	public static function init() {
 		add_action( 'wp_abilities_api_categories_init', array( __CLASS__, 'register_categories' ) );
 		add_action( 'wp_abilities_api_init', array( __CLASS__, 'register_abilities' ) );
 	}
 
+	/**
+	 * Register categories using the native WordPress Abilities API.
+	 *
+	 * @return void
+	 */
 	public static function register_categories() {
 		if ( ! function_exists( 'wp_register_ability_category' ) ) {
 			return;
@@ -25,6 +38,13 @@ final class BC_MCP_Abilities {
 		);
 	}
 
+	/**
+	 * Schema using the native WordPress Abilities API.
+	 *
+	 * @param mixed $properties Callback input.
+	 * @param mixed $required Callback input.
+	 * @return array
+	 */
 	private static function schema( $properties = array(), $required = array() ) {
 		return array(
 			'type'                 => 'object',
@@ -34,6 +54,11 @@ final class BC_MCP_Abilities {
 		);
 	}
 
+	/**
+	 * Output schema using the native WordPress Abilities API.
+	 *
+	 * @return array
+	 */
 	private static function output_schema() {
 		return array(
 			'type'       => 'object',
@@ -48,6 +73,17 @@ final class BC_MCP_Abilities {
 		);
 	}
 
+	/**
+	 * Add using the native WordPress Abilities API.
+	 *
+	 * @param mixed $slug Callback input.
+	 * @param mixed $label Callback input.
+	 * @param mixed $description Callback input.
+	 * @param mixed $inputs Callback input.
+	 * @param mixed $callback Callback input.
+	 * @param mixed $readonly Callback input.
+	 * @return void
+	 */
 	public static function add( $slug, $label, $description, $inputs, $callback, $readonly = true ) {
 		wp_register_ability(
 			'bc-mcp-abilities/' . $slug,
@@ -75,6 +111,12 @@ final class BC_MCP_Abilities {
 		);
 	}
 
+	/**
+	 * Can read using the native WordPress Abilities API.
+	 *
+	 * @param mixed $slug Callback input.
+	 * @return bool
+	 */
 	public static function can_read( $slug ) {
 		// Infrastructure and installed-plugin details are administrator-only.
 		if ( 'site-info' === $slug ) {
@@ -83,12 +125,23 @@ final class BC_MCP_Abilities {
 		return is_user_logged_in() && current_user_can( 'edit_posts' );
 	}
 
+	/**
+	 * Can write using the native WordPress Abilities API.
+	 *
+	 * @param mixed $slug Callback input.
+	 * @return bool
+	 */
 	public static function can_write( $slug ) {
 		return is_user_logged_in()
 			&& current_user_can( 'manage_options' )
 			&& BC_MCP_Abilities_Admin::is_enabled( $slug );
 	}
 
+	/**
+	 * Register abilities using the native WordPress Abilities API.
+	 *
+	 * @return void
+	 */
 	public static function register_abilities() {
 		if ( ! function_exists( 'wp_register_ability' ) ) {
 			return;
@@ -224,6 +277,12 @@ final class BC_MCP_Abilities {
 		self::add( 'check-url', 'Check Same-site URL', 'Perform a bounded HEAD request to a relative path on the current WordPress site.', self::schema( array( 'path' => $string ) ), 'check_url' );
 	}
 
+	/**
+	 * Ok using the native WordPress Abilities API.
+	 *
+	 * @param mixed $data Callback input.
+	 * @return array
+	 */
 	private static function ok( $data ) {
 		return array(
 			'success' => true,
@@ -231,6 +290,12 @@ final class BC_MCP_Abilities {
 		);
 	}
 
+	/**
+	 * Permitted post using the native WordPress Abilities API.
+	 *
+	 * @param mixed $id Callback input.
+	 * @return WP_Post|WP_Error
+	 */
 	private static function permitted_post( $id ) {
 		$post = get_post( absint( $id ) );
 		if ( ! $post || ! in_array( $post->post_type, array( 'post', 'page' ), true ) || ! current_user_can( 'edit_post', $post->ID ) ) {
@@ -239,10 +304,22 @@ final class BC_MCP_Abilities {
 		return $post;
 	}
 
+	/**
+	 * Revision using the native WordPress Abilities API.
+	 *
+	 * @param mixed $post Callback input.
+	 * @return string
+	 */
 	private static function revision( $post ) {
 		return hash( 'sha256', $post->post_modified_gmt . '|' . $post->post_title . '|' . $post->post_content . '|' . $post->post_excerpt . '|' . $post->post_status );
 	}
 
+	/**
+	 * Post data using the native WordPress Abilities API.
+	 *
+	 * @param mixed $post Callback input.
+	 * @return array
+	 */
 	private static function post_data( $post ) {
 		return array(
 			'id'        => (int) $post->ID,
@@ -256,6 +333,11 @@ final class BC_MCP_Abilities {
 		);
 	}
 
+	/**
+	 * Site info using the native WordPress Abilities API.
+	 *
+	 * @return array
+	 */
 	public static function site_info() {
 		require_once ABSPATH . 'wp-admin/includes/plugin.php';
 		$theme = wp_get_theme();
@@ -272,6 +354,12 @@ final class BC_MCP_Abilities {
 		);
 	}
 
+	/**
+	 * List content using the native WordPress Abilities API.
+	 *
+	 * @param mixed $input Callback input.
+	 * @return array
+	 */
 	public static function list_content( $input ) {
 		$input = (array) $input;
 		$args  = array(
@@ -302,11 +390,23 @@ final class BC_MCP_Abilities {
 		);
 	}
 
+	/**
+	 * Get content using the native WordPress Abilities API.
+	 *
+	 * @param mixed $input Callback input.
+	 * @return array|WP_Error
+	 */
 	public static function get_content( $input ) {
 		$post = self::permitted_post( $input['post_id'] );
 		return is_wp_error( $post ) ? $post : self::ok( self::post_data( $post ) );
 	}
 
+	/**
+	 * Create draft using the native WordPress Abilities API.
+	 *
+	 * @param mixed $input Callback input.
+	 * @return array|WP_Error
+	 */
 	public static function create_draft( $input ) {
 		$type = isset( $input['post_type'] ) ? $input['post_type'] : '';
 		if ( ! in_array( $type, array( 'post', 'page' ), true ) || ! current_user_can( get_post_type_object( $type )->cap->create_posts ) ) {
@@ -328,6 +428,12 @@ final class BC_MCP_Abilities {
 		return self::ok( self::post_data( get_post( $id ) ) );
 	}
 
+	/**
+	 * Update content using the native WordPress Abilities API.
+	 *
+	 * @param mixed $input Callback input.
+	 * @return array|WP_Error
+	 */
 	public static function update_content( $input ) {
 		$post = self::permitted_post( $input['post_id'] );
 		if ( is_wp_error( $post ) ) {
@@ -412,6 +518,12 @@ final class BC_MCP_Abilities {
 		return self::ok( self::post_data( get_post( $post->ID ) ) );
 	}
 
+	/**
+	 * List media using the native WordPress Abilities API.
+	 *
+	 * @param mixed $input Callback input.
+	 * @return array
+	 */
 	public static function list_media( $input ) {
 		$input = (array) $input;
 		$posts = get_posts(
@@ -441,6 +553,12 @@ final class BC_MCP_Abilities {
 		);
 	}
 
+	/**
+	 * Get media using the native WordPress Abilities API.
+	 *
+	 * @param mixed $input Callback input.
+	 * @return array|WP_Error
+	 */
 	public static function get_media( $input ) {
 		$id   = absint( $input['attachment_id'] );
 		$post = get_post( $id );
@@ -460,6 +578,12 @@ final class BC_MCP_Abilities {
 		);
 	}
 
+	/**
+	 * Update media alt using the native WordPress Abilities API.
+	 *
+	 * @param mixed $input Callback input.
+	 * @return array|WP_Error
+	 */
 	public static function update_media_alt( $input ) {
 		$id   = absint( $input['attachment_id'] );
 		$post = get_post( $id );
@@ -476,6 +600,12 @@ final class BC_MCP_Abilities {
 		);
 	}
 
+	/**
+	 * Elementor document using the native WordPress Abilities API.
+	 *
+	 * @param mixed $input Callback input.
+	 * @return array|WP_Error
+	 */
 	public static function elementor_document( $input ) {
 		$post = self::permitted_post( $input['post_id'] );
 		if ( is_wp_error( $post ) ) {
@@ -556,6 +686,12 @@ final class BC_MCP_Abilities {
 		);
 	}
 
+	/**
+	 * Check url using the native WordPress Abilities API.
+	 *
+	 * @param mixed $input Callback input.
+	 * @return array|WP_Error
+	 */
 	public static function check_url( $input ) {
 		$path = isset( $input['path'] ) ? (string) $input['path'] : '/';
 		if ( '' === $path || '/' !== $path[0] || 0 === strpos( $path, '//' ) || false !== strpos( $path, '\\' ) || false !== strpos( $path, '#' ) ) {
