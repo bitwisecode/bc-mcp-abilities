@@ -46,7 +46,7 @@ final class BC_MCP_Abilities_Integrations {
 				'required'             => array( 'post_id' ),
 				'additionalProperties' => false,
 			),
-			'rank_math_read'
+			array( __CLASS__, 'rank_math_read' )
 		);
 
 		BC_MCP_Abilities::add(
@@ -65,7 +65,7 @@ final class BC_MCP_Abilities_Integrations {
 				'required'             => array( 'post_id', 'expected_revision' ),
 				'additionalProperties' => false,
 			),
-			'rank_math_update',
+			array( __CLASS__, 'rank_math_update' ),
 			false
 		);
 
@@ -89,7 +89,7 @@ final class BC_MCP_Abilities_Integrations {
 				'required'             => array( 'source_url' ),
 				'additionalProperties' => false,
 			),
-			'upload_image',
+			array( __CLASS__, 'upload_image' ),
 			false
 		);
 	}
