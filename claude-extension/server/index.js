@@ -17,6 +17,7 @@ function validateEndpoint(raw) {
   if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash ||
       (url.port && url.port !== "443") || !url.hostname.includes(".") ||
       url.hostname === "localhost" ||
+      /^\d+\.\d+\.\d+\.\d+$/.test(url.hostname) ||
       !url.pathname.endsWith("/wp-json/mcp/mcp-adapter-default-server")) {
     throw new Error("Use the public HTTPS endpoint of the official WordPress MCP Adapter.");
   }
