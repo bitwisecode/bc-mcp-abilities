@@ -31,9 +31,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Stage release files
         run: |
-          mkdir -p dist/bc-mcp-abilities/includes
+          mkdir -p dist/bc-mcp-abilities/includes dist/bc-mcp-abilities/claude-extension/server
           cp bc-mcp-abilities.php readme.txt LICENSE uninstall.php dist/bc-mcp-abilities/
           cp includes/*.php dist/bc-mcp-abilities/includes/
+          cp claude-extension/server/index.js dist/bc-mcp-abilities/claude-extension/server/
       - uses: wordpress/plugin-check-action@v1
         with:
           build-dir: './dist/bc-mcp-abilities'

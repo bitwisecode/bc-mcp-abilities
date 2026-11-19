@@ -1,63 +1,34 @@
-# Test BC MCP Abilities with Claude Desktop on macOS
+# Connect BC MCP Abilities to Claude Desktop without Terminal
 
-This is a temporary testing path. **BC MCP Abilities is independent of the MCP Adapter for WordPress-side ability registration**, but it does **not yet implement an MCP endpoint or OAuth inside the plugin**. For Claude testing install the [official WordPress MCP Adapter](https://wordpress.org/plugins/mcp-adapter/) as a separate bridge. A future release may add a built-in MCP endpoint and OAuth for direct ChatGPT connections without relying on another hosted MCP server.
+BC MCP Abilities runs independently on WordPress 6.9+. For the current Claude connection, activate the **official MCP Adapter** alongside BC MCP Abilities.
 
-## Staging WordPress
+## No-terminal setup
 
-1. Install BC MCP Abilities staging ZIP on **WordPress 6.9+**.
-2. Install and activate official **MCP Adapter** on the same site.
-3. Keep all write abilities **off** under Settings → BC MCP Abilities.
-4. Under Users → Profile, create a dedicated **WordPress Application Password**. Choose a user with the least privilege needed; for `site-info` the BC plugin requires Administrator. For initial reads use an Editor.
-5. Note your website **Site Address URL**; the default MCP endpoint is `https://yourwebsite.example/wp-json/mcp/mcp-adapter-default-server`.
+1. In WordPress activate BC MCP Abilities and the official MCP Adapter.
+2. Open **Settings > BC MCP Abilities**. Find **Connect to Claude Desktop**.
+3. Click **Download Claude Extension (.mcpb)**.
+4. Under **Users > Profile**, create an Application Password for the dedicated WordPress account Claude should use.
+5. In the **Claude Desktop application** (not claude.ai in the browser), go to **Settings > Desktop app > Extensions > Manage > Advanced settings > Install Extension**.
+6. Select the `.mcpb` file you downloaded.
+7. Enter the WordPress username and Application Password when Claude asks. The website's endpoint is prefilled in the extension's settings.
+8. Ask Claude: *Discover all WordPress abilities beginning with `bc-mcp-abilities/`. Do not modify anything.*
 
-## Claude Desktop (Mac)
+There are **no Terminal commands, Node.js installation requirements, or manual JSON configuration** for this route. Claude Desktop supplies the Node.js runtime and uses operating-system secure storage for sensitive configuration values.
 
-Ensure Node.js is installed (`node -v`, `npx -v`). Claude Desktop can use the official local helper `@automattic/mcp-wordpress-remote`.
+## Security notes
 
-Open the config file:
-
-```bash
-mkdir -p "$HOME/Library/Application Support/Claude"
-touch "$HOME/Library/Application Support/Claude/claude_desktop_config.json"
-open -a TextEdit "$HOME/Library/Application Support/Claude/claude_desktop_config.json"
-```
-
-If the file is empty, paste this JSON. If it already has `mcpServers`, **add the new server under the existing object without replacing anything**.
-
-```json
-{
-  "mcpServers": {
-    "bc-wordpress-staging": {
-      "command": "npx",
-      "args": ["-y", "@automattic/mcp-wordpress-remote@latest"],
-      "env": {
-        "WP_API_URL": "https://yourwebsite.example/wp-json/mcp/mcp-adapter-default-server",
-        "WP_API_USERNAME": "your-wordpress-username",
-        "WP_API_PASSWORD": "your-application-password"
-      }
-    }
-  }
-}
-```
-
-Save, fully quit Claude Desktop (Cmd+Q), then reopen it. Keep this configuration private because it holds an Application Password. Do not post it in GitHub or chat.
-
-If Claude Desktop's modern settings do not show a Developer tab, the manual config file location above still provides the required configuration.
-
-## Read-only test prompts
-
-1. `Discover all abilities exposed by my WordPress MCP Adapter, and show the ones beginning with bc-mcp-abilities/.`
-2. `Get info about bc-mcp-abilities/list-content including its input schema.`
-3. `Use bc-mcp-abilities/list-content to list five pages, with no changes.`
-4. `Use bc-mcp-abilities/get-content to read a page I choose. Do not modify it.`
-
-Write tests should only take place on staging after the read-only tests succeed. Each write requires the site administrator to enable the corresponding ability in **Settings → BC MCP Abilities** and must pass the authenticated user's WordPress capability checks.
+- The generated bundle contains `manifest.json` and `server/index.js`, but **no WordPress credentials**.
+- The download is protected by a WordPress administrator permission check and nonce.
+- The WordPress website must have PHP `ZipArchive` enabled for dynamic MCPB downloads.
+- The extension forwards authenticated MCP over HTTPS, rejecting redirects and non-HTTPS endpoints.
+- Each WordPress ability still enforces its own permissions. All BC write abilities remain disabled unless an administrator enables them.
+- This extension is for **Claude Desktop only**, not the browser-based Claude service. Browser and ChatGPT connections require OAuth.
 
 ## Troubleshooting
 
-- **404 / no MCP route**: Ensure WordPress MCP Adapter is installed and active, and the endpoint uses the correct Site Address URL.
-- **401**: WordPress login username or Application Password is wrong, or the host strips the Authorization header.
-- **No BC abilities**: Ensure BC MCP Abilities is active and both WordPress and the official Adapter have completed activation. Run the plugin's `tests/smoke.php` on a disposable staging site if needed.
-- **Permission denied**: The WordPress user lacks the required capabilities or the requested write is disabled by the BC plugin.
+- **401:** Wrong Application Password, wrong login username, or HTTP Authorization header stripped by hosting.
+- **404:** MCP Adapter not active, or incorrect WordPress REST route.
+- **No abilities:** BC MCP Abilities not active or insufficient WordPress account permissions.
+- **No extension visible:** Ensure you're using Claude Desktop's Extensions settings, not browser connectors.
 
-Source: [Official WordPress MCP Adapter Site Owners Guide](https://github.com/WordPress/mcp-adapter/blob/trunk/docs/getting-started/site-owners.md).
+Official help: [Claude Desktop Extensions](https://support.claude.com/en/articles/10949351-getting-started-with-local-mcp-servers-on-claude-desktop) and [MCP Adapter](https://github.com/WordPress/mcp-adapter/blob/trunk/docs/getting-started/site-owners.md).

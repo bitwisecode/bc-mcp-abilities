@@ -1,0 +1,20 @@
+name: Claude Desktop Extension
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify bundled Node bridge syntax
+        run: node --check claude-extension/server/index.js
+      - name: Run extension protocol and security tests
+        run: node --test tests/claude-extension.test.mjs

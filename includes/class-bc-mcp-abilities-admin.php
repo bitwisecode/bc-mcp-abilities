@@ -123,6 +123,7 @@ final class BC_MCP_Abilities_Admin {
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'BC MCP Abilities', 'bc-mcp-abilities' ); ?></h1>
+			<?php BC_MCP_Abilities_Claude::render(); ?>
 			<p><?php esc_html_e( 'Abilities use WordPress core and do not require the MCP Adapter. For MCP client connections, install and configure the official WordPress MCP Adapter separately.', 'bc-mcp-abilities' ); ?></p>
 			<p>
 				<strong><?php esc_html_e( 'Default MCP endpoint (only when MCP Adapter is active):', 'bc-mcp-abilities' ); ?></strong>
