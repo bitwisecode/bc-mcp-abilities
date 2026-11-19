@@ -25,6 +25,4 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
-      - uses: wordpress/plugin-check-action@v1.0.6
-        with:
-          slug: bc-mcp-abilities
+      - uses: wordpress/plugin-check-action@v1
