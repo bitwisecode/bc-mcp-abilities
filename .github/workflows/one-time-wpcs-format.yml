@@ -1,0 +1,32 @@
+name: One-time WPCS formatter
+on:
+  push:
+    branches: [feat/agent-abilities-foundation]
+permissions:
+  contents: write
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/agent-abilities-foundation
+          persist-credentials: true
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+          tools: composer
+      - run: composer install --no-interaction --prefer-dist
+      - name: Autoformat WordPress PHP
+        run: ./vendor/bin/phpcbf || test "$?" -eq 1
+      - name: Commit WPCS formatting
+        run: |
+          if ! git diff --quiet -- bc-mcp-abilities.php includes/ uninstall.php tests/; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add bc-mcp-abilities.php includes/ uninstall.php tests/
+            git commit -m "style: apply WPCS automatic fixes to expanded abilities"
+            git push origin HEAD:feat/agent-abilities-foundation
+          fi
