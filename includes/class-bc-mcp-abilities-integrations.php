@@ -30,7 +30,10 @@ final class BC_MCP_Abilities_Integrations {
 	 * @return void
 	 */
 	public static function register() {
-		$int = array( 'type' => 'integer', 'minimum' => 1 );
+		$int = array(
+			'type'    => 'integer',
+			'minimum' => 1,
+		);
 		$str = array( 'type' => 'string' );
 
 		BC_MCP_Abilities::add(
@@ -53,11 +56,11 @@ final class BC_MCP_Abilities_Integrations {
 			array(
 				'type'                 => 'object',
 				'properties'           => array(
-					'post_id'             => $int,
-					'expected_revision'   => $str,
-					'title'               => $str,
-					'description'         => $str,
-					'focus_keyword'       => $str,
+					'post_id'           => $int,
+					'expected_revision' => $str,
+					'title'             => $str,
+					'description'       => $str,
+					'focus_keyword'     => $str,
 				),
 				'required'             => array( 'post_id', 'expected_revision' ),
 				'additionalProperties' => false,
@@ -172,7 +175,7 @@ final class BC_MCP_Abilities_Integrations {
 			return new WP_Error( 'bc_mcp_rank_math_conflict', __( 'SEO fields changed. Read them again before saving.', 'bc-mcp-abilities' ) );
 		}
 
-		$fields = array(
+		$fields  = array(
 			'title'         => 'rank_math_title',
 			'description'   => 'rank_math_description',
 			'focus_keyword' => 'rank_math_focus_keyword',
@@ -204,7 +207,7 @@ final class BC_MCP_Abilities_Integrations {
 		if ( ! current_user_can( 'upload_files' ) ) {
 			return new WP_Error( 'bc_mcp_upload_denied', __( 'Media uploads are not permitted.', 'bc-mcp-abilities' ) );
 		}
-		$url = isset( $input['source_url'] ) ? esc_url_raw( (string) $input['source_url'] ) : '';
+		$url   = isset( $input['source_url'] ) ? esc_url_raw( (string) $input['source_url'] ) : '';
 		$parts = wp_parse_url( $url );
 		if ( ! is_array( $parts ) || 'https' !== strtolower( $parts['scheme'] ?? '' ) || empty( $parts['host'] ) || isset( $parts['user'] ) || isset( $parts['pass'] ) || ! wp_http_validate_url( $url ) ) {
 			return new WP_Error( 'bc_mcp_upload_url', __( 'Provide a public HTTPS image URL.', 'bc-mcp-abilities' ) );
@@ -253,14 +256,14 @@ final class BC_MCP_Abilities_Integrations {
 			'image/webp' => 'webp',
 			'image/gif'  => 'gif',
 		);
-		$mime = wp_get_image_mime( $tmp );
+		$mime    = wp_get_image_mime( $tmp );
 		if ( ! isset( $allowed[ $mime ] ) ) {
 			wp_delete_file( $tmp );
 			return new WP_Error( 'bc_mcp_upload_type', __( 'Only JPEG, PNG, WebP and GIF images are supported.', 'bc-mcp-abilities' ) );
 		}
-		$name = isset( $input['filename'] ) ? sanitize_file_name( $input['filename'] ) : 'ai-image';
-		$base = sanitize_title( pathinfo( $name, PATHINFO_FILENAME ) );
-		$file = array(
+		$name      = isset( $input['filename'] ) ? sanitize_file_name( $input['filename'] ) : 'ai-image';
+		$base      = sanitize_title( pathinfo( $name, PATHINFO_FILENAME ) );
+		$file      = array(
 			'name'     => ( $base ? $base : 'ai-image' ) . '.' . $allowed[ $mime ],
 			'tmp_name' => $tmp,
 			'type'     => $mime,
