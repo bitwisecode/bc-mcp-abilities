@@ -36,6 +36,7 @@ $write_abilities = array(
 	'rank-math-update',
 	'elementor-update-text',
 	'elementor-undo',
+	'wc-update-stock',
 );
 
 $all_abilities = array_merge( $read_abilities, $write_abilities );
