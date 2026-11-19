@@ -4,6 +4,7 @@
  *
  * @package BCMCPAbilities
  */
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -81,10 +82,10 @@ final class BC_MCP_Abilities {
 	 * @param mixed $description Callback input.
 	 * @param mixed $inputs Callback input.
 	 * @param mixed $callback Callback input.
-	 * @param mixed $readonly Callback input.
+	 * @param mixed $read_only Callback input.
 	 * @return void
 	 */
-	public static function add( $slug, $label, $description, $inputs, $callback, $readonly = true ) {
+	public static function add( $slug, $label, $description, $inputs, $callback, $read_only = true ) {
 		wp_register_ability(
 			'bc-mcp-abilities/' . $slug,
 			array(
@@ -94,17 +95,17 @@ final class BC_MCP_Abilities {
 				'input_schema'        => $inputs,
 				'output_schema'       => self::output_schema(),
 				'execute_callback'    => is_array( $callback ) ? $callback : array( __CLASS__, $callback ),
-				'permission_callback' => static function () use ( $readonly, $slug ) {
-					return $readonly ? self::can_read( $slug ) : self::can_write( $slug );
+				'permission_callback' => static function () use ( $read_only, $slug ) {
+					return $read_only ? self::can_read( $slug ) : self::can_write( $slug );
 				},
 				'meta'                => array(
 					'public'       => true,
 					'show_in_rest' => true,
 					'mcp'          => array( 'public' => true ),
 					'annotations'  => array(
-						'readonly'    => $readonly,
-						'destructive' => ! $readonly,
-						'idempotent'  => $readonly,
+						'readonly'    => $read_only,
+						'destructive' => ! $read_only,
+						'idempotent'  => $read_only,
 					),
 				),
 			)
