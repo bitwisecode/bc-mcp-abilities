@@ -1,0 +1,39 @@
+name: WordPress Quality
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  coding-standards:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+          tools: composer
+      - name: Install QA dependencies (no runtime dependencies)
+        run: composer install --no-interaction --prefer-dist
+      - name: Check WordPress Coding Standards
+        run: composer lint
+  plugin-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stage release files
+        run: |
+          mkdir -p dist/bc-mcp-abilities/includes
+          cp bc-mcp-abilities.php readme.txt LICENSE uninstall.php dist/bc-mcp-abilities/
+          cp includes/*.php dist/bc-mcp-abilities/includes/
+      - uses: wordpress/plugin-check-action@v1
+        with:
+          build-dir: './dist/bc-mcp-abilities'
