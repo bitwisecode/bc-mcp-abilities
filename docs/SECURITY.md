@@ -30,3 +30,7 @@ Write permissions are **off by default**. Tools may remain discoverable to autho
 - No arbitrary PHP/JavaScript code editing, plugin/theme source writing, shell execution, direct SQL, or plugin installation abilities are included.
 
 Please report vulnerabilities privately to the BitwiseCode maintainer.
+
+## Optional ChatGPT OAuth CIMD integration
+
+The ChatGPT client option is disabled by default. When explicitly enabled by a site administrator, it adds exactly one trusted `chatgpt.com` CIMD client ID to the supported `wp-media/mcp-oauth` publisher filter. It does not accept arbitrary client ID hosts, implement token issuance, create an OAuth endpoint, or bypass the WordPress ability-level permissions. The OAuth provider must verify the client metadata and redirect URI, enforce PKCE, validate tokens, and link authorization to the correct WordPress user. Do not enable on an untested production site.
