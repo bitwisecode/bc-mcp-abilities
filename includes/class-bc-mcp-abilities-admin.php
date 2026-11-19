@@ -23,10 +23,10 @@ final class BC_MCP_Abilities_Admin {
 	 */
 	public static function writable_abilities() {
 		return array(
-			'create-draft'       => __( 'Create WordPress post and page drafts', 'bc-mcp-abilities' ),
-			'update-content'     => __( 'Edit existing posts and pages with revision checking', 'bc-mcp-abilities' ),
-			'restore-revision'   => __( 'Restore historical post revisions with conflict protection', 'bc-mcp-abilities' ),
-			'update-media-alt'   => __( 'Update image alternative text', 'bc-mcp-abilities' ),
+			'create-draft'     => __( 'Create WordPress post and page drafts', 'bc-mcp-abilities' ),
+			'update-content'   => __( 'Edit existing posts and pages with revision checking', 'bc-mcp-abilities' ),
+			'restore-revision' => __( 'Restore historical post revisions with conflict protection', 'bc-mcp-abilities' ),
+			'update-media-alt' => __( 'Update image alternative text', 'bc-mcp-abilities' ),
 		);
 	}
 
