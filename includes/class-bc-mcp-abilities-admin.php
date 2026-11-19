@@ -26,7 +26,6 @@ final class BC_MCP_Abilities_Admin {
 			'create-draft'       => __( 'Create WordPress post and page drafts', 'bc-mcp-abilities' ),
 			'update-content'     => __( 'Edit existing posts and pages with revision checking', 'bc-mcp-abilities' ),
 			'update-media-alt'   => __( 'Update image alternative text', 'bc-mcp-abilities' ),
-			'elementor-text'     => __( 'Edit Elementor text widgets with revision checking', 'bc-mcp-abilities' ),
 		);
 	}
 
