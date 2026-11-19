@@ -3,7 +3,7 @@
 Release remains blocked until all gates pass.
 
 ## Automated
-- [ ] PHP syntax checks across supported PHP versions
+- [x] PHP syntax checks across supported PHP versions (earlier branch commit; current head must pass again)
 - [ ] WordPress Coding Standards (PHPCS) without errors
 - [ ] WordPress Plugin Check without blocking findings
 - [ ] Tests against WordPress 6.9 and latest stable
