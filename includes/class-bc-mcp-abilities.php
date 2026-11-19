@@ -46,7 +46,7 @@ final class BC_MCP_Abilities {
             'output_schema' => self::output_schema(),
             'execute_callback' => array( __CLASS__, $callback ),
             'permission_callback' => static function () use ( $readonly, $slug ) {
-                return $readonly ? self::can_read() : self::can_write( $slug );
+                return $readonly ? self::can_read( $slug ) : self::can_write( $slug );
             },
             'meta' => array(
                 'public' => true,
@@ -57,7 +57,11 @@ final class BC_MCP_Abilities {
         ) );
     }
 
-    public static function can_read() {
+    public static function can_read( $slug ) {
+        // Infrastructure and installed-plugin details are administrator-only.
+        if ( 'site-info' === $slug ) {
+            return is_user_logged_in() && current_user_can( 'manage_options' );
+        }
         return is_user_logged_in() && current_user_can( 'edit_posts' );
     }
 
