@@ -12,4 +12,6 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 }
 
 delete_option( 'bc_mcp_abilities_enabled_writes' );
+delete_option( 'bc_mcp_abilities_chatgpt_enabled' );
+delete_option( 'bc_mcp_abilities_chatgpt_client_id' );
 delete_post_meta_by_key( '_bc_mcp_abilities_elementor_undo' );

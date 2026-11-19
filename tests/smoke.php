@@ -61,6 +61,39 @@ if ( ! is_readable( dirname( __DIR__ ) . '/claude-extension/server/index.js' ) )
 	WP_CLI::error( 'The Claude Desktop extension bridge is missing from the plugin.' );
 }
 
+$client_id = BC_MCP_Abilities_ChatGPT::DEFAULT_CLIENT_ID;
+if ( $client_id !== BC_MCP_Abilities_ChatGPT::sanitize_client_id( $client_id ) ) {
+	WP_CLI::error( 'Stable ChatGPT client ID not accepted.' );
+}
+if ( $client_id !== BC_MCP_Abilities_ChatGPT::sanitize_client_id( 'https://example.com/oauth/client.json' ) ) {
+	WP_CLI::error( 'Untrusted OAuth client ID was not rejected.' );
+}
+if ( 'https://chatgpt.com/oauth/abc12345/client.json' !== BC_MCP_Abilities_ChatGPT::sanitize_client_id( 'https://chatgpt.com/oauth/abc12345/client.json' ) ) {
+	WP_CLI::error( 'Callback-specific ChatGPT client ID was rejected.' );
+}
+if ( ! BC_MCP_Abilities_ChatGPT::enabled() ) {
+	$publishers = array( 'claude' => array( 'host' => 'claude.ai' ) );
+	if ( $publishers !== BC_MCP_Abilities_ChatGPT::trusted_publishers( $publishers ) ) {
+		WP_CLI::error( 'ChatGPT OAuth trust is not opt-in.' );
+	}
+}
+
+$enable_test_client = static function () {
+	return true;
+};
+add_filter( 'pre_option_bc_mcp_abilities_chatgpt_enabled', $enable_test_client );
+$existing_publishers = array( 'claude' => array( 'host' => 'claude.ai' ) );
+$with_chatgpt = BC_MCP_Abilities_ChatGPT::trusted_publishers( $existing_publishers );
+remove_filter( 'pre_option_bc_mcp_abilities_chatgpt_enabled', $enable_test_client );
+if (
+	! isset( $with_chatgpt['chatgpt'] ) ||
+	'chatgpt.com' !== $with_chatgpt['chatgpt']['host'] ||
+	array( BC_MCP_Abilities_ChatGPT::DEFAULT_CLIENT_ID ) !== $with_chatgpt['chatgpt']['client_ids'] ||
+	$with_chatgpt['claude'] !== $existing_publishers['claude']
+) {
+	WP_CLI::error( 'ChatGPT OAuth publisher trust is not correctly restricted to the OpenAI client metadata.' );
+}
+
 $old_user = get_current_user_id();
 wp_set_current_user( 0 );
 foreach ( $all_abilities as $slug ) {
