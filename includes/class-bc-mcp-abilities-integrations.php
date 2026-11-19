@@ -180,15 +180,20 @@ final class BC_MCP_Abilities_Integrations {
 			'description'   => 'rank_math_description',
 			'focus_keyword' => 'rank_math_focus_keyword',
 		);
-		$updates = 0;
+		$pending = array();
 		foreach ( $fields as $field => $key ) {
 			if ( array_key_exists( $field, $input ) ) {
 				$value = sanitize_text_field( $input[ $field ] );
 				if ( strlen( $value ) > 1000 ) {
 					return new WP_Error( 'bc_mcp_rank_math_length', __( 'SEO field exceeds the 1000-byte limit.', 'bc-mcp-abilities' ) );
 				}
+				$pending[ $key ] = $value;
+			}
+		}
+		$updates = count( $pending );
+		if ( $updates ) {
+			foreach ( $pending as $key => $value ) {
 				update_post_meta( $post->ID, $key, $value );
-				++$updates;
 			}
 		}
 		if ( 0 === $updates ) {
