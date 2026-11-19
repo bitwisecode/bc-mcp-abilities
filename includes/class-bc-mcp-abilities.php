@@ -108,6 +108,10 @@ final class BC_MCP_Abilities {
 			'alt_text' => $string,
 		), array( 'attachment_id', 'alt_text' ) ), 'update_media_alt', false );
 		self::add( 'elementor-document', 'Read Elementor Document', 'Read an Elementor page structure and revision token without modifying its data.', self::schema( array( 'post_id' => $integer ), array( 'post_id' ) ), 'elementor_document' );
+		self::add( 'elementor-get-element', 'Read Elementor Element', 'Find one Elementor element by its element ID.', self::schema( array(
+			'post_id' => $integer,
+			'element_id' => $string,
+		), array( 'post_id', 'element_id' ) ), 'elementor_get_element' );
 		self::add( 'check-url', 'Check Same-site URL', 'Perform a bounded HEAD request to a relative path on the current WordPress site.', self::schema( array( 'path' => $string ) ), 'check_url' );
 	}
 
@@ -272,6 +276,62 @@ final class BC_MCP_Abilities {
 			return new WP_Error( 'bc_mcp_elementor_invalid', 'Elementor document has no valid element tree.' );
 		}
 		return self::ok( array( 'post_id' => $post->ID, 'elements' => $tree, 'revision' => hash( 'sha256', wp_json_encode( $tree ) ) ) );
+	}
+
+
+	/**
+	 * Find a nested Elementor node without modifying its document.
+	 *
+	 * @param array  $nodes Elementor element tree.
+	 * @param string $id    Exact element ID.
+	 * @param int    $depth Recursion depth.
+	 * @return array|null
+	 */
+	private static function find_element( $nodes, $id, $depth = 0 ) {
+		if ( ! is_array( $nodes ) || $depth > 30 ) {
+			return null;
+		}
+		foreach ( $nodes as $element ) {
+			if ( ! is_array( $element ) ) {
+				continue;
+			}
+			if ( isset( $element['id'] ) && (string) $element['id'] === $id ) {
+				return $element;
+			}
+			if ( ! empty( $element['elements'] ) ) {
+				$found = self::find_element( $element['elements'], $id, $depth + 1 );
+				if ( null !== $found ) {
+					return $found;
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Read a particular Elementor element.
+	 *
+	 * @param array $input Schema-validated input.
+	 * @return array|WP_Error
+	 */
+	public static function elementor_get_element( $input ) {
+		$document = self::elementor_document( array( 'post_id' => $input['post_id'] ) );
+		if ( is_wp_error( $document ) ) {
+			return $document;
+		}
+		$id = (string) $input['element_id'];
+		if ( ! preg_match( '/^[a-zA-Z0-9_-]{1,64}$/', $id ) ) {
+			return new WP_Error( 'bc_mcp_elementor_bad_id', 'Invalid element ID.' );
+		}
+		$element = self::find_element( $document['data']['elements'], $id );
+		if ( null === $element ) {
+			return new WP_Error( 'bc_mcp_elementor_not_found', 'Element not found.' );
+		}
+		return self::ok( array(
+			'post_id' => absint( $input['post_id'] ),
+			'revision' => $document['data']['revision'],
+			'element' => $element,
+		) );
 	}
 
 	public static function check_url( $input ) {
