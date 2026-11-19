@@ -215,6 +215,7 @@ final class BC_MCP_Abilities_ChatGPT {
 			<li><?php esc_html_e( 'Ask ChatGPT to discover the abilities beginning with bc-mcp-abilities/. Keep write permissions disabled during your first test.', 'bc-mcp-abilities' ); ?></li>
 		</ol>
 		<p class="description"><?php esc_html_e( 'Availability of custom MCP connections depends on your ChatGPT plan and workspace. This setting enables only a supported OAuth provider integration; it does not guarantee that ChatGPT will accept a connection.', 'bc-mcp-abilities' ); ?></p>
+		<p class="description"><?php esc_html_e( 'Disabling this setting does not immediately revoke previously issued OAuth tokens. To revoke existing access, disconnect the ChatGPT connection and revoke its access in the WordPress account used to authorize it.', 'bc-mcp-abilities' ); ?></p>
 		<p><a target="_blank" rel="noopener noreferrer" href="https://help.openai.com/en/articles/12584461-connecting-custom-mcp-servers-in-chatgpt"><?php esc_html_e( 'ChatGPT custom MCP connection instructions', 'bc-mcp-abilities' ); ?></a></p>
 		<?php
 	}
