@@ -17,7 +17,10 @@ final class BC_MCP_Abilities_WooCommerce {
 	 * @return void
 	 */
 	public static function register() {
-		$int = array( 'type' => 'integer', 'minimum' => 1 );
+		$int = array(
+			'type'    => 'integer',
+			'minimum' => 1,
+		);
 
 		BC_MCP_Abilities::add(
 			'wc-products',
@@ -27,7 +30,11 @@ final class BC_MCP_Abilities_WooCommerce {
 				'type'                 => 'object',
 				'properties'           => array(
 					'search'   => array( 'type' => 'string' ),
-					'per_page' => array( 'type' => 'integer', 'minimum' => 1, 'maximum' => 50 ),
+					'per_page' => array(
+						'type'    => 'integer',
+						'minimum' => 1,
+						'maximum' => 50,
+					),
 					'page'     => $int,
 				),
 				'additionalProperties' => false,
@@ -56,7 +63,11 @@ final class BC_MCP_Abilities_WooCommerce {
 				'type'                 => 'object',
 				'properties'           => array(
 					'product_id'        => $int,
-					'stock_quantity'    => array( 'type' => 'integer', 'minimum' => 0, 'maximum' => 1000000 ),
+					'stock_quantity'    => array(
+						'type'    => 'integer',
+						'minimum' => 0,
+						'maximum' => 1000000,
+					),
 					'expected_revision' => array( 'type' => 'string' ),
 				),
 				'required'             => array( 'product_id', 'stock_quantity', 'expected_revision' ),
@@ -73,7 +84,11 @@ final class BC_MCP_Abilities_WooCommerce {
 			array(
 				'type'                 => 'object',
 				'properties'           => array(
-					'per_page' => array( 'type' => 'integer', 'minimum' => 1, 'maximum' => 25 ),
+					'per_page' => array(
+						'type'    => 'integer',
+						'minimum' => 1,
+						'maximum' => 25,
+					),
 					'status'   => array( 'type' => 'string' ),
 				),
 				'additionalProperties' => false,
@@ -118,16 +133,16 @@ final class BC_MCP_Abilities_WooCommerce {
 	 */
 	private static function product_summary( $product ) {
 		return array(
-			'id'             => $product->get_id(),
-			'name'           => $product->get_name(),
-			'type'           => $product->get_type(),
-			'status'         => $product->get_status(),
-			'sku'            => $product->get_sku(),
-			'regular_price'  => $product->get_regular_price(),
-			'sale_price'     => $product->get_sale_price(),
-			'stock_status'   => $product->get_stock_status(),
-			'stock_quantity' => $product->get_stock_quantity(),
-			'permalink'      => $product->get_permalink(),
+			'id'                 => $product->get_id(),
+			'name'               => $product->get_name(),
+			'type'               => $product->get_type(),
+			'status'             => $product->get_status(),
+			'sku'                => $product->get_sku(),
+			'regular_price'      => $product->get_regular_price(),
+			'sale_price'         => $product->get_sale_price(),
+			'stock_status'       => $product->get_stock_status(),
+			'stock_quantity'     => $product->get_stock_quantity(),
+			'permalink'          => $product->get_permalink(),
 			'inventory_revision' => self::inventory_revision( $product ),
 		);
 	}
@@ -143,11 +158,11 @@ final class BC_MCP_Abilities_WooCommerce {
 			'sha256',
 			wp_json_encode(
 				array(
-					'stock'         => $product->get_stock_quantity(),
-					'status'        => $product->get_stock_status(),
-					'manage_stock'  => $product->get_manage_stock(),
-					'backorders'    => $product->get_backorders(),
-					'product_id'    => $product->get_id(),
+					'stock'        => $product->get_stock_quantity(),
+					'status'       => $product->get_stock_status(),
+					'manage_stock' => $product->get_manage_stock(),
+					'backorders'   => $product->get_backorders(),
+					'product_id'   => $product->get_id(),
 				)
 			)
 		);
@@ -203,9 +218,9 @@ final class BC_MCP_Abilities_WooCommerce {
 		if ( is_wp_error( $denied ) ) {
 			return $denied;
 		}
-		$limit    = isset( $input['per_page'] ) ? min( 50, max( 1, absint( $input['per_page'] ) ) ) : 20;
-		$page     = isset( $input['page'] ) ? max( 1, absint( $input['page'] ) ) : 1;
-		$query    = array(
+		$limit = isset( $input['per_page'] ) ? min( 50, max( 1, absint( $input['per_page'] ) ) ) : 20;
+		$page  = isset( $input['page'] ) ? max( 1, absint( $input['page'] ) ) : 1;
+		$query = array(
 			'limit'    => $limit,
 			'page'     => $page,
 			'status'   => array( 'publish', 'private', 'draft', 'pending' ),
@@ -243,7 +258,7 @@ final class BC_MCP_Abilities_WooCommerce {
 		if ( is_wp_error( $denied ) ) {
 			return $denied;
 		}
-		$id = absint( $input['product_id'] );
+		$id      = absint( $input['product_id'] );
 		$product = wc_get_product( $id );
 		if ( ! $product || ! current_user_can( 'edit_post', $id ) ) {
 			return new WP_Error( 'bc_mcp_product_missing', __( 'Product unavailable or editing is not permitted.', 'bc-mcp-abilities' ) );
@@ -274,10 +289,10 @@ final class BC_MCP_Abilities_WooCommerce {
 			return new WP_Error( 'bc_mcp_order_status', __( 'Unknown order status filter.', 'bc-mcp-abilities' ) );
 		}
 		$args = array(
-			'limit' => isset( $input['per_page'] ) ? min( 25, max( 1, absint( $input['per_page'] ) ) ) : 10,
+			'limit'   => isset( $input['per_page'] ) ? min( 25, max( 1, absint( $input['per_page'] ) ) ) : 10,
 			'orderby' => 'date',
-			'order' => 'DESC',
-			'return' => 'objects',
+			'order'   => 'DESC',
+			'return'  => 'objects',
 		);
 		if ( $status ) {
 			$args['status'] = 'wc-' . $status;
@@ -294,6 +309,11 @@ final class BC_MCP_Abilities_WooCommerce {
 				'created'  => $date ? $date->date( 'c' ) : '',
 			);
 		}
-		return self::ok( array( 'orders' => $items, 'count' => count( $items ) ) );
+		return self::ok(
+			array(
+				'orders' => $items,
+				'count'  => count( $items ),
+			)
+		);
 	}
 }

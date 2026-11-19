@@ -27,7 +27,10 @@ final class BC_MCP_Abilities_Elementor {
 	 * @return void
 	 */
 	public static function register() {
-		$int = array( 'type' => 'integer', 'minimum' => 1 );
+		$int = array(
+			'type'    => 'integer',
+			'minimum' => 1,
+		);
 		$str = array( 'type' => 'string' );
 
 		BC_MCP_Abilities::add(
@@ -93,7 +96,7 @@ final class BC_MCP_Abilities_Elementor {
 		if ( ! $document ) {
 			return new WP_Error( 'bc_mcp_elementor_document', __( 'Elementor could not open the document.', 'bc-mcp-abilities' ) );
 		}
-		$raw = get_post_meta( $post->ID, '_elementor_data', true );
+		$raw  = get_post_meta( $post->ID, '_elementor_data', true );
 		$tree = is_array( $raw ) ? $raw : json_decode( (string) $raw, true );
 		if ( ! is_array( $tree ) ) {
 			return new WP_Error( 'bc_mcp_elementor_invalid', __( 'Elementor document has no valid JSON element tree.', 'bc-mcp-abilities' ) );
@@ -159,7 +162,7 @@ final class BC_MCP_Abilities_Elementor {
 			}
 			if ( isset( $node['id'] ) && (string) $node['id'] === $id ) {
 				++$matches;
-				$type = isset( $node['widgetType'] ) ? (string) $node['widgetType'] : '';
+				$type   = isset( $node['widgetType'] ) ? (string) $node['widgetType'] : '';
 				$fields = array(
 					'heading'     => 'title',
 					'text-editor' => 'editor',
@@ -204,7 +207,7 @@ final class BC_MCP_Abilities_Elementor {
 	 * @return array|WP_Error
 	 */
 	public static function update_text( $input ) {
-		$post_id = absint( $input['post_id'] );
+		$post_id  = absint( $input['post_id'] );
 		$snapshot = self::snapshot( $post_id );
 		if ( is_wp_error( $snapshot ) ) {
 			return $snapshot;
@@ -219,7 +222,7 @@ final class BC_MCP_Abilities_Elementor {
 
 		$updated = $snapshot['tree'];
 		$matches = 0;
-		$error = self::replace_text( $updated, (string) $input['element_id'], (string) $input['text'], $matches );
+		$error   = self::replace_text( $updated, (string) $input['element_id'], (string) $input['text'], $matches );
 		if ( is_wp_error( $error ) ) {
 			return $error;
 		}
@@ -229,7 +232,7 @@ final class BC_MCP_Abilities_Elementor {
 		if ( strlen( wp_json_encode( $updated ) ) > self::MAX_SIZE ) {
 			return new WP_Error( 'bc_mcp_elementor_large', __( 'Updated Elementor document exceeds the safe size limit.', 'bc-mcp-abilities' ) );
 		}
-		$token = wp_generate_uuid4();
+		$token  = wp_generate_uuid4();
 		$backup = array(
 			'token'         => $token,
 			'before'        => $snapshot['tree'],
@@ -270,7 +273,7 @@ final class BC_MCP_Abilities_Elementor {
 	 */
 	public static function undo( $input ) {
 		$post_id = absint( $input['post_id'] );
-		$backup = get_post_meta( $post_id, self::BACKUP_KEY, true );
+		$backup  = get_post_meta( $post_id, self::BACKUP_KEY, true );
 		if ( ! is_array( $backup ) || empty( $backup['token'] ) || empty( $backup['after_hash'] ) || empty( $backup['before'] ) ) {
 			return new WP_Error( 'bc_mcp_elementor_undo_missing', __( 'No completed BC MCP Elementor change is available for undo.', 'bc-mcp-abilities' ) );
 		}
