@@ -1,0 +1,25 @@
+name: WordPress Abilities Smoke Test
+on:
+  push:
+    branches: [main, feat/agent-abilities-foundation]
+  pull_request:
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Start a disposable WordPress installation
+        run: npx --yes @wordpress/env start
+      - name: Activate BC MCP Abilities
+        run: npx --yes @wordpress/env run cli wp plugin activate bc-mcp-abilities
+      - name: Verify registered abilities and authorization defaults
+        run: npx --yes @wordpress/env run cli wp eval-file /var/www/html/wp-content/plugins/bc-mcp-abilities/tests/smoke.php
+      - name: Stop disposable WordPress environment
+        if: always()
+        run: npx --yes @wordpress/env stop || true
