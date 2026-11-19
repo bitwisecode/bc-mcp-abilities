@@ -57,7 +57,7 @@ final class BC_MCP_Abilities {
 				'category'            => 'bc-mcp-abilities',
 				'input_schema'        => $inputs,
 				'output_schema'       => self::output_schema(),
-				'execute_callback'    => array( __CLASS__, $callback ),
+				'execute_callback'    => is_array( $callback ) ? $callback : array( __CLASS__, $callback ),
 				'permission_callback' => static function () use ( $readonly, $slug ) {
 					return $readonly ? self::can_read( $slug ) : self::can_write( $slug );
 				},
