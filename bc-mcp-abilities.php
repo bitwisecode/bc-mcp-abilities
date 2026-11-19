@@ -10,7 +10,10 @@
  * Text Domain: bc-mcp-abilities
  * Requires at least: 6.9
  * Requires PHP: 7.4
+ *
+ * @package BCMCPAbilities
  */
+
 defined( 'ABSPATH' ) || exit;
 define( 'BC_MCP_ABILITIES_VERSION', '0.1.0-dev' );
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-admin.php';
