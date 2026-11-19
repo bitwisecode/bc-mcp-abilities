@@ -48,7 +48,7 @@ final class BC_MCP_Abilities {
 		);
 	}
 
-	private static function add( $slug, $label, $description, $inputs, $callback, $readonly = true ) {
+	public static function add( $slug, $label, $description, $inputs, $callback, $readonly = true ) {
 		wp_register_ability(
 			'bc-mcp-abilities/' . $slug,
 			array(
