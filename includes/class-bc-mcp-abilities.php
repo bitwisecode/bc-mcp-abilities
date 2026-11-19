@@ -45,12 +45,14 @@ final class BC_MCP_Abilities {
             'input_schema' => $inputs,
             'output_schema' => self::output_schema(),
             'execute_callback' => array( __CLASS__, $callback ),
-            'permission_callback' => $readonly ? array( __CLASS__, 'can_read' ) : array( __CLASS__, 'can_write' ),
+            'permission_callback' => static function () use ( $readonly, $slug ) {
+                return $readonly ? self::can_read() : self::can_write( $slug );
+            },
             'meta' => array(
                 'public' => true,
                 'show_in_rest' => true,
                 'mcp' => array( 'public' => true ),
-                'annotations' => array( 'readonly' => $readonly, 'destructive' => false, 'idempotent' => $readonly ),
+                'annotations' => array( 'readonly' => $readonly, 'destructive' => ! $readonly, 'idempotent' => $readonly ),
             ),
         ) );
     }
@@ -59,8 +61,10 @@ final class BC_MCP_Abilities {
         return is_user_logged_in() && current_user_can( 'edit_posts' );
     }
 
-    public static function can_write() {
-        return is_user_logged_in() && current_user_can( 'edit_posts' );
+    public static function can_write( $slug ) {
+        return is_user_logged_in()
+            && current_user_can( 'manage_options' )
+            && BC_MCP_Abilities_Admin::is_enabled( $slug );
     }
 
     public static function register_abilities() {
@@ -95,6 +99,10 @@ final class BC_MCP_Abilities {
             'per_page' => array( 'type' => 'integer', 'minimum' => 1, 'maximum' => 50 ),
         ) ), 'list_media' );
         self::add( 'get-media', 'Get Media', 'Read Media Library attachment metadata and alt text.', self::schema( array( 'attachment_id' => $integer ), array( 'attachment_id' ) ), 'get_media' );
+        self::add( 'update-media-alt', 'Update Image Alt Text', 'Update the alt text of one existing image attachment.', self::schema( array(
+            'attachment_id' => $integer,
+            'alt_text' => $string,
+        ), array( 'attachment_id', 'alt_text' ) ), 'update_media_alt', false );
         self::add( 'elementor-document', 'Read Elementor Document', 'Read an Elementor page structure and revision token without modifying its data.', self::schema( array( 'post_id' => $integer ), array( 'post_id' ) ), 'elementor_document' );
         self::add( 'check-url', 'Check Same-site URL', 'Perform a bounded HEAD request to a relative path on the current WordPress site.', self::schema( array( 'path' => $string ) ), 'check_url' );
     }
@@ -233,6 +241,17 @@ final class BC_MCP_Abilities {
             'description' => $post->post_content, 'alt' => get_post_meta( $id, '_wp_attachment_image_alt', true ),
             'mime' => $post->post_mime_type, 'url' => wp_get_attachment_url( $id ),
         ) );
+    }
+
+    public static function update_media_alt( $input ) {
+        $id = absint( $input['attachment_id'] );
+        $post = get_post( $id );
+        if ( ! $post || 'attachment' !== $post->post_type || ! wp_attachment_is_image( $id ) || ! current_user_can( 'edit_post', $id ) ) {
+            return new WP_Error( 'bc_mcp_media_forbidden', 'Image unavailable or editing not permitted.' );
+        }
+        $alt = sanitize_text_field( $input['alt_text'] );
+        update_post_meta( $id, '_wp_attachment_image_alt', $alt );
+        return self::ok( array( 'attachment_id' => $id, 'alt_text' => $alt ) );
     }
 
     public static function elementor_document( $input ) {
