@@ -34,3 +34,5 @@ Please report vulnerabilities privately to the BitwiseCode maintainer.
 ## Optional ChatGPT OAuth CIMD integration
 
 The ChatGPT client option is disabled by default. When explicitly enabled by a site administrator, it adds exactly one trusted `chatgpt.com` CIMD client ID to the supported `wp-media/mcp-oauth` publisher filter. It does not accept arbitrary client ID hosts, implement token issuance, create an OAuth endpoint, or bypass the WordPress ability-level permissions. The OAuth provider must verify the client metadata and redirect URI, enforce PKCE, validate tokens, and link authorization to the correct WordPress user. Do not enable on an untested production site.
+
+**Revocation note:** Disabling the ChatGPT client trust setting prevents future trust-list additions but does not immediately invalidate existing OAuth access tokens or already-cached client metadata. Revoke existing application passwords/tokens in the OAuth provider and disconnect the ChatGPT connector separately. Do not treat the checkbox as an emergency token kill switch.
