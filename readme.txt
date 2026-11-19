@@ -16,6 +16,8 @@ BC MCP Abilities registers WordPress-native management abilities. It does not sh
 
 This is development software. Test on staging only.
 
+An optional ChatGPT connector settings section supports administrator-approved CIMD client metadata when a compatible WordPress OAuth provider is already active. BC MCP Abilities does not itself issue OAuth tokens or provide its own MCP endpoint.
+
 == Installation ==
 
 1. Install on WordPress 6.9 or later.
