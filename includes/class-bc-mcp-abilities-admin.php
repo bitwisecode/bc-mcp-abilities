@@ -28,6 +28,7 @@ final class BC_MCP_Abilities_Admin {
 			'restore-revision' => __( 'Restore historical post revisions with conflict protection', 'bc-mcp-abilities' ),
 			'elementor-update-text' => __( 'Update supported Elementor text widgets with recovery snapshot', 'bc-mcp-abilities' ),
 			'elementor-undo' => __( 'Undo the last recorded Elementor text update', 'bc-mcp-abilities' ),
+			'wc-update-stock' => __( 'Update individually managed WooCommerce inventory using revision checks', 'bc-mcp-abilities' ),
 			'rank-math-update' => __( 'Edit Rank Math title, description and focus keywords', 'bc-mcp-abilities' ),
 			'upload-image'     => __( 'Import public HTTPS images into Media Library', 'bc-mcp-abilities' ),
 			'update-media-alt' => __( 'Update image alternative text', 'bc-mcp-abilities' ),
