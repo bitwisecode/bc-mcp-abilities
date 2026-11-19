@@ -87,9 +87,9 @@ final class BC_MCP_Abilities_Claude {
 					'required'    => true,
 				),
 				'username'             => array(
-					'type'        => 'string',
-					'title'       => 'WordPress login username',
-					'required'    => true,
+					'type'     => 'string',
+					'title'    => 'WordPress login username',
+					'required' => true,
 				),
 				'application_password' => array(
 					'type'        => 'string',
@@ -100,7 +100,7 @@ final class BC_MCP_Abilities_Claude {
 				),
 			),
 		);
-		$privacy = get_privacy_policy_url();
+		$privacy  = get_privacy_policy_url();
 		if ( $privacy && 'https' === wp_parse_url( $privacy, PHP_URL_SCHEME ) ) {
 			$manifest['privacy_policies'] = array( $privacy );
 		}
