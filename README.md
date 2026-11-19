@@ -2,7 +2,7 @@
 
 Native, independent WordPress Abilities API plugin developed by **BitwiseCode**. WordPress 6.9+ and PHP 7.4+ required. The [official MCP Adapter](https://wordpress.org/plugins/mcp-adapter/) is optional: it provides the MCP transport, while this plugin registers and executes abilities.
 
-> **Developer preview — do not deploy to production or submit to WordPress.org until quality checks and staging acceptance tests pass.** Development takes place on `feat/agent-abilities-foundation` and PR #1.
+> **Developer preview — do not deploy to production or submit to WordPress.org until quality checks and staging acceptance tests pass.** Use the main branch or a tested staging ZIP; enable new OAuth integrations only after reviewing site permissions.
 
 ## Registered abilities (22)
 
@@ -15,6 +15,10 @@ Native, independent WordPress Abilities API plugin developed by **BitwiseCode**.
 | WooCommerce | `wc-products`, `wc-product`, `wc-update-stock`, `wc-order-report` |
 
 Full names are prefixed by `bc-mcp-abilities/`.
+
+## Optional ChatGPT connection
+
+The **Settings → BC MCP Abilities → Connect to ChatGPT** section provides a direct WordPress-to-ChatGPT setup guide and an administrator-opt-in CIMD trusted publisher integration when a compatible WordPress OAuth provider is active. This does not create an OAuth server or require the Jobayer hosted MCP server. See [ChatGPT connection guide](docs/CHATGPT-CONNECTION.md).
 
 ## Setup
 
