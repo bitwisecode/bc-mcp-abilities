@@ -1,0 +1,34 @@
+name: Build staging install ZIP
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'bc-mcp-abilities.php'
+      - 'includes/**'
+      - 'uninstall.php'
+      - 'readme.txt'
+      - 'LICENSE'
+      - '.github/workflows/staging-zip.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble WordPress plugin ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist/bc-mcp-abilities/includes
+          cp bc-mcp-abilities.php readme.txt LICENSE uninstall.php dist/bc-mcp-abilities/
+          cp includes/*.php dist/bc-mcp-abilities/includes/
+          (cd dist && zip -qr bc-mcp-abilities.zip bc-mcp-abilities)
+          unzip -l dist/bc-mcp-abilities.zip
+      - name: Upload staging build
+        uses: actions/upload-artifact@v4
+        with:
+          name: bc-mcp-abilities-staging-zip
+          path: dist/bc-mcp-abilities.zip
+          retention-days: 30
