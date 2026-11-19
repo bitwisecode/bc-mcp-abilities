@@ -20,6 +20,13 @@ Source-of-truth: https://github.com/jobayerhossan/jobayer-wordpress-ai (Agent v0
 - get-media
 - elementor-document (read only)
 - check-url
+- update-media-alt (administrator opt-in)
+- elementor-get-element (read-only)
+
+## Governance implemented
+- WordPress Settings API admin interface with per-write opt-in (default all writes off)
+- Restrict diagnostic metadata to administrators
+- WordPressCS/PHPCS (patched WPCS >=3.4.1) and official Plugin Check CI workflows
 
 ## Next priorities
 1. Add Elementor element inspection, safe element updates through Elementor APIs, validation, revision check, backups, and rollback.
