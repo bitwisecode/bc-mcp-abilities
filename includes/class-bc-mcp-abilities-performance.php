@@ -24,11 +24,20 @@ final class BC_MCP_Abilities_Performance {
 			array(
 				'type'                 => 'object',
 				'properties'           => array(
-					'path'       => array( 'type' => 'string', 'maxLength' => 1024 ),
-					'strategy'   => array( 'type' => 'string', 'enum' => array( 'mobile', 'desktop' ) ),
+					'path'       => array(
+						'type'      => 'string',
+						'maxLength' => 1024,
+					),
+					'strategy'   => array(
+						'type' => 'string',
+						'enum' => array( 'mobile', 'desktop' ),
+					),
 					'categories' => array(
 						'type'        => 'array',
-						'items'       => array( 'type' => 'string', 'enum' => array( 'performance', 'accessibility', 'best-practices', 'seo' ) ),
+						'items'       => array(
+							'type' => 'string',
+							'enum' => array( 'performance', 'accessibility', 'best-practices', 'seo' ),
+						),
 						'minItems'    => 1,
 						'maxItems'    => 4,
 						'uniqueItems' => true,
@@ -75,9 +84,9 @@ final class BC_MCP_Abilities_Performance {
 		foreach ( array(
 			'largest-contentful-paint' => 'lcp',
 			'first-contentful-paint'   => 'fcp',
-			'cumulative-layout-shift' => 'cls',
-			'total-blocking-time'     => 'tbt',
-			'speed-index'             => 'speed_index',
+			'cumulative-layout-shift'  => 'cls',
+			'total-blocking-time'      => 'tbt',
+			'speed-index'              => 'speed_index',
 		) as $key => $label ) {
 			$value = isset( $lighthouse['audits'][ $key ]['numericValue'] ) ? $lighthouse['audits'][ $key ]['numericValue'] : null;
 			if ( is_numeric( $value ) ) {
@@ -141,8 +150,12 @@ final class BC_MCP_Abilities_Performance {
 		$cached    = get_transient( $cache_key );
 		if ( is_array( $cached ) ) {
 			$cached['cached'] = true;
-			return array( 'success' => true, 'data' => $cached );
+			return array(
+					'success' => true,
+					'data'    => $cached,
+				);
 		}
+		
 		$args = array(
 			'url'      => $url,
 			'strategy' => $strategy,
@@ -171,10 +184,14 @@ final class BC_MCP_Abilities_Performance {
 			return new WP_Error( 'bc_mcp_performance_result', __( 'PageSpeed Insights returned no valid Lighthouse result.', 'bc-mcp-abilities' ) );
 		}
 		$result = self::report( $decoded );
+
 		$result['url']      = $url;
 		$result['strategy'] = $strategy;
 		$result['cached']   = false;
 		set_transient( $cache_key, $result, HOUR_IN_SECONDS );
-		return array( 'success' => true, 'data' => $result );
+		return array(
+			'success' => true,
+			'data'    => $result,
+		);
 	}
 }
