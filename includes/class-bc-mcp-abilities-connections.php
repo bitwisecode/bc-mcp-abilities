@@ -27,7 +27,7 @@ final class BC_MCP_Abilities_Connections {
 	 * @return void
 	 */
 	public static function register_settings() {
-		foreach ( array( BC_MCP_Abilities_Server::OPTION, BC_MCP_Abilities_OAuth::OPTION ) as $option ) {
+		foreach ( array( BC_MCP_Abilities_Server::OPTION, BC_MCP_Abilities_OAuth::OPTION, 'bc_mcp_oauth_debug_enabled' ) as $option ) {
 			register_setting(
 				'bc_mcp_connections',
 				$option,
@@ -89,6 +89,14 @@ final class BC_MCP_Abilities_Connections {
 					<strong><?php esc_html_e( 'Enable WordPress OAuth authorization', 'bc-mcp-abilities' ); ?></strong>
 				</label>
 			</p>
+			<input type="hidden" name="bc_mcp_oauth_debug_enabled" value="0">
+			<p>
+				<label>
+					<input type="checkbox" name="bc_mcp_oauth_debug_enabled" value="1" <?php checked( '1', get_option( 'bc_mcp_oauth_debug_enabled', '0' ) ); ?>>
+					<strong><?php esc_html_e( 'Enable temporary OAuth connection diagnostics', 'bc-mcp-abilities' ); ?></strong>
+				</label>
+			</p>
+			<p class="description"><?php esc_html_e( 'Diagnostic events record only their stage, result and timestamp. No authorization codes, tokens, passwords, client IDs, URLs, user IDs or IP addresses are recorded. The last 25 events remain for up to 24 hours. Turn this off after testing.', 'bc-mcp-abilities' ); ?></p>
 			<?php submit_button( __( 'Save connection settings', 'bc-mcp-abilities' ), 'secondary', 'submit', false ); ?>
 		</form>
 
@@ -98,6 +106,35 @@ final class BC_MCP_Abilities_Connections {
 			<p><em><?php esc_html_e( 'Not enabled yet. Enable both settings on a staging site before connecting.', 'bc-mcp-abilities' ); ?></em></p>
 		<?php endif; ?>
 
+		<?php if ( '1' === (string) get_option( 'bc_mcp_oauth_debug_enabled', '0' ) ) : ?>
+			<h3><?php esc_html_e( 'Recent OAuth connection stages', 'bc-mcp-abilities' ); ?></h3>
+			<?php
+			$events = get_option( 'bc_mcp_oauth_debug_events', array() );
+			$events = is_array( $events ) ? array_reverse( array_slice( $events, -25 ) ) : array();
+			?>
+			<?php if ( empty( $events ) ) : ?>
+				<p><?php esc_html_e( 'No recent diagnostic events. Try connecting ChatGPT and refresh this page.', 'bc-mcp-abilities' ); ?></p>
+			<?php else : ?>
+				<table class="widefat striped" style="max-width:650px">
+					<thead><tr>
+						<th><?php esc_html_e( 'Time (UTC)', 'bc-mcp-abilities' ); ?></th>
+						<th><?php esc_html_e( 'Stage', 'bc-mcp-abilities' ); ?></th>
+						<th><?php esc_html_e( 'Result', 'bc-mcp-abilities' ); ?></th>
+					</tr></thead>
+					<tbody>
+						<?php foreach ( $events as $event ) : ?>
+							<?php if ( is_array( $event ) && ! empty( $event['time'] ) && time() - absint( $event['time'] ) < DAY_IN_SECONDS ) : ?>
+								<tr>
+									<td><?php echo esc_html( gmdate( 'Y-m-d H:i:s', absint( $event['time'] ) ) ); ?></td>
+									<td><?php echo esc_html( sanitize_key( (string) ( $event['event'] ?? '' ) ) ); ?></td>
+									<td><?php echo esc_html( sanitize_key( (string) ( $event['result'] ?? '' ) ) ); ?></td>
+								</tr>
+							<?php endif; ?>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+			<?php endif; ?>
+		<?php endif; ?>
 		<p><strong><?php esc_html_e( 'MCP server URL', 'bc-mcp-abilities' ); ?></strong></p>
 		<p><input type="text" readonly class="regular-text code" style="max-width:100%;width:650px" id="bc-mcp-standalone-url" value="<?php echo esc_attr( $endpoint ); ?>" onclick="this.select()"></p>
 

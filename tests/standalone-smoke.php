@@ -49,6 +49,12 @@ foreach ( $block as $uri ) {
 	$expect( ! BC_MCP_Abilities_OAuth::allowed_redirect( $uri ), 'Unsafe callback was accepted.' );
 }
 
+$canonical = BC_MCP_Abilities_Server::endpoint();
+$expect( BC_MCP_Abilities_OAuth::valid_token_resource( $canonical, $canonical ), 'Matching resource must be permitted on token exchange.' );
+$expect( BC_MCP_Abilities_OAuth::valid_token_resource( '', $canonical ), 'Omitted token resource must retain the authorized audience.' );
+$expect( ! BC_MCP_Abilities_OAuth::valid_token_resource( 'https://evil.example/mcp', $canonical ), 'Token exchange must not switch resources.' );
+$expect( ! BC_MCP_Abilities_OAuth::valid_token_resource( '', 'https://evil.example/mcp' ), 'Original authorization must be restricted to this MCP server.' );
+
 $verifier  = str_repeat( 'v', 64 );
 $challenge = rtrim( strtr( base64_encode( hash( 'sha256', $verifier, true ) ), '+/', '-_' ), '=' );
 $expect( BC_MCP_Abilities_OAuth::pkce_valid( $verifier, $challenge ), 'Correct OAuth PKCE S256 verifier failed.' );
