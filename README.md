@@ -4,7 +4,7 @@ Native, independent WordPress Abilities API plugin developed by **BitwiseCode**.
 
 > **Developer preview — do not deploy to production or submit to WordPress.org until quality checks and staging acceptance tests pass.** The Agent-parity expansion is under review in draft PR #7; production release still requires integration testing.
 
-## Registered abilities (35 on the Agent-parity development branch)
+## Registered abilities (45 in the pre-release development branch)
 
 | Module | Abilities |
 | --- | --- |
@@ -13,6 +13,9 @@ Native, independent WordPress Abilities API plugin developed by **BitwiseCode**.
 | Elementor | `elementor-document`, `elementor-get-element`, `elementor-update-text`, `elementor-undo`, `elementor-validate-json`, `elementor-export-json`, `elementor-create-document`, `elementor-update-settings`, `elementor-add-element`, `elementor-delete-element`, `elementor-move-element`, `elementor-regenerate-css` |
 | Rank Math | `rank-math-read`, `rank-math-update` |
 | WooCommerce | `wc-products`, `wc-product`, `wc-update-stock`, `wc-order-report` |
+| Taxonomies | `list-taxonomies`, `list-taxonomy-terms`, `get-post-terms`, `create-taxonomy-term`, `assign-post-terms` |
+| Classic menus | `list-menus`, `get-menu`, `create-menu`, `add-menu-item` |
+| Diagnostics | `pagespeed-audit` |
 
 Full names are prefixed by `bc-mcp-abilities/`.
 
@@ -30,6 +33,8 @@ The existing Claude OAuth MCP provider connection remains unchanged and can coex
 ## Admin dashboard
 
 The WordPress admin screen under **Settings → BC MCP Abilities** includes a responsive dashboard: setup overview, ChatGPT/OAuth connection controls, searchable write-ability permissions, bounded sanitized diagnostics, and Claude OAuth MCP URL guidance in the same Connections tab (without an extension download). Existing option names and security checks are preserved. The public plugin deliberately excludes Facebook, LinkedIn, and YouTube API integrations and social publishing.
+
+Taxonomy term changes and classic menu writes require explicit per-ability administrator opt-in. Term assignment requires an exact revision check; a menu item can reference only an existing permitted post or public taxonomy term, not an arbitrary external URL.
 
 ## Setup
 

@@ -29,6 +29,7 @@ jobs:
           npx --yes @wordpress/env run cli wp eval-file /var/www/html/wp-content/plugins/bc-mcp-abilities/tests/chatgpt-connection-smoke.php
           npx --yes @wordpress/env run cli wp eval-file /var/www/html/wp-content/plugins/bc-mcp-abilities/tests/agent-parity-smoke.php
           npx --yes @wordpress/env run cli wp eval-file /var/www/html/wp-content/plugins/bc-mcp-abilities/tests/admin-dashboard-smoke.php
+          npx --yes @wordpress/env run cli wp eval-file /var/www/html/wp-content/plugins/bc-mcp-abilities/tests/taxonomy-menu-smoke.php
       - name: Stop disposable WordPress environment
         if: always()
         run: npx --yes @wordpress/env stop || true

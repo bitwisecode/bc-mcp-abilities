@@ -269,10 +269,11 @@ final class BC_MCP_Abilities_UI {
 		$server_on = BC_MCP_Abilities_Server::enabled();
 		$oauth_on  = BC_MCP_Abilities_OAuth::enabled();
 		$groups    = array(
-			__( 'Content & posts', 'bc-mcp-abilities' ) => array( 'create-draft', 'update-content', 'restore-revision', 'create-custom-draft', 'update-custom-content' ),
-			__( 'Elementor', 'bc-mcp-abilities' )       => array( 'elementor-update-text', 'elementor-undo', 'elementor-create-document', 'elementor-update-settings', 'elementor-add-element', 'elementor-delete-element', 'elementor-move-element', 'elementor-regenerate-css' ),
-			__( 'WooCommerce', 'bc-mcp-abilities' )     => array( 'wc-update-stock' ),
-			__( 'SEO & media', 'bc-mcp-abilities' )     => array( 'rank-math-update', 'upload-image', 'update-media-alt' ),
+			__( 'Content & posts', 'bc-mcp-abilities' )    => array( 'create-draft', 'update-content', 'restore-revision', 'create-custom-draft', 'update-custom-content' ),
+			__( 'Elementor', 'bc-mcp-abilities' )          => array( 'elementor-update-text', 'elementor-undo', 'elementor-create-document', 'elementor-update-settings', 'elementor-add-element', 'elementor-delete-element', 'elementor-move-element', 'elementor-regenerate-css' ),
+			__( 'WooCommerce', 'bc-mcp-abilities' )        => array( 'wc-update-stock' ),
+			__( 'Taxonomies & menus', 'bc-mcp-abilities' ) => array( 'create-taxonomy-term', 'assign-post-terms', 'create-menu', 'add-menu-item' ),
+			__( 'SEO & media', 'bc-mcp-abilities' )        => array( 'rank-math-update', 'upload-image', 'update-media-alt' ),
 		);
 
 		$grouped = array();
