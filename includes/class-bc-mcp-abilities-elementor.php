@@ -338,6 +338,12 @@ final class BC_MCP_Abilities_Elementor {
 		);
 	}
 
+	/**
+	 * Restore the most recent Elementor update when its revision and token match.
+	 *
+	 * @param array $input Validated ability input.
+	 * @return array|WP_Error
+	 */
 	public static function undo( $input ) {
 		$post_id = absint( $input['post_id'] );
 		$backup  = get_post_meta( $post_id, self::BACKUP_KEY, true );
