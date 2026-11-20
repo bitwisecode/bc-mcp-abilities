@@ -20,6 +20,10 @@ jobs:
           node-version: '24'
       - name: Start a disposable WordPress installation
         run: npx --yes @wordpress/env start
+      - name: Enable WordPress debugging for plugin-review regression
+        run: |
+          npx --yes @wordpress/env run cli wp config set WP_DEBUG true --raw
+          npx --yes @wordpress/env run cli wp eval 'if ( ! defined( "WP_DEBUG" ) || ! WP_DEBUG ) { WP_CLI::error( "WP_DEBUG must be enabled for this release-review smoke run." ); }'
       - name: Activate BC MCP Abilities
         run: npx --yes @wordpress/env run cli wp plugin activate bc-mcp-abilities
       - name: Verify registered abilities and authorization defaults
@@ -27,6 +31,7 @@ jobs:
           npx --yes @wordpress/env run cli wp eval-file /var/www/html/wp-content/plugins/bc-mcp-abilities/tests/smoke.php
           npx --yes @wordpress/env run cli wp eval-file /var/www/html/wp-content/plugins/bc-mcp-abilities/tests/standalone-smoke.php
           npx --yes @wordpress/env run cli wp eval-file /var/www/html/wp-content/plugins/bc-mcp-abilities/tests/chatgpt-connection-smoke.php
+          npx --yes @wordpress/env run cli wp eval-file /var/www/html/wp-content/plugins/bc-mcp-abilities/tests/plugin-directory-review-smoke.php
           npx --yes @wordpress/env run cli wp eval-file /var/www/html/wp-content/plugins/bc-mcp-abilities/tests/agent-parity-smoke.php
           npx --yes @wordpress/env run cli wp eval-file /var/www/html/wp-content/plugins/bc-mcp-abilities/tests/admin-dashboard-smoke.php
           npx --yes @wordpress/env run cli wp eval-file /var/www/html/wp-content/plugins/bc-mcp-abilities/tests/taxonomy-menu-smoke.php

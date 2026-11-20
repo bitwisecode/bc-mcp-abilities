@@ -20,11 +20,13 @@ $assert = static function ( $condition, $message ) {
 $previous_https = isset( $_SERVER['HTTPS'] ) ? $_SERVER['HTTPS'] : null;
 $previous_mcp   = get_option( BC_MCP_Abilities_Server::OPTION, '0' );
 $previous_oauth = get_option( BC_MCP_Abilities_OAuth::OPTION, '0' );
+$previous_clients = get_option( BC_MCP_Abilities_OAuth::CLIENTS_OPTION, array() );
 $previous_user  = get_current_user_id();
 
 $_SERVER['HTTPS'] = 'on';
 update_option( BC_MCP_Abilities_Server::OPTION, '1' );
 update_option( BC_MCP_Abilities_OAuth::OPTION, '1' );
+update_option( BC_MCP_Abilities_OAuth::CLIENTS_OPTION, array( 'bc_smoke' => array( 'client_name' => 'BC smoke test client', 'redirect_uris' => array( 'https://chatgpt.com/connector_platform_oauth_redirect' ), 'created_at' => time() ) ) );
 wp_set_current_user( 0 );
 
 $call = static function ( $method, $id, $params = array() ) {
@@ -161,6 +163,10 @@ $assert( ! empty( $payload['abilities'] ), 'The authorized editor must see permi
 $assert( get_current_user_id() === $editor, 'The Bearer token must set the WordPress current user.' );
 $names = wp_list_pluck( $payload['abilities'], 'name' );
 $assert( ! in_array( 'bc-mcp-abilities/site-info', $names, true ), 'Administrator-only abilities must stay hidden from editors.' );
+delete_option( BC_MCP_Abilities_OAuth::CLIENTS_OPTION );
+$assert( 401 === $authed( $valid, 'tools/call', array( 'name' => 'bc-list-abilities', 'arguments' => (object) array() ) )->get_status(), 'Removing a registered OAuth client must invalidate its previously issued bearer tokens.' );
+update_option( BC_MCP_Abilities_OAuth::CLIENTS_OPTION, array( 'bc_smoke' => array( 'client_name' => 'BC smoke test client', 'redirect_uris' => array( 'https://chatgpt.com/connector_platform_oauth_redirect' ), 'created_at' => time() ) ) );
+
 
 $assert( 401 === $authed( str_repeat( 'a', 64 ), 'tools/call', array( 'name' => 'bc-list-abilities' ) )->get_status(), 'Unknown or expired tokens must be rejected.' );
 $assert( 401 === $authed( str_repeat( 'a', 64 ), 'tools/list' )->get_status(), 'A presented invalid token must be rejected even for discovery so the client can refresh.' );
@@ -177,6 +183,7 @@ wp_delete_user( $reader );
 
 update_option( BC_MCP_Abilities_Server::OPTION, $previous_mcp );
 update_option( BC_MCP_Abilities_OAuth::OPTION, $previous_oauth );
+update_option( BC_MCP_Abilities_OAuth::CLIENTS_OPTION, $previous_clients );
 if ( null === $previous_https ) {
 	unset( $_SERVER['HTTPS'] );
 } else {

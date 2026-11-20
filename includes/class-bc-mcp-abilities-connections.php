@@ -64,7 +64,7 @@ final class BC_MCP_Abilities_Connections {
 	 * @return string
 	 */
 	public static function sanitize_toggle( $value ) {
-		return '1' === (string) $value ? '1' : '0';
+		return ( is_string( $value ) || is_int( $value ) ) && '1' === (string) $value ? '1' : '0';
 	}
 
 	/**
