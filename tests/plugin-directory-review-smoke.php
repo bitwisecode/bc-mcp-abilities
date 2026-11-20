@@ -31,7 +31,7 @@ foreach (
 		'https://openai.com/policies/privacy-policy/',
 		'https://www.anthropic.com/legal/consumer-terms',
 		'https://www.anthropic.com/legal/privacy',
-		'what the user is authorized to access',
+		'that the user is authorized to access',
 		'No other images are imported automatically.',
 	) as $required
 ) {
