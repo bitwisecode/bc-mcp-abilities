@@ -101,7 +101,7 @@ final class BC_MCP_Abilities_Server {
 	 * @return void
 	 */
 	public static function challenge() {
-		$metadata = esc_url_raw( rest_url( 'bc-mcp/v1/oauth/resource' ) );
+		$metadata = esc_url_raw( home_url( '/.well-known/oauth-protected-resource/wp-json/bc-mcp/v1/server' ) );
 		header( 'WWW-Authenticate: Bearer resource_metadata="' . $metadata . '", scope="mcp"' );
 	}
 
