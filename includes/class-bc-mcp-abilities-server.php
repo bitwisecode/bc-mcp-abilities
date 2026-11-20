@@ -157,11 +157,11 @@ final class BC_MCP_Abilities_Server {
 
 		return array(
 			array(
-				'name'           => 'bc-list-abilities',
-				'title'          => 'List BC WordPress Abilities',
-				'description'    => 'Discover permitted WordPress abilities registered by BC MCP Abilities.',
-				'inputSchema'    => $schema,
-				'annotations'    => array( 'readOnlyHint' => true ),
+				'name'        => 'bc-list-abilities',
+				'title'       => 'List BC WordPress Abilities',
+				'description' => 'Discover permitted WordPress abilities registered by BC MCP Abilities.',
+				'inputSchema' => $schema,
+				'annotations' => array( 'readOnlyHint' => true ),
 			),
 			array(
 				'name'        => 'bc-get-ability-info',
@@ -170,7 +170,10 @@ final class BC_MCP_Abilities_Server {
 				'inputSchema' => array(
 					'type'                 => 'object',
 					'properties'           => array(
-						'ability_name' => array( 'type' => 'string', 'minLength' => 3 ),
+						'ability_name' => array(
+							'type'      => 'string',
+							'minLength' => 3,
+						),
 					),
 					'required'             => array( 'ability_name' ),
 					'additionalProperties' => false,
@@ -184,13 +187,22 @@ final class BC_MCP_Abilities_Server {
 				'inputSchema' => array(
 					'type'                 => 'object',
 					'properties'           => array(
-						'ability_name' => array( 'type' => 'string', 'minLength' => 3 ),
-						'parameters'   => array( 'type' => 'object', 'additionalProperties' => true ),
+						'ability_name' => array(
+							'type'      => 'string',
+							'minLength' => 3,
+						),
+						'parameters'   => array(
+							'type'                 => 'object',
+							'additionalProperties' => true,
+						),
 					),
 					'required'             => array( 'ability_name', 'parameters' ),
 					'additionalProperties' => false,
 				),
-				'annotations' => array( 'readOnlyHint' => false, 'destructiveHint' => true ),
+				'annotations' => array(
+					'readOnlyHint'    => false,
+					'destructiveHint' => true,
+				),
 			),
 		);
 	}
@@ -291,7 +303,10 @@ final class BC_MCP_Abilities_Server {
 				array(
 					'jsonrpc' => '2.0',
 					'id'      => null,
-					'error'   => array( 'code' => -32600, 'message' => 'Invalid JSON-RPC request.' ),
+					'error'   => array(
+						'code'    => -32600,
+						'message' => 'Invalid JSON-RPC request.',
+					),
 				),
 				400
 			);
@@ -307,7 +322,10 @@ final class BC_MCP_Abilities_Server {
 					array(
 						'protocolVersion' => '2025-11-25',
 						'capabilities'    => array( 'tools' => array( 'listChanged' => false ) ),
-						'serverInfo'      => array( 'name' => 'bc-mcp-abilities', 'version' => BC_MCP_ABILITIES_VERSION ),
+						'serverInfo'      => array(
+							'name'    => 'bc-mcp-abilities',
+							'version' => BC_MCP_ABILITIES_VERSION,
+						),
 						'instructions'    => 'Use bc-list-abilities first. Inspect schemas before invoking. Never change WordPress content without explicit user approval.',
 					)
 				);
@@ -323,7 +341,7 @@ final class BC_MCP_Abilities_Server {
 				if ( 'bc-list-abilities' === $name ) {
 					return self::success( $id, self::tool_result( array( 'abilities' => self::list_abilities() ) ) );
 				}
-				$target = isset( $args['ability_name'] ) ? $args['ability_name'] : '';
+				$target  = isset( $args['ability_name'] ) ? $args['ability_name'] : '';
 				$ability = self::bc_ability( $target );
 				if ( ! $ability ) {
 					return self::success( $id, self::tool_result( array( 'error' => 'Unknown BC ability.' ), true ) );
@@ -346,7 +364,10 @@ final class BC_MCP_Abilities_Server {
 			array(
 				'jsonrpc' => '2.0',
 				'id'      => $id,
-				'error'   => array( 'code' => -32601, 'message' => 'Method not found.' ),
+				'error'   => array(
+					'code'    => -32601,
+					'message' => 'Method not found.',
+				),
 			),
 			200
 		);

@@ -283,7 +283,7 @@ final class BC_MCP_Abilities_OAuth {
 		if ( count( $clients ) >= self::MAX_CLIENTS ) {
 			self::fail( 'too_many_clients', 429 );
 		}
-		$id = 'bc_' . bin2hex( random_bytes( 24 ) );
+		$id             = 'bc_' . bin2hex( random_bytes( 24 ) );
 		$clients[ $id ] = array(
 			'redirect_uris' => array_values( $body['redirect_uris'] ),
 			'client_name'   => sanitize_text_field( (string) ( $body['client_name'] ?? 'ChatGPT' ) ),
@@ -312,15 +312,15 @@ final class BC_MCP_Abilities_OAuth {
 	 * @return array|WP_Error
 	 */
 	private static function validated_authorization( $input ) {
-		$client_id  = self::field( 'client_id', $input );
-		$redirect   = self::field( 'redirect_uri', $input );
-		$challenge  = self::field( 'code_challenge', $input );
-		$method     = self::field( 'code_challenge_method', $input );
-		$resource   = self::field( 'resource', $input );
-		$scope      = self::field( 'scope', $input );
-		$state      = self::field( 'state', $input );
-		$response   = self::field( 'response_type', $input );
-		$clients    = self::clients();
+		$client_id = self::field( 'client_id', $input );
+		$redirect  = self::field( 'redirect_uri', $input );
+		$challenge = self::field( 'code_challenge', $input );
+		$method    = self::field( 'code_challenge_method', $input );
+		$resource  = self::field( 'resource', $input );
+		$scope     = self::field( 'scope', $input );
+		$state     = self::field( 'state', $input );
+		$response  = self::field( 'response_type', $input );
+		$clients   = self::clients();
 
 		if ( ! isset( $clients[ $client_id ] ) || ! in_array( $redirect, $clients[ $client_id ]['redirect_uris'], true ) || ! self::allowed_redirect( $redirect ) ) {
 			return new WP_Error( 'invalid_client' );
@@ -333,12 +333,12 @@ final class BC_MCP_Abilities_OAuth {
 			return new WP_Error( 'invalid_scope' );
 		}
 		return array(
-			'client_id'     => $client_id,
-			'redirect_uri'  => $redirect,
-			'challenge'     => $challenge,
-			'resource'      => $resource,
-			'scope'         => implode( ' ', $scopes ),
-			'state'         => $state,
+			'client_id'    => $client_id,
+			'redirect_uri' => $redirect,
+			'challenge'    => $challenge,
+			'resource'     => $resource,
+			'scope'        => implode( ' ', $scopes ),
+			'state'        => $state,
 		);
 	}
 
@@ -386,7 +386,14 @@ final class BC_MCP_Abilities_OAuth {
 			}
 			$choice = self::field( 'bc_decision', $_POST );
 			if ( 'approve' !== $choice ) {
-				self::client_redirect( $auth, array( 'error' => 'access_denied', 'state' => $auth['state'], 'iss' => self::issuer() ) );
+				self::client_redirect(
+					$auth,
+					array(
+						'error' => 'access_denied',
+						'state' => $auth['state'],
+						'iss'   => self::issuer(),
+					)
+				);
 			}
 			$code = bin2hex( random_bytes( 32 ) );
 			set_transient(
@@ -397,7 +404,14 @@ final class BC_MCP_Abilities_OAuth {
 				),
 				5 * MINUTE_IN_SECONDS
 			);
-			self::client_redirect( $auth, array( 'code' => $code, 'state' => $auth['state'], 'iss' => self::issuer() ) );
+			self::client_redirect(
+				$auth,
+				array(
+					'code'  => $code,
+					'state' => $auth['state'],
+					'iss'   => self::issuer(),
+				)
+			);
 		}
 
 		nocache_headers();
