@@ -22,6 +22,8 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities.php'
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-integrations.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-elementor.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-woocommerce.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-content.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-elementor-agent.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-server.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-oauth.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-connections.php';
@@ -34,3 +36,5 @@ BC_MCP_Abilities_Connections::init();
 add_action( 'wp_abilities_api_init', array( 'BC_MCP_Abilities_Integrations', 'register' ), 20 );
 add_action( 'wp_abilities_api_init', array( 'BC_MCP_Abilities_Elementor', 'register' ), 20 );
 add_action( 'wp_abilities_api_init', array( 'BC_MCP_Abilities_WooCommerce', 'register' ), 20 );
+add_action( 'wp_abilities_api_init', array( 'BC_MCP_Abilities_Content', 'register' ), 20 );
+add_action( 'wp_abilities_api_init', array( 'BC_MCP_Abilities_Elementor_Agent', 'register' ), 20 );
