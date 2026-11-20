@@ -21,6 +21,8 @@ jobs:
         run: npx --yes @wordpress/env start
       - name: Install and activate real Elementor plugin
         run: npx --yes @wordpress/env run cli wp plugin install elementor --activate
+      - name: Activate BC MCP Abilities
+        run: npx --yes @wordpress/env run cli wp plugin activate bc-mcp-abilities
       - name: Run Elementor create/edit/move/delete/undo/CSS integration
         run: npx --yes @wordpress/env run cli wp eval-file /var/www/html/wp-content/plugins/bc-mcp-abilities/tests/elementor-integration.php
       - name: Stop disposable WordPress
