@@ -12,6 +12,22 @@ defined( 'ABSPATH' ) || exit;
  */
 final class BC_MCP_Abilities {
 	/**
+	 * Registered read-only ability catalog, including hidden entries.
+	 *
+	 * @var array<string,array>
+	 */
+	private static $read_catalog = array();
+
+	/**
+	 * Return all first-party read-only entries for the exposure settings.
+	 *
+	 * @return array
+	 */
+	public static function read_catalog() {
+		return self::$read_catalog;
+	}
+
+	/**
 	 * Init using the native WordPress Abilities API.
 	 *
 	 * @return void
@@ -86,6 +102,18 @@ final class BC_MCP_Abilities {
 	 * @return void
 	 */
 	public static function add( $slug, $label, $description, $inputs, $callback, $read_only = true ) {
+		if ( $read_only ) {
+			self::$read_catalog[ $slug ] = array(
+				'label'       => $label,
+				'description' => $description,
+			);
+			// Do not register a hidden read ability. This also removes discovery
+			// and REST/MCP client exposure, not merely execution permissions.
+			if ( BC_MCP_Abilities_Admin::is_read_disabled( $slug ) ) {
+				return;
+			}
+		}
+
 		wp_register_ability(
 			'bc-mcp-abilities/' . $slug,
 			array(
@@ -94,7 +122,18 @@ final class BC_MCP_Abilities {
 				'category'            => 'bc-mcp-abilities',
 				'input_schema'        => $inputs,
 				'output_schema'       => self::output_schema(),
-				'execute_callback'    => is_array( $callback ) ? $callback : array( __CLASS__, $callback ),
+				'execute_callback'    => static function ( $input = array() ) use ( $callback, $slug, $read_only ) {
+					$handler = is_array( $callback ) ? $callback : array( __CLASS__, $callback );
+					try {
+						$result = call_user_func( $handler, $input );
+						$success = ! is_wp_error( $result ) && ( ! is_array( $result ) || ! isset( $result['success'] ) || true === $result['success'] );
+						BC_MCP_Abilities_Audit::record( $slug, $read_only, $success );
+						return $result;
+					} catch ( Throwable $error ) {
+						BC_MCP_Abilities_Audit::record( $slug, $read_only, false );
+						throw $error;
+					}
+				},
 				'permission_callback' => static function () use ( $read_only, $slug ) {
 					return $read_only ? self::can_read( $slug ) : self::can_write( $slug );
 				},
@@ -119,6 +158,9 @@ final class BC_MCP_Abilities {
 	 * @return bool
 	 */
 	public static function can_read( $slug ) {
+		if ( BC_MCP_Abilities_Admin::is_read_disabled( $slug ) ) {
+			return false;
+		}
 		// Infrastructure and installed-plugin details are administrator-only.
 		if ( 'site-info' === $slug ) {
 			return is_user_logged_in() && current_user_can( 'manage_options' );
