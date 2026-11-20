@@ -20,6 +20,48 @@ This integration is **independent** of the official MCP Adapter, the Jobayer AI 
 7. Sign into WordPress when redirected, then approve the permission screen.
 8. Discover tools and execute only read operations before testing changes. The three exposed MCP tools are `bc-list-abilities`, `bc-get-ability-info`, and `bc-execute-ability`. The latter invokes only `bc-mcp-abilities/*` and needs an extra `confirmed=true` value for a write.
 
+## Automated HTTP end-to-end check
+
+`tests/chatgpt-oauth-http-e2e.py` replays the ChatGPT connection sequence over real HTTP — protected-resource and authorization-server discovery, DCR, WordPress sign-in, consent, PKCE token exchange, `initialize`, `notifications/initialized`, `tools/list`, and a read-only `tools/call` of `bc-list-abilities` — plus negative cases (missing, malformed, unknown, revoked tokens; replayed refresh tokens; users without `edit_posts`; JSON-RPC errors). It never calls a write ability.
+
+```bash
+python3 tests/chatgpt-oauth-http-e2e.py https://staging.example.com EDITOR_LOGIN EDITOR_PASSWORD [SUBSCRIBER_LOGIN SUBSCRIBER_PASSWORD]
+```
+
+Use dedicated staging test accounts only. Each run registers one DCR client.
+
+## Troubleshooting with diagnostics
+
+Enable **temporary OAuth connection diagnostics** under **Connect ChatGPT directly**, reconnect ChatGPT, and refresh the settings page. Each event shows the stage, result, MCP method, whether an `Authorization` header reached PHP and the token check outcome. Only fixed labels are stored (never tokens, codes, client IDs, cookies, IPs or bodies); at most 50 events are kept for 24 hours and they are deleted when diagnostics are turned off.
+
+A healthy connection, oldest first:
+
+| Stage | Result | MCP method | Authorization | Detail |
+| --- | --- | --- | --- | --- |
+| mcp | initialized | initialize | anonymous | protocol_2025-… (ChatGPT's tool scan) |
+| mcp | listed | tools/list | anonymous | |
+| registration | registered | | | |
+| authorization | approved | | | |
+| token | received → issued | | | |
+| mcp | initialized | initialize | token_valid | protocol_… |
+| mcp | listed | tools/list | token_valid | |
+| mcp | call_succeeded | tools/call | token_valid | bc-list-abilities |
+
+How to read failures:
+
+- `unauthorized` · `missing` · `token_missing` on `tools/call` — no `Authorization` header reached PHP. The plugin already reads `HTTP_AUTHORIZATION`, `REDIRECT_HTTP_AUTHORIZATION` and `getallheaders()`. If it persists, the host or a security/cache plugin is removing the header before PHP; WordPress's default `.htaccess` line `RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]` restores it on Apache/LiteSpeed.
+- `token_unknown_or_expired` — the token is not in WordPress (expired after one hour, revoked, or the transient/object cache was flushed). ChatGPT should refresh; if it cannot, reconnect.
+- `token_resource_mismatch` — the token was issued for a different URL (for example after changing the site URL or permalinks). Reconnect.
+- `forbidden` / `user_not_permitted` — the authorizing WordPress user lacks `edit_posts`.
+- `initialized` with `protocol_mismatch_offered_…` — the client asked for a protocol revision this server does not implement.
+- `unknown_method` — the client called an MCP method this server does not offer (e.g. `resources/list`); it receives JSON-RPC error `-32601`, which is expected and harmless.
+
+WordPress evaluates REST permission callbacks a second time while building the `Allow` header; this plugin records each request once.
+
+### Fixed: tools could not be imported (2026-11)
+
+`bc-list-abilities` advertised `"inputSchema": {"type": "object", "properties": []}`. PHP encodes an empty array as a JSON list, which is not a valid JSON Schema `properties` value; OpenAI rejects such tool schemas (`[] is not of type 'object'`). Discovery and OAuth succeeded, but ChatGPT never called a tool. The schema now encodes `"properties": {}`, and `tests/chatgpt-connection-smoke.php` guards against regressions.
+
 ## ChatGPT account limitations
 
 Custom MCP server creation and full MCP write access currently depend on ChatGPT's plan and workspace policies. Official OpenAI documentation lists full functionality for **Business / Enterprise / Edu**, with Pro supporting limited read/fetch. A Plus account may not show the create-custom-MCP action. This is a ChatGPT product limitation, not a failure of BC MCP Abilities.

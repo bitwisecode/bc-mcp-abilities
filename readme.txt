@@ -34,4 +34,5 @@ No. Every ability requires a logged-in WordPress user with appropriate permissio
 == Changelog ==
 
 = 0.1.0 =
+* Fix ChatGPT tool import: `bc-list-abilities` now publishes a valid JSON Schema (`properties: {}`); MCP protocol version negotiation; Authorization header fallback for Apache/LiteSpeed hosts; RFC 6750-compliant challenges; richer, privacy-safe connection diagnostics.
 * Developer preview: 35 abilities, including new eligible custom post type operations and safe Elementor structure/JSON/CSS tools. No unrestricted source editing.

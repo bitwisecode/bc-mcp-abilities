@@ -18,12 +18,113 @@ final class BC_MCP_Abilities_Server {
 	const OPTION = 'bc_mcp_standalone_enabled';
 
 	/**
+	 * MCP protocol revisions this stateless JSON transport implements, newest first.
+	 */
+	const PROTOCOL_VERSIONS = array( '2025-11-25', '2025-06-18', '2025-03-26' );
+
+	/**
+	 * Protocol methods that return only static server metadata, never site data.
+	 */
+	const PUBLIC_METHODS = array( 'initialize', 'notifications/initialized', 'tools/list', 'ping' );
+
+	/**
+	 * Whether the current request presented a valid Bearer token (diagnostics only).
+	 *
+	 * @var bool
+	 */
+	private static $authenticated = false;
+
+	/**
+	 * Request already recorded by authorize(). WordPress re-runs permission
+	 * callbacks while building the Allow header (rest_send_allow_header), which
+	 * would otherwise log every rejected request twice.
+	 *
+	 * @var string
+	 */
+	private static $traced_request = '';
+
+	/**
 	 * Register WordPress REST routes.
 	 *
 	 * @return void
 	 */
 	public static function init() {
 		add_action( 'rest_api_init', array( __CLASS__, 'register_routes' ) );
+		add_filter( 'rest_post_dispatch', array( __CLASS__, 'end_request' ), 99 );
+	}
+
+	/**
+	 * Reset per-request diagnostic state after the Allow header is built.
+	 *
+	 * @param WP_HTTP_Response $response Response.
+	 * @return WP_HTTP_Response
+	 */
+	public static function end_request( $response ) {
+		self::$traced_request = '';
+		self::$authenticated  = false;
+		return $response;
+	}
+
+	/**
+	 * Negotiate the protocol revision per the MCP lifecycle rules: echo the
+	 * client's requested version when supported, otherwise offer the latest.
+	 *
+	 * @param mixed $requested Client-requested protocol version.
+	 * @return string
+	 */
+	public static function negotiate_version( $requested ) {
+		if ( is_string( $requested ) && in_array( $requested, self::PROTOCOL_VERSIONS, true ) ) {
+			return $requested;
+		}
+		return self::PROTOCOL_VERSIONS[0];
+	}
+
+	/**
+	 * Map a JSON-RPC method to a fixed diagnostic label; never log arbitrary input.
+	 *
+	 * @param mixed $method JSON-RPC method.
+	 * @return string
+	 */
+	public static function method_label( $method ) {
+		$known = array( 'initialize', 'notifications/initialized', 'notifications/cancelled', 'ping', 'tools/list', 'tools/call', 'resources/list', 'resources/templates/list', 'prompts/list', 'logging/setLevel', 'completion/complete' );
+		if ( ! is_string( $method ) || '' === $method ) {
+			return 'none';
+		}
+		if ( in_array( $method, $known, true ) ) {
+			return $method;
+		}
+		return 0 === strpos( $method, 'notifications/' ) ? 'notifications/other' : 'other';
+	}
+
+	/**
+	 * Read the Authorization header, including the copies that Apache/LiteSpeed
+	 * CGI setups (e.g. Hostinger shared hosting) place in REDIRECT_HTTP_AUTHORIZATION.
+	 *
+	 * @param WP_REST_Request $request Current request.
+	 * @return string
+	 */
+	public static function authorization_header( $request ) {
+		$header = (string) $request->get_header( 'authorization' );
+		if ( '' !== $header ) {
+			return $header;
+		}
+		// Only fall back to the live HTTP request for the route it is serving.
+		if ( '/bc-mcp/v1/server' !== $request->get_route() ) {
+			return '';
+		}
+		foreach ( array( 'HTTP_AUTHORIZATION', 'REDIRECT_HTTP_AUTHORIZATION' ) as $key ) {
+			if ( ! empty( $_SERVER[ $key ] ) && is_string( $_SERVER[ $key ] ) ) {
+				return trim( wp_unslash( $_SERVER[ $key ] ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Opaque credential, validated by strict regex in bearer_user().
+			}
+		}
+		if ( function_exists( 'getallheaders' ) ) {
+			foreach ( (array) getallheaders() as $name => $value ) {
+				if ( is_string( $name ) && 'authorization' === strtolower( $name ) && is_string( $value ) ) {
+					return trim( $value );
+				}
+			}
+		}
+		return '';
 	}
 
 	/**
@@ -99,48 +200,110 @@ final class BC_MCP_Abilities_Server {
 			return new WP_Error( 'bc_mcp_disabled', __( 'Standalone MCP is disabled.', 'bc-mcp-abilities' ), array( 'status' => 404 ) );
 		}
 
-		// ChatGPT scans MCP tools before linking the WordPress account. These
-		// protocol methods only return static server metadata, never site data.
-		// Every tools/call still requires a valid OAuth Bearer token.
 		$message = $request->get_json_params();
 		$method  = is_array( $message ) && isset( $message['method'] ) && is_string( $message['method'] ) ? $message['method'] : '';
-		if ( is_array( $message ) && '2.0' === ( $message['jsonrpc'] ?? '' ) && in_array( $method, array( 'initialize', 'notifications/initialized', 'tools/list', 'ping' ), true ) ) {
+		$label   = self::method_label( $method );
+		$bearer  = self::authorization_header( $request );
+		$auth    = '' === $bearer ? 'missing' : ( 0 === stripos( $bearer, 'Bearer ' ) ? 'bearer' : 'other_scheme' );
+
+		// ChatGPT scans MCP tools before linking the WordPress account. These
+		// protocol methods only return static server metadata, never site data,
+		// so they are public when no credential is presented. Every other
+		// method, including tools/call, requires a valid OAuth Bearer token.
+		$public              = is_array( $message ) && '2.0' === ( $message['jsonrpc'] ?? '' ) && in_array( $method, self::PUBLIC_METHODS, true );
+		self::$authenticated = false;
+		if ( $public && 'missing' === $auth ) {
 			return true;
 		}
 
-		$bearer = $request->get_header( 'authorization' );
-		$user   = BC_MCP_Abilities_OAuth::bearer_user( $bearer );
+		$user = BC_MCP_Abilities_OAuth::bearer_user( $bearer );
 		if ( is_wp_error( $user ) || ! $user ) {
-			self::challenge();
-			BC_MCP_Abilities_OAuth::trace( 'mcp', 'unauthorized' );
+			$reason = is_wp_error( $user ) ? $user->get_error_code() : '';
+			$detail = array(
+				'bc_mcp_oauth_missing'      => 'token_missing',
+				'bc_mcp_oauth_malformed'    => 'token_malformed',
+				'bc_mcp_oauth_unknown'      => 'token_unknown_or_expired',
+				'bc_mcp_oauth_wrong_target' => 'token_resource_mismatch',
+				'bc_mcp_oauth_scope'        => 'token_scope_insufficient',
+				'bc_mcp_oauth_denied'       => 'user_not_permitted',
+				'bc_mcp_oauth_disabled'     => 'oauth_disabled',
+			);
+			$detail = $detail[ $reason ] ?? 'token_invalid';
+			// RFC 6750 section 3.1: no error code when the request carried no credential.
+			self::challenge( 'missing' === $auth ? '' : ( 'token_scope_insufficient' === $detail ? 'insufficient_scope' : 'invalid_token' ) );
+			self::trace_once(
+				$request,
+				'unauthorized',
+				array(
+					'method' => $label,
+					'auth'   => $auth,
+					'detail' => $detail,
+				)
+			);
+			if ( 'token_scope_insufficient' === $detail ) {
+				return new WP_Error( 'bc_mcp_insufficient_scope', __( 'The access token lacks the mcp scope.', 'bc-mcp-abilities' ), array( 'status' => 403 ) );
+			}
 			return new WP_Error( 'bc_mcp_unauthorized', __( 'OAuth authorization required.', 'bc-mcp-abilities' ), array( 'status' => 401 ) );
 		}
 
 		wp_set_current_user( (int) $user );
 		if ( ! current_user_can( 'edit_posts' ) ) {
+			self::trace_once(
+				$request,
+				'forbidden',
+				array(
+					'method' => $label,
+					'auth'   => $auth,
+					'detail' => 'user_not_permitted',
+				)
+			);
 			return new WP_Error( 'bc_mcp_forbidden', __( 'This user lacks WordPress editing permissions.', 'bc-mcp-abilities' ), array( 'status' => 403 ) );
 		}
+		self::$authenticated = true;
 		return true;
+	}
+
+	/**
+	 * Record an authorization outcome once per HTTP request.
+	 *
+	 * @param WP_REST_Request $request Current request.
+	 * @param string          $result  Diagnostic result.
+	 * @param array           $context Diagnostic labels.
+	 * @return void
+	 */
+	private static function trace_once( $request, $result, $context ) {
+		$key = spl_object_hash( $request );
+		if ( self::$traced_request === $key ) {
+			return;
+		}
+		self::$traced_request = $key;
+		BC_MCP_Abilities_OAuth::trace( 'mcp', $result, $context );
 	}
 
 	/**
 	 * Emit the OAuth discovery hint required by remote MCP clients.
 	 *
+	 * @param string $error RFC 6750 error code, or empty when no credential was sent.
 	 * @return void
 	 */
-	public static function challenge() {
+	public static function challenge( $error = '' ) {
 		$metadata = esc_url_raw( home_url( '/.well-known/oauth-protected-resource/wp-json/bc-mcp/v1/server' ) );
-		header( 'WWW-Authenticate: Bearer resource_metadata="' . $metadata . '", scope="mcp", error="invalid_token", error_description="WordPress OAuth sign-in required"' );
+		$value    = 'Bearer resource_metadata="' . $metadata . '", scope="mcp"';
+		if ( in_array( $error, array( 'invalid_token', 'insufficient_scope' ), true ) ) {
+			$value .= ', error="' . $error . '"';
+		}
+		header( 'WWW-Authenticate: ' . $value );
 	}
 
 	/**
 	 * Create the JSON-RPC response envelope.
 	 *
-	 * @param mixed $id     Request identifier.
-	 * @param mixed $result Result content.
+	 * @param mixed  $id      Request identifier.
+	 * @param mixed  $result  Result content.
+	 * @param string $version Negotiated protocol version for the response header.
 	 * @return WP_REST_Response
 	 */
-	private static function success( $id, $result ) {
+	private static function success( $id, $result, $version = '' ) {
 		$response = new WP_REST_Response(
 			array(
 				'jsonrpc' => '2.0',
@@ -149,7 +312,7 @@ final class BC_MCP_Abilities_Server {
 			),
 			200
 		);
-		$response->header( 'MCP-Protocol-Version', '2025-11-25' );
+		$response->header( 'MCP-Protocol-Version', '' !== $version ? $version : self::PROTOCOL_VERSIONS[0] );
 		$response->header( 'Cache-Control', 'no-store' );
 		return $response;
 	}
@@ -174,7 +337,7 @@ final class BC_MCP_Abilities_Server {
 			),
 			200
 		);
-		$response->header( 'MCP-Protocol-Version', '2025-11-25' );
+		$response->header( 'MCP-Protocol-Version', self::PROTOCOL_VERSIONS[0] );
 		$response->header( 'Cache-Control', 'no-store' );
 		return $response;
 	}
@@ -185,9 +348,11 @@ final class BC_MCP_Abilities_Server {
 	 * @return array
 	 */
 	private static function tools() {
+		// JSON Schema requires "properties" to be an object. An empty PHP array
+		// encodes as [] which OpenAI/ChatGPT reject when importing tools.
 		$schema = array(
 			'type'                 => 'object',
-			'properties'           => array(),
+			'properties'           => new stdClass(),
 			'additionalProperties' => false,
 		);
 		// ChatGPT can read the three tool descriptors without authenticating,
@@ -348,74 +513,114 @@ final class BC_MCP_Abilities_Server {
 	 * @return WP_REST_Response
 	 */
 	public static function respond( $request ) {
+		$auth = self::$authenticated ? 'token_valid' : 'anonymous';
 		$body = $request->get_body();
 		if ( strlen( (string) $body ) > 1024 * 1024 ) {
-			BC_MCP_Abilities_OAuth::trace( 'mcp', 'invalid_request' );
+			BC_MCP_Abilities_OAuth::trace(
+				'mcp',
+				'invalid_request',
+				array(
+					'auth'   => $auth,
+					'detail' => 'too_large',
+				)
+			);
 			return self::error( null, -32600, 'Request exceeds 1 MB.' );
 		}
 		$data = $request->get_json_params();
 		if ( ! is_array( $data ) || '2.0' !== ( $data['jsonrpc'] ?? '' ) || ! isset( $data['method'] ) || ! is_string( $data['method'] ) ) {
-			BC_MCP_Abilities_OAuth::trace( 'mcp', 'invalid_request' );
+			BC_MCP_Abilities_OAuth::trace(
+				'mcp',
+				'invalid_request',
+				array(
+					'auth'   => $auth,
+					'detail' => is_array( $data ) && array_key_exists( 0, $data ) ? 'batch_unsupported' : 'not_jsonrpc',
+				)
+			);
 			return self::error( null, -32600, 'Invalid JSON-RPC request.' );
 		}
 		$id     = array_key_exists( 'id', $data ) ? $data['id'] : null;
 		$method = (string) $data['method'];
 		$params = isset( $data['params'] ) && is_array( $data['params'] ) ? $data['params'] : array();
+		$label  = self::method_label( $method );
+		$trace  = array(
+			'method' => $label,
+			'auth'   => $auth,
+		);
+
+		// JSON-RPC notifications never receive a response body: 202 Accepted.
+		if ( 0 === strpos( $method, 'notifications/' ) ) {
+			return new WP_REST_Response( null, 202 );
+		}
 
 		switch ( $method ) {
 			case 'initialize':
-				BC_MCP_Abilities_OAuth::trace( 'mcp', 'initialized' );
+				$requested       = $params['protocolVersion'] ?? '';
+				$version         = self::negotiate_version( $requested );
+				$trace['detail'] = $version === $requested ? 'protocol_' . $version : 'protocol_mismatch_offered_' . $version;
+				BC_MCP_Abilities_OAuth::trace( 'mcp', 'initialized', $trace );
 				return self::success(
 					$id,
 					array(
-						'protocolVersion' => '2025-11-25',
+						'protocolVersion' => $version,
 						'capabilities'    => array( 'tools' => array( 'listChanged' => false ) ),
 						'serverInfo'      => array(
 							'name'    => 'bc-mcp-abilities',
 							'version' => BC_MCP_ABILITIES_VERSION,
 						),
 						'instructions'    => 'Use bc-list-abilities first. Inspect schemas before invoking. Never change WordPress content without explicit user approval.',
-					)
+					),
+					$version
 				);
-			case 'notifications/initialized':
-				return new WP_REST_Response( null, 202 );
 			case 'ping':
 				return self::success( $id, (object) array() );
 			case 'tools/list':
-				BC_MCP_Abilities_OAuth::trace( 'mcp', 'listed' );
+				BC_MCP_Abilities_OAuth::trace( 'mcp', 'listed', $trace );
 				return self::success( $id, array( 'tools' => self::tools() ) );
 			case 'tools/call':
-				BC_MCP_Abilities_OAuth::trace( 'mcp', 'called' );
-				$name = isset( $params['name'] ) ? (string) $params['name'] : '';
-				$args = isset( $params['arguments'] ) && is_array( $params['arguments'] ) ? $params['arguments'] : array();
-				if ( 'bc-list-abilities' === $name ) {
-					return self::success( $id, self::tool_result( array( 'abilities' => self::list_abilities() ) ) );
-				}
-				$target  = isset( $args['ability_name'] ) ? $args['ability_name'] : '';
-				$ability = self::bc_ability( $target );
-				if ( ! $ability ) {
-					return self::success( $id, self::tool_result( array( 'error' => 'Unknown BC ability.' ), true ) );
-				}
-				if ( 'bc-get-ability-info' === $name ) {
-					return self::success( $id, self::tool_result( self::ability_info( $ability ) ) );
-				}
-				if ( 'bc-execute-ability' === $name ) {
-					$slug   = substr( (string) $target, strlen( 'bc-mcp-abilities/' ) );
-					$writes = array_keys( BC_MCP_Abilities_Admin::writable_abilities() );
-					if ( in_array( $slug, $writes, true ) && true !== ( $args['confirmed'] ?? false ) ) {
-						return self::success( $id, self::tool_result( array( 'error' => 'Explicit user confirmation is required for WordPress writes.' ), true ) );
-					}
-					$input  = isset( $args['parameters'] ) && is_array( $args['parameters'] ) ? $args['parameters'] : array();
-					$output = $ability->execute( $input );
-					if ( is_wp_error( $output ) ) {
-						return self::success( $id, self::tool_result( array( 'error' => $output->get_error_message() ), true ) );
-					}
-					return self::success( $id, self::tool_result( $output ) );
-				}
-				return self::success( $id, self::tool_result( array( 'error' => 'Unknown MCP tool.' ), true ) );
+				$name            = isset( $params['name'] ) && is_string( $params['name'] ) ? $params['name'] : '';
+				$args            = isset( $params['arguments'] ) && is_array( $params['arguments'] ) ? $params['arguments'] : array();
+				$result          = self::call_tool( $name, $args );
+				$trace['detail'] = in_array( $name, array( 'bc-list-abilities', 'bc-get-ability-info', 'bc-execute-ability' ), true ) ? $name : 'unknown_tool';
+				BC_MCP_Abilities_OAuth::trace( 'mcp', $result['isError'] ? 'call_failed' : 'call_succeeded', $trace );
+				return self::success( $id, $result );
 		}
 
-		BC_MCP_Abilities_OAuth::trace( 'mcp', 'unknown_method' );
+		BC_MCP_Abilities_OAuth::trace( 'mcp', 'unknown_method', $trace );
 		return self::error( $id, -32601, 'Method not found.' );
+	}
+
+	/**
+	 * Run one of the three MCP tools for the authenticated WordPress user.
+	 *
+	 * @param string $name Tool name.
+	 * @param array  $args Tool arguments.
+	 * @return array MCP tool result.
+	 */
+	private static function call_tool( $name, $args ) {
+		if ( 'bc-list-abilities' === $name ) {
+			return self::tool_result( array( 'abilities' => self::list_abilities() ) );
+		}
+		$target  = isset( $args['ability_name'] ) ? $args['ability_name'] : '';
+		$ability = self::bc_ability( $target );
+		if ( ! $ability ) {
+			return self::tool_result( array( 'error' => 'Unknown BC ability.' ), true );
+		}
+		if ( 'bc-get-ability-info' === $name ) {
+			return self::tool_result( self::ability_info( $ability ) );
+		}
+		if ( 'bc-execute-ability' === $name ) {
+			$slug   = substr( (string) $target, strlen( 'bc-mcp-abilities/' ) );
+			$writes = array_keys( BC_MCP_Abilities_Admin::writable_abilities() );
+			if ( in_array( $slug, $writes, true ) && true !== ( $args['confirmed'] ?? false ) ) {
+				return self::tool_result( array( 'error' => 'Explicit user confirmation is required for WordPress writes.' ), true );
+			}
+			$input  = isset( $args['parameters'] ) && is_array( $args['parameters'] ) ? $args['parameters'] : array();
+			$output = $ability->execute( $input );
+			if ( is_wp_error( $output ) ) {
+				return self::tool_result( array( 'error' => $output->get_error_message() ), true );
+			}
+			return self::tool_result( $output );
+		}
+		return self::tool_result( array( 'error' => 'Unknown MCP tool.' ), true );
 	}
 }
