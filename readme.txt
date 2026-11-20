@@ -32,7 +32,7 @@ BC MCP Abilities does not require ChatGPT or Claude to be installed or connected
 
 ChatGPT is provided by OpenAI. Terms: https://openai.com/policies/terms-of-use/ . Privacy: https://openai.com/policies/privacy-policy/ .
 
-Claude is provided by Anthropic. Terms and privacy documents: https://www.anthropic.com/legal . The optional Claude OAuth URL requires a compatible, separately installed MCP provider.
+Claude is provided by Anthropic. Consumer terms: https://www.anthropic.com/legal/consumer-terms . Privacy policy: https://www.anthropic.com/legal/privacy . The optional Claude OAuth URL requires a compatible, separately installed MCP provider.
 
 = Optional image import from user-selected websites =
 
