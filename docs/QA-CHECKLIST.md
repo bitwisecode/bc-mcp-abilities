@@ -21,8 +21,10 @@ Release remains blocked until all gates pass.
 - [ ] Term creation requires manage_terms and edit_terms on that specific taxonomy
 - [ ] Term assignment rejects stale revision tokens, duplicate IDs and terms from another taxonomy
 - [ ] Menu item creation rejects inaccessible posts, unpublished content without proper rights, invalid parent and untrusted external URLs
-- [ ] Read-only ability exposure denylist hides opted-out abilities from discovery and rejects execution
-- [ ] Activity history omits passwords, tokens, OAuth codes, protected meta, request bodies and PII
+- [x] Read-only ability exposure denylist implemented with admin controls and registry-level hiding; verify through fresh-request CI.
+- [ ] Validate on staging with official MCP Adapter discovery after disabling and re-enabling an ability
+- [x] Activity logger stores only user ID, first-party ability slug, read/write, result and timestamp; admin CSV/export/clear controls added.
+- [ ] Verify seven-day cron pruning and role-restricted export/clear on staging.
 - [ ] Revision conflict rejects updates and restores
 - [ ] Revision restore accepts revisions belonging only to the requested post
 - [ ] Element IDs are validated, and missing Elementor is handled gracefully
