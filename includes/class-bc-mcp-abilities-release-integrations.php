@@ -186,7 +186,7 @@ final class BC_MCP_Abilities_Release_Integrations {
 		// indexable presentation is refreshed by the owning plugin.
 		// Focus keyword is intentionally separate because Yoast's official
 		// update-post-seo-data ability does not permit writing keyphrases.
-		$map = array(
+		$map          = array(
 			'title'       => 'seo_title',
 			'description' => 'meta_description',
 		);
