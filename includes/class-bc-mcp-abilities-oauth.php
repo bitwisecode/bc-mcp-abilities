@@ -66,7 +66,8 @@ final class BC_MCP_Abilities_OAuth {
 	 * @return void
 	 */
 	public static function rewrite() {
-		add_rewrite_rule( '^\.well-known/oauth-protected-resource/wp-json/bc-mcp/v1/server/? 'index.php?bc_mcp_oauth_route=metadata', 'top' );
+		add_rewrite_rule( '^\.well-known/oauth-protected-resource/wp-json/bc-mcp/v1/server/?$', 'index.php?bc_mcp_oauth_route=protected', 'top' );
+		add_rewrite_rule( '^\.well-known/oauth-authorization-server/bc-mcp/?$', 'index.php?bc_mcp_oauth_route=metadata', 'top' );
 		add_rewrite_rule( '^bc-mcp/\.well-known/oauth-authorization-server/?$', 'index.php?bc_mcp_oauth_route=metadata', 'top' );
 		add_rewrite_rule( '^bc-mcp/oauth/(authorize|token|register|revoke)/?$', 'index.php?bc_mcp_oauth_route=$matches[1]', 'top' );
 	}
@@ -88,11 +89,11 @@ final class BC_MCP_Abilities_OAuth {
 	 * @return void
 	 */
 	public static function maybe_flush() {
-		if ( '1' === (string) get_option( 'bc_mcp_oauth_rewrite_version', '0' ) ) {
+		if ( '2' === (string) get_option( 'bc_mcp_oauth_rewrite_version', '0' ) ) {
 			return;
 		}
 		flush_rewrite_rules( false );
-		update_option( 'bc_mcp_oauth_rewrite_version', '1', false );
+		update_option( 'bc_mcp_oauth_rewrite_version', '2', false );
 	}
 
 	/**
