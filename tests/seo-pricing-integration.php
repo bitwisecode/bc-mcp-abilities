@@ -69,8 +69,8 @@ $price_input = array(
 $updated = wp_get_ability( 'bc-mcp-abilities/wc-update-prices' )->execute( $price_input );
 $assert( ! is_wp_error( $updated ) && ! empty( $updated['success'] ), 'WooCommerce pricing update failed.' );
 $after = wc_get_product( $product_id );
-$assert( '30' === (string) $after->get_regular_price() && '25' === (string) $after->get_sale_price(), 'WooCommerce stored incorrect prices.' );
-$assert( '25' === (string) $after->get_price(), 'WooCommerce effective active price should reflect the sale.' );
+$assert( 30.0 === (float) $after->get_regular_price() && 25.0 === (float) $after->get_sale_price(), 'WooCommerce stored incorrect prices.' );
+$assert( 25.0 === (float) $after->get_price(), 'WooCommerce effective active price should reflect the sale.' );
 $assert( is_wp_error( BC_MCP_Abilities_Release_Integrations::update_prices( $price_input ) ), 'Stale pricing update must fail.' );
 
 $latest = BC_MCP_Abilities_Release_Integrations::pricing_state( $after );
