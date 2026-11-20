@@ -73,16 +73,17 @@ final class BC_MCP_Abilities_UI {
 	 * @return void
 	 */
 	private static function connections() {
-		$server_on = BC_MCP_Abilities_Server::enabled();
-		$oauth_on  = '1' === (string) get_option( BC_MCP_Abilities_OAuth::OPTION, '0' );
-		$debug_on  = '1' === (string) get_option( 'bc_mcp_oauth_debug_enabled', '0' );
-		$endpoint  = BC_MCP_Abilities_Server::endpoint();
+		$server_on      = BC_MCP_Abilities_Server::enabled();
+		$oauth_on       = '1' === (string) get_option( BC_MCP_Abilities_OAuth::OPTION, '0' );
+		$debug_on       = '1' === (string) get_option( 'bc_mcp_oauth_debug_enabled', '0' );
+		$endpoint       = BC_MCP_Abilities_Server::endpoint();
+		$claude_oauth   = rest_url( 'mcp/mcp-oauth-server' );
 		?>
 		<div class="bc-section-header">
 			<div>
 				<p class="bc-eyebrow"><?php esc_html_e( 'Connection settings', 'bc-mcp-abilities' ); ?></p>
-				<h2><?php esc_html_e( 'ChatGPT & MCP server', 'bc-mcp-abilities' ); ?></h2>
-				<p><?php esc_html_e( 'Connect ChatGPT directly to this WordPress site with the built-in MCP endpoint and OAuth authorization.', 'bc-mcp-abilities' ); ?></p>
+				<h2><?php esc_html_e( 'Connections', 'bc-mcp-abilities' ); ?></h2>
+				<p><?php esc_html_e( 'Manage OAuth connections for ChatGPT and Claude in one place. Both use MCP server URLs; no desktop extension download is required for the OAuth method.', 'bc-mcp-abilities' ); ?></p>
 			</div>
 			<?php self::status( $server_on && $oauth_on && is_ssl() ); ?>
 		</div>
@@ -90,22 +91,22 @@ final class BC_MCP_Abilities_UI {
 			<div class="bc-alert bc-alert-danger"><?php esc_html_e( 'HTTPS is required. Enable TLS for WordPress before turning on OAuth.', 'bc-mcp-abilities' ); ?></div>
 		<?php endif; ?>
 		<div class="bc-card">
-			<div class="bc-card-title"><h3><?php esc_html_e( 'Connection configuration', 'bc-mcp-abilities' ); ?></h3><p><?php esc_html_e( 'Changes are saved using WordPress settings and nonce validation.', 'bc-mcp-abilities' ); ?></p></div>
+			<div class="bc-card-title"><h3><?php esc_html_e( 'MCP server configuration', 'bc-mcp-abilities' ); ?></h3><p><?php esc_html_e( 'Settings use WordPress nonce validation and existing secure option storage.', 'bc-mcp-abilities' ); ?></p></div>
 			<form method="post" action="options.php">
 				<?php settings_fields( 'bc_mcp_connections' ); ?>
 				<input type="hidden" name="<?php echo esc_attr( BC_MCP_Abilities_Server::OPTION ); ?>" value="0" />
 				<input type="hidden" name="<?php echo esc_attr( BC_MCP_Abilities_OAuth::OPTION ); ?>" value="0" />
 				<input type="hidden" name="bc_mcp_oauth_debug_enabled" value="0" />
 				<label class="bc-setting-row">
-					<span><strong><?php esc_html_e( 'MCP server', 'bc-mcp-abilities' ); ?></strong><small><?php esc_html_e( 'Expose the built-in REST MCP endpoint to compatible clients.', 'bc-mcp-abilities' ); ?></small></span>
+					<span><strong><?php esc_html_e( 'Built-in MCP server', 'bc-mcp-abilities' ); ?></strong><small><?php esc_html_e( 'Expose the built-in REST MCP endpoint used by ChatGPT.', 'bc-mcp-abilities' ); ?></small></span>
 					<span class="bc-switch"><input type="checkbox" name="<?php echo esc_attr( BC_MCP_Abilities_Server::OPTION ); ?>" value="1" <?php checked( $server_on ); ?> /><span class="bc-switch-track" aria-hidden="true"></span></span>
 				</label>
 				<label class="bc-setting-row">
-					<span><strong><?php esc_html_e( 'WordPress OAuth', 'bc-mcp-abilities' ); ?></strong><small><?php esc_html_e( 'Require WordPress authorization and scoped tokens for protected operations.', 'bc-mcp-abilities' ); ?></small></span>
+					<span><strong><?php esc_html_e( 'WordPress OAuth', 'bc-mcp-abilities' ); ?></strong><small><?php esc_html_e( 'Enable authorization codes and scoped tokens for the built-in MCP endpoint.', 'bc-mcp-abilities' ); ?></small></span>
 					<span class="bc-switch"><input type="checkbox" name="<?php echo esc_attr( BC_MCP_Abilities_OAuth::OPTION ); ?>" value="1" <?php checked( $oauth_on ); ?> <?php disabled( ! is_ssl() ); ?> /><span class="bc-switch-track" aria-hidden="true"></span></span>
 				</label>
 				<label class="bc-setting-row">
-					<span><strong><?php esc_html_e( 'Temporary diagnostics', 'bc-mcp-abilities' ); ?></strong><small><?php esc_html_e( 'Capture sanitized protocol events for troubleshooting; records expire after 24 hours and are deleted when switched off.', 'bc-mcp-abilities' ); ?></small></span>
+					<span><strong><?php esc_html_e( 'Temporary diagnostics', 'bc-mcp-abilities' ); ?></strong><small><?php esc_html_e( 'Capture sanitized protocol events for troubleshooting. Records expire after 24 hours and are removed when switched off.', 'bc-mcp-abilities' ); ?></small></span>
 					<span class="bc-switch"><input type="checkbox" name="bc_mcp_oauth_debug_enabled" value="1" <?php checked( $debug_on ); ?> /><span class="bc-switch-track" aria-hidden="true"></span></span>
 				</label>
 				<div class="bc-form-actions">
@@ -113,19 +114,44 @@ final class BC_MCP_Abilities_UI {
 				</div>
 			</form>
 		</div>
-		<div class="bc-card">
-			<div class="bc-card-title"><h3><?php esc_html_e( 'Your MCP endpoint', 'bc-mcp-abilities' ); ?></h3><p><?php esc_html_e( 'Use this exact URL when creating your ChatGPT custom MCP connector.', 'bc-mcp-abilities' ); ?></p></div>
-			<div class="bc-copy-field">
-				<input id="bc-mcp-server-url" type="text" value="<?php echo esc_attr( $endpoint ); ?>" readonly aria-label="<?php esc_attr_e( 'MCP server URL', 'bc-mcp-abilities' ); ?>" />
-				<button class="button bc-copy-button" type="button" data-bc-copy="bc-mcp-server-url"><?php esc_html_e( 'Copy URL', 'bc-mcp-abilities' ); ?></button>
+		<div class="bc-client-grid">
+			<div class="bc-card bc-client-card">
+				<div class="bc-client-heading">
+					<span class="bc-client-logo" aria-hidden="true">GPT</span>
+					<div><p class="bc-eyebrow"><?php esc_html_e( 'Built-in OAuth connection', 'bc-mcp-abilities' ); ?></p><h3><?php esc_html_e( 'ChatGPT', 'bc-mcp-abilities' ); ?></h3></div>
+				</div>
+				<p class="bc-client-description"><?php esc_html_e( 'Connect ChatGPT directly to the standalone BC MCP endpoint using OAuth and Dynamic Client Registration.', 'bc-mcp-abilities' ); ?></p>
+				<label class="bc-client-field-label" for="bc-mcp-server-url"><?php esc_html_e( 'MCP server URL', 'bc-mcp-abilities' ); ?></label>
+				<div class="bc-copy-field">
+					<input id="bc-mcp-server-url" type="text" value="<?php echo esc_attr( $endpoint ); ?>" readonly aria-label="<?php esc_attr_e( 'ChatGPT MCP server URL', 'bc-mcp-abilities' ); ?>" />
+					<button class="button bc-copy-button" type="button" data-bc-copy="bc-mcp-server-url"><?php esc_html_e( 'Copy URL', 'bc-mcp-abilities' ); ?></button>
+				</div>
+				<ol class="bc-steps">
+					<li><?php esc_html_e( 'Enable the built-in MCP server and WordPress OAuth above.', 'bc-mcp-abilities' ); ?></li>
+					<li><?php esc_html_e( 'In ChatGPT, add a custom MCP server with this URL and automatic OAuth registration.', 'bc-mcp-abilities' ); ?></li>
+					<li><?php esc_html_e( 'Approve the WordPress consent screen and test a read-only ability.', 'bc-mcp-abilities' ); ?></li>
+				</ol>
 			</div>
-			<ol class="bc-steps">
-				<li><?php esc_html_e( 'Enable MCP server and WordPress OAuth, then save.', 'bc-mcp-abilities' ); ?></li>
-				<li><?php esc_html_e( 'In ChatGPT, add a custom MCP server using this endpoint and OAuth with Dynamic Client Registration.', 'bc-mcp-abilities' ); ?></li>
-				<li><?php esc_html_e( 'Authorize access from WordPress, then try listing abilities before enabling any writes.', 'bc-mcp-abilities' ); ?></li>
-			</ol>
-			<p class="bc-muted"><?php esc_html_e( 'Enabled indicates configuration, not a live connection test. The separate Claude MCP Adapter endpoint is not changed.', 'bc-mcp-abilities' ); ?></p>
+			<div class="bc-card bc-client-card">
+				<div class="bc-client-heading">
+					<span class="bc-client-logo bc-client-logo-claude" aria-hidden="true">C</span>
+					<div><p class="bc-eyebrow"><?php esc_html_e( 'OAuth-compatible MCP provider', 'bc-mcp-abilities' ); ?></p><h3><?php esc_html_e( 'Claude', 'bc-mcp-abilities' ); ?></h3></div>
+				</div>
+				<p class="bc-client-description"><?php esc_html_e( 'Use the MCP URL from your existing OAuth-capable WordPress MCP provider. Claude connects directly through its MCP integration—no .mcpb attachment or Application Password is needed for that flow.', 'bc-mcp-abilities' ); ?></p>
+				<label class="bc-client-field-label" for="bc-claude-oauth-url"><?php esc_html_e( 'OAuth MCP provider URL (when installed)', 'bc-mcp-abilities' ); ?></label>
+				<div class="bc-copy-field">
+					<input id="bc-claude-oauth-url" type="text" value="<?php echo esc_attr( $claude_oauth ); ?>" readonly aria-label="<?php esc_attr_e( 'Claude OAuth MCP provider URL', 'bc-mcp-abilities' ); ?>" />
+					<button class="button bc-copy-button" type="button" data-bc-copy="bc-claude-oauth-url"><?php esc_html_e( 'Copy URL', 'bc-mcp-abilities' ); ?></button>
+				</div>
+				<ol class="bc-steps">
+					<li><?php esc_html_e( 'Make sure the separate OAuth MCP provider exposing this URL is active.', 'bc-mcp-abilities' ); ?></li>
+					<li><?php esc_html_e( 'Add the remote MCP URL in Claude and complete the WordPress OAuth sign-in.', 'bc-mcp-abilities' ); ?></li>
+					<li><?php esc_html_e( 'If you already have a working Claude OAuth URL, keep using that exact URL.', 'bc-mcp-abilities' ); ?></li>
+				</ol>
+				<p class="bc-client-note"><?php esc_html_e( 'This URL belongs to an optional OAuth MCP provider; BC MCP Abilities does not create that provider route. The Application Password-only MCP Adapter endpoint is different.', 'bc-mcp-abilities' ); ?></p>
+			</div>
 		</div>
+		<p class="bc-muted"><?php esc_html_e( 'The configuration badge above is not a live connectivity test. OAuth support depends on the specific endpoint and client.', 'bc-mcp-abilities' ); ?></p>
 		<?php
 	}
 
@@ -266,9 +292,6 @@ final class BC_MCP_Abilities_UI {
 					<div class="bc-hero-version"><?php echo esc_html( BC_MCP_ABILITIES_VERSION ); ?> <span><?php esc_html_e( 'Developer preview', 'bc-mcp-abilities' ); ?></span></div>
 				</div>
 			</div>
-			<?php if ( isset( $_GET['settings-updated'] ) && 'true' === sanitize_text_field( wp_unslash( $_GET['settings-updated'] ) ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Presentation-only success banner. ?>
-				<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Settings saved successfully.', 'bc-mcp-abilities' ); ?></p></div>
-			<?php endif; ?>
 			<div class="bc-layout">
 				<nav class="bc-sidebar" role="tablist" aria-label="<?php esc_attr_e( 'MCP settings sections', 'bc-mcp-abilities' ); ?>" aria-orientation="vertical">
 					<p class="bc-sidebar-label"><?php esc_html_e( 'WORKSPACE', 'bc-mcp-abilities' ); ?></p>
@@ -276,7 +299,6 @@ final class BC_MCP_Abilities_UI {
 					<button type="button" role="tab" class="bc-tab" id="bc-tab-connections" data-bc-tab="connections" aria-controls="bc-panel-connections" aria-selected="false"><span class="dashicons dashicons-admin-links" aria-hidden="true"></span><?php esc_html_e( 'Connections', 'bc-mcp-abilities' ); ?></button>
 					<button type="button" role="tab" class="bc-tab" id="bc-tab-abilities" data-bc-tab="abilities" aria-controls="bc-panel-abilities" aria-selected="false"><span class="dashicons dashicons-admin-settings" aria-hidden="true"></span><?php esc_html_e( 'Abilities & permissions', 'bc-mcp-abilities' ); ?></button>
 					<button type="button" role="tab" class="bc-tab" id="bc-tab-diagnostics" data-bc-tab="diagnostics" aria-controls="bc-panel-diagnostics" aria-selected="false"><span class="dashicons dashicons-list-view" aria-hidden="true"></span><?php esc_html_e( 'Diagnostics', 'bc-mcp-abilities' ); ?></button>
-					<button type="button" role="tab" class="bc-tab" id="bc-tab-claude" data-bc-tab="claude" aria-controls="bc-panel-claude" aria-selected="false"><span class="dashicons dashicons-cloud" aria-hidden="true"></span><?php esc_html_e( 'Claude Desktop', 'bc-mcp-abilities' ); ?></button>
 					<div class="bc-sidebar-footer"><span class="dashicons dashicons-lock" aria-hidden="true"></span><span><?php esc_html_e( 'Write access is off by default. Existing WordPress capabilities always apply.', 'bc-mcp-abilities' ); ?></span></div>
 				</nav>
 				<main class="bc-workspace">
@@ -292,7 +314,7 @@ final class BC_MCP_Abilities_UI {
 								<div class="bc-card-title"><h3><?php esc_html_e( 'Connection health', 'bc-mcp-abilities' ); ?></h3><p><?php esc_html_e( 'Configuration overview, not a live network check.', 'bc-mcp-abilities' ); ?></p></div>
 								<div class="bc-overview-row"><span><?php esc_html_e( 'MCP endpoint', 'bc-mcp-abilities' ); ?></span><?php self::status( $server_on ); ?></div>
 								<div class="bc-overview-row"><span><?php esc_html_e( 'OAuth authorization', 'bc-mcp-abilities' ); ?></span><?php self::status( $oauth_on ); ?></div>
-								<div class="bc-overview-row"><span><?php esc_html_e( 'Claude MCP Adapter', 'bc-mcp-abilities' ); ?></span><?php self::status( BC_MCP_Abilities_Claude::adapter_active() ); ?></div>
+								<div class="bc-overview-row"><span><?php esc_html_e( 'HTTPS website', 'bc-mcp-abilities' ); ?></span><?php self::status( is_ssl() ); ?></div>
 								<button type="button" class="button bc-outline-button" data-bc-goto="connections"><?php esc_html_e( 'Manage connections', 'bc-mcp-abilities' ); ?></button>
 							</div>
 							<div class="bc-card bc-card-accent">
@@ -326,10 +348,6 @@ final class BC_MCP_Abilities_UI {
 						</div>
 					</section>
 					<section class="bc-tab-panel" id="bc-panel-diagnostics" role="tabpanel" aria-labelledby="bc-tab-diagnostics"><?php self::diagnostics(); ?></section>
-					<section class="bc-tab-panel" id="bc-panel-claude" role="tabpanel" aria-labelledby="bc-tab-claude">
-						<div class="bc-section-header"><div><p class="bc-eyebrow"><?php esc_html_e( 'Desktop integration', 'bc-mcp-abilities' ); ?></p><h2><?php esc_html_e( 'Claude Desktop', 'bc-mcp-abilities' ); ?></h2><p><?php esc_html_e( 'Use the existing MCP Adapter bridge without changing the ChatGPT OAuth connection.', 'bc-mcp-abilities' ); ?></p></div></div>
-						<div class="bc-card bc-claude-legacy"><?php BC_MCP_Abilities_Claude::render(); ?></div>
-					</section>
 				</main>
 			</div>
 		</div>
