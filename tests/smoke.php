@@ -25,6 +25,11 @@ $read_abilities = array(
 	'wc-products',
 	'wc-product',
 	'wc-order-report',
+	'content-types',
+	'search-custom-content',
+	'get-custom-content',
+	'elementor-validate-json',
+	'elementor-export-json',
 );
 
 $write_abilities = array(
@@ -37,6 +42,14 @@ $write_abilities = array(
 	'elementor-update-text',
 	'elementor-undo',
 	'wc-update-stock',
+	'create-custom-draft',
+	'update-custom-content',
+	'elementor-create-document',
+	'elementor-update-settings',
+	'elementor-add-element',
+	'elementor-delete-element',
+	'elementor-move-element',
+	'elementor-regenerate-css',
 );
 
 $all_abilities = array_merge( $read_abilities, $write_abilities );
