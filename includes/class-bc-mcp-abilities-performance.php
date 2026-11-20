@@ -151,12 +151,12 @@ final class BC_MCP_Abilities_Performance {
 		if ( is_array( $cached ) ) {
 			$cached['cached'] = true;
 			return array(
-					'success' => true,
-					'data'    => $cached,
-				);
+				'success' => true,
+				'data'    => $cached,
+			);
 		}
-		
-		$args = array(
+
+		$args     = array(
 			'url'      => $url,
 			'strategy' => $strategy,
 		);
