@@ -58,18 +58,18 @@ final class BC_MCP_Abilities_Menus {
 			__( 'Add one existing accessible post or public taxonomy term to a classic menu. Does not accept arbitrary URLs.', 'bc-mcp-abilities' ),
 			self::schema(
 				array(
-					'menu_id'    => $int,
-					'object_id'  => $int,
-					'object'     => array(
+					'menu_id'   => $int,
+					'object_id' => $int,
+					'object'    => array(
 						'type'      => 'string',
 						'minLength' => 1,
 						'maxLength' => 40,
 					),
-					'parent_id'  => array(
+					'parent_id' => array(
 						'type'    => 'integer',
 						'minimum' => 0,
 					),
-					'position'   => array(
+					'position'  => array(
 						'type'    => 'integer',
 						'minimum' => 0,
 						'maximum' => 500,
@@ -189,14 +189,14 @@ final class BC_MCP_Abilities_Menus {
 		$entries = array();
 		foreach ( (array) $items as $item ) {
 			$entries[] = array(
-				'item_id'    => (int) $item->ID,
-				'title'      => $item->title,
-				'url'        => esc_url_raw( $item->url ),
-				'type'       => $item->type,
-				'object'     => $item->object,
-				'object_id'  => (int) $item->object_id,
-				'parent_id'  => (int) $item->menu_item_parent,
-				'position'   => (int) $item->menu_order,
+				'item_id'   => (int) $item->ID,
+				'title'     => $item->title,
+				'url'       => esc_url_raw( $item->url ),
+				'type'      => $item->type,
+				'object'    => $item->object,
+				'object_id' => (int) $item->object_id,
+				'parent_id' => (int) $item->menu_item_parent,
+				'position'  => (int) $item->menu_order,
 			);
 			if ( count( $entries ) >= 200 ) {
 				break;
@@ -228,7 +228,12 @@ final class BC_MCP_Abilities_Menus {
 			return new WP_Error( 'bc_mcp_menu_name', __( 'Menu name is invalid.', 'bc-mcp-abilities' ) );
 		}
 		$id = wp_create_nav_menu( $name );
-		return is_wp_error( $id ) ? $id : self::ok( array( 'menu_id' => (int) $id, 'name' => $name ) );
+		return is_wp_error( $id ) ? $id : self::ok(
+			array(
+				'menu_id' => (int) $id,
+				'name'    => $name,
+			)
+		);
 	}
 
 	/**
@@ -256,7 +261,7 @@ final class BC_MCP_Abilities_Menus {
 			}
 			$type = 'post_type';
 		} else {
-			$tax = get_taxonomy( $object );
+			$tax  = get_taxonomy( $object );
 			$term = $tax && $tax->public && $tax->show_ui ? get_term( $id, $object ) : false;
 			if ( ! $tax || ! $tax->public || ! $tax->show_ui || ! $term || is_wp_error( $term ) ||
 				! current_user_can( $tax->cap->assign_terms ) ) {
@@ -289,6 +294,11 @@ final class BC_MCP_Abilities_Menus {
 			$args['menu-item-position'] = absint( $input['position'] );
 		}
 		$item_id = wp_update_nav_menu_item( $menu->term_id, 0, $args );
-		return is_wp_error( $item_id ) ? $item_id : self::ok( array( 'menu_id' => (int) $menu->term_id, 'item_id' => (int) $item_id ) );
+		return is_wp_error( $item_id ) ? $item_id : self::ok(
+			array(
+				'menu_id' => (int) $menu->term_id,
+				'item_id' => (int) $item_id,
+			)
+		);
 	}
 }
