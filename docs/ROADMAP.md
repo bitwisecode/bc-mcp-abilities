@@ -35,6 +35,14 @@ All write abilities require a WordPress administrator and explicit per-ability o
 5. Add content revision and stock-update failure-case tests, race/concurrency handling and user documentation.
 6. Add final WP.org screenshots/icons, changelog and stable release package once all gates pass.
 
+## Public plugin scope
+
+Facebook, LinkedIn and YouTube integrations, scheduling, profile/page posting, media publishing, and associated tokens are deliberately **out of scope** for the public BC MCP Abilities plugin. They must remain in separately deployed private tooling, not this repository's public plugin distribution.
+
+## Admin experience
+
+The settings interface is being redesigned as a standalone, responsive WordPress dashboard with connection controls, searchable write permission groups, diagnostics, Claude setup and clear overview/status indicators. Existing option keys, WordPress capability checks, and nonce-based save handling remain unchanged.
+
 ## Long-term integrations
 
 ACF, Yoast/SEOPress, custom post types, taxonomy management and advanced WooCommerce workflows can be layered in independent modules after the initial release.
