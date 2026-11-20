@@ -2,11 +2,11 @@
 
 Reference: [Jobayer AI Agent](https://github.com/jobayerhossan/jobayer-wordpress-ai), v0.7.0. The competitor ZIP, Enable Abilities for MCP 2.17.1, was analyzed separately; its source has not been copied.
 
-## Implemented on the WordPress Abilities API (22 abilities)
+## Implemented on the WordPress Abilities API (35 on Agent-parity draft PR #7)
 
-- **Core:** site information, post/page search/read, create drafts, revision-guarded updates, list and restore existing WordPress revisions, bounded same-site HEAD checks.
+- **Core:** site information, post/page search/read, create drafts, revision-guarded updates, list/restore revisions, bounded same-site HEAD checks, plus allowed public custom post types, draft creation and revision-guarded custom edits.
 - **Media:** list/read attachments, update image alternative text, download public HTTPS images into Media Library with MIME and 8 MB size limits.
-- **Elementor:** read documents and elements; edit Heading, Text Editor and Button text using an expected document revision, a stored pre-save snapshot, and one-level undo.
+- **Elementor:** read documents and elements; safe widget text/settings edits; guarded node add/delete/move; export/validate JSON; draft document creation and CSS regeneration. Writes use an expected revision, a pre-save snapshot and one-level undo.
 - **Rank Math:** read and edit allowlisted SEO meta values with metadata concurrency tokens.
 - **WooCommerce:** search/read product inventory and variations, HPOS-compatible PII-free order reports, and stock updates for individually managed products and variations with concurrency tokens.
 
@@ -16,7 +16,7 @@ All write abilities require a WordPress administrator and explicit per-ability o
 
 - Arbitrary PHP/JS source-file patches, filesystem edits, shell commands and remote code execution. These are not appropriate for the public WordPress.org edition.
 - HMAC site-agent credential exchange and the separate custom MCP server. The WordPress Abilities API plus optional official MCP Adapter replaces those connection mechanics.
-- Raw Elementor document overwrite/JSON import with user-controlled widgets, because executable HTML, custom code and layout integrity require stricter safety design.
+- Arbitrary Elementor document overwrite/JSON import with user-controlled widgets, because executable HTML, custom code and layout integrity require stricter safety design; a read-only JSON validator is now included.
 - Bulk role changes, plugin/theme installation, direct SQL and customer-data exports.
 
 ## Standalone MCP and OAuth developer preview
