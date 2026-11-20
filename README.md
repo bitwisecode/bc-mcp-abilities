@@ -16,6 +16,17 @@ Native, independent WordPress Abilities API plugin developed by **BitwiseCode**.
 
 Full names are prefixed by `bc-mcp-abilities/`.
 
+## Standalone WordPress MCP and ChatGPT OAuth — developer preview
+
+The plugin now contains an **independent WordPress MCP endpoint** at `/wp-json/bc-mcp/v1/server` and a namespaced OAuth authorization service at `/bc-mcp`. Neither depends on the official MCP Adapter. Both are disabled by default.
+
+1. On **staging**, open **Settings → BC MCP Abilities** and enable the built-in MCP endpoint and WordPress OAuth.
+2. In ChatGPT Plugins on web, use **Add custom MCP server**, paste the URL, select automatic OAuth client registration (DCR), and approve access through WordPress.
+3. First test discovery and a read-only ability.
+4. Keep all BC write abilities disabled until separate testing.
+
+The existing Claude/MCP Adapter connection remains unchanged and can coexist. This is experimental code until OAuth end-to-end acceptance testing and security review finish.
+
 ## Setup
 
 1. Install on an isolated WordPress 6.9+ staging website.

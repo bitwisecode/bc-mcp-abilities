@@ -10,6 +10,9 @@ on:
       - 'readme.txt'
       - 'LICENSE'
       - '.github/workflows/staging-zip.yml'
+      - 'tests/standalone-smoke.php'
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read

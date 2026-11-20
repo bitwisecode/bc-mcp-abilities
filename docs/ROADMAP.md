@@ -19,6 +19,13 @@ All write abilities require a WordPress administrator and explicit per-ability o
 - Raw Elementor document overwrite/JSON import with user-controlled widgets, because executable HTML, custom code and layout integrity require stricter safety design.
 - Bulk role changes, plugin/theme installation, direct SQL and customer-data exports.
 
+## Standalone MCP and OAuth developer preview
+
+- Native WordPress REST MCP endpoint, independent of the Adapter
+- OAuth 2.1-style authorization code with PKCE S256, client registration restricted to ChatGPT callbacks, refresh/revoke, OAuth discovery metadata and WordPress consent screen
+- Disabled by default pending tests and independent security review
+- Still requires real ChatGPT handshake, callback, token exchange, refresh, permission and third-party review tests before publication
+
 ## Still to develop / harden before first public release
 
 1. Finish WordPress Coding Standards and Plugin Check on latest commit and test on WordPress 6.9 and 7.1.

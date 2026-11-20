@@ -1,0 +1,117 @@
+<?php
+/**
+ * Standalone ChatGPT/remote MCP connection settings screen.
+ *
+ * @package BCMCPAbilities
+ */
+
+defined( 'ABSPATH' ) || exit;
+
+/**
+ * Keep standalone connection settings separate from ability write permissions.
+ */
+final class BC_MCP_Abilities_Connections {
+
+	/**
+	 * Register settings using the WordPress Settings API.
+	 *
+	 * @return void
+	 */
+	public static function init() {
+		add_action( 'admin_init', array( __CLASS__, 'register_settings' ) );
+	}
+
+	/**
+	 * Register default-off transport and OAuth toggles.
+	 *
+	 * @return void
+	 */
+	public static function register_settings() {
+		foreach ( array( BC_MCP_Abilities_Server::OPTION, BC_MCP_Abilities_OAuth::OPTION ) as $option ) {
+			register_setting(
+				'bc_mcp_connections',
+				$option,
+				array(
+					'type'              => 'string',
+					'description'       => __( 'Enable the standalone BC MCP connection.', 'bc-mcp-abilities' ),
+					'default'           => '0',
+					'show_in_rest'      => false,
+					'sanitize_callback' => array( __CLASS__, 'sanitize_toggle' ),
+				)
+			);
+		}
+	}
+
+	/**
+	 * Normalize checkbox input.
+	 *
+	 * @param mixed $value Posted form value.
+	 * @return string
+	 */
+	public static function sanitize_toggle( $value ) {
+		return '1' === (string) $value ? '1' : '0';
+	}
+
+	/**
+	 * Render easy, independent ChatGPT connector instructions.
+	 *
+	 * @return void
+	 */
+	public static function render() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+		$server_on = BC_MCP_Abilities_Server::enabled();
+		$oauth_on  = BC_MCP_Abilities_OAuth::enabled();
+		$endpoint  = BC_MCP_Abilities_Server::endpoint();
+		?>
+		<hr />
+		<h2><?php esc_html_e( 'Connect ChatGPT directly', 'bc-mcp-abilities' ); ?></h2>
+		<p><?php esc_html_e( 'Connect ChatGPT directly to WordPress using OAuth sign-in. No MCP Adapter, Node.js, external account or Terminal is required for this connection.', 'bc-mcp-abilities' ); ?></p>
+
+		<?php if ( ! is_ssl() ) : ?>
+			<div class="notice notice-error inline"><p><?php esc_html_e( 'HTTPS is required. OAuth cannot be enabled over HTTP.', 'bc-mcp-abilities' ); ?></p></div>
+		<?php endif; ?>
+
+		<form method="post" action="options.php">
+			<?php settings_fields( 'bc_mcp_connections' ); ?>
+			<input type="hidden" name="<?php echo esc_attr( BC_MCP_Abilities_Server::OPTION ); ?>" value="0">
+			<input type="hidden" name="<?php echo esc_attr( BC_MCP_Abilities_OAuth::OPTION ); ?>" value="0">
+			<p>
+				<label>
+					<input type="checkbox" name="<?php echo esc_attr( BC_MCP_Abilities_Server::OPTION ); ?>" value="1" <?php checked( $server_on ); ?>>
+					<strong><?php esc_html_e( 'Enable built-in MCP endpoint', 'bc-mcp-abilities' ); ?></strong>
+				</label>
+			</p>
+			<p>
+				<label>
+					<input type="checkbox" name="<?php echo esc_attr( BC_MCP_Abilities_OAuth::OPTION ); ?>" value="1" <?php checked( '1', get_option( BC_MCP_Abilities_OAuth::OPTION, '0' ) ); ?> <?php disabled( ! is_ssl() ); ?>>
+					<strong><?php esc_html_e( 'Enable WordPress OAuth authorization', 'bc-mcp-abilities' ); ?></strong>
+				</label>
+			</p>
+			<?php submit_button( __( 'Save connection settings', 'bc-mcp-abilities' ), 'secondary', 'submit', false ); ?>
+		</form>
+
+		<?php if ( $oauth_on ) : ?>
+			<p><strong><?php esc_html_e( 'Ready to test', 'bc-mcp-abilities' ); ?></strong></p>
+		<?php else : ?>
+			<p><em><?php esc_html_e( 'Not enabled yet. Enable both settings on a staging site before connecting.', 'bc-mcp-abilities' ); ?></em></p>
+		<?php endif; ?>
+
+		<p><strong><?php esc_html_e( 'MCP server URL', 'bc-mcp-abilities' ); ?></strong></p>
+		<p><input type="text" readonly class="regular-text code" style="max-width:100%;width:650px" id="bc-mcp-standalone-url" value="<?php echo esc_attr( $endpoint ); ?>" onclick="this.select()"></p>
+
+		<ol>
+			<li><?php esc_html_e( 'Enable the standalone MCP endpoint and OAuth using the settings above.', 'bc-mcp-abilities' ); ?></li>
+			<li><?php esc_html_e( 'In ChatGPT on the web, open Plugins and choose Add custom MCP server.', 'bc-mcp-abilities' ); ?></li>
+			<li><?php esc_html_e( 'Paste the MCP server URL shown above and select automatic OAuth registration (Dynamic Client Registration).', 'bc-mcp-abilities' ); ?></li>
+			<li><?php esc_html_e( 'Complete the WordPress sign-in and choose Authorize on the permission screen.', 'bc-mcp-abilities' ); ?></li>
+			<li><?php esc_html_e( 'Discover and test a read-only ability before enabling write abilities.', 'bc-mcp-abilities' ); ?></li>
+		</ol>
+		<p><strong><?php esc_html_e( 'Claude remains available:', 'bc-mcp-abilities' ); ?></strong>
+			<?php esc_html_e( 'The working official MCP Adapter OAuth endpoint is separate and remains unchanged.', 'bc-mcp-abilities' ); ?>
+		</p>
+		<p class="description"><?php esc_html_e( 'Development preview: test OAuth and permissions on staging first. ChatGPT custom MCP availability depends on your ChatGPT plan or workspace.', 'bc-mcp-abilities' ); ?></p>
+		<?php
+	}
+}
