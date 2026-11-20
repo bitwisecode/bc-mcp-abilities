@@ -154,9 +154,11 @@ final class BC_MCP_Abilities_UI {
 					<th><?php esc_html_e( 'Time (UTC)', 'bc-mcp-abilities' ); ?></th><th><?php esc_html_e( 'Stage', 'bc-mcp-abilities' ); ?></th><th><?php esc_html_e( 'Result', 'bc-mcp-abilities' ); ?></th><th><?php esc_html_e( 'MCP method', 'bc-mcp-abilities' ); ?></th><th><?php esc_html_e( 'Authorization', 'bc-mcp-abilities' ); ?></th><th><?php esc_html_e( 'Detail', 'bc-mcp-abilities' ); ?></th>
 				</tr></thead><tbody>
 					<?php foreach ( $events as $event ) : ?>
-						<?php if ( ! is_array( $event ) || empty( $event['time'] ) || time() - absint( $event['time'] ) >= DAY_IN_SECONDS ) {
-						continue;
-					} ?>
+						<?php
+						if ( ! is_array( $event ) || empty( $event['time'] ) || time() - absint( $event['time'] ) >= DAY_IN_SECONDS ) {
+							continue;
+						}
+						?>
 						<tr>
 							<td><?php echo esc_html( gmdate( 'Y-m-d H:i:s', absint( $event['time'] ) ) ); ?></td>
 							<td><?php echo esc_html( sanitize_key( (string) ( $event['event'] ?? '' ) ) ); ?></td>
