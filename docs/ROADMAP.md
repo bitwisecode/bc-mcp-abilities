@@ -33,9 +33,9 @@ All write abilities require a WordPress administrator and explicit per-ability o
 
 1. Finish WordPress Coding Standards and Plugin Check on latest commit and test on WordPress 6.9 and 7.1.
 2. Add deep integration tests for Elementor save and undo, WooCommerce inventory and order read, Rank Math metadata and safe image upload (including SSRF and size tests).
-3. Add bounded admin-only activity audit logs that avoid storing credentials, customer PII, or large payloads (release blocker).
-4. Add admin UI for first-party read-only ability exposure policies (release blocker); third-party integration controls later.
-5. Add content revision and stock-update failure-case tests, race/concurrency handling and user documentation.
+3. **Implemented in security PR**: bounded first-party execution audit (100 entries / 7-day retention, admin-only CSV export and clear) logging only ability, user ID, type and outcome. Complete independent security verification before public release.
+4. **Implemented in security PR**: administrator-configurable read-only ability hiding. Hidden BC read operations are not registered, so they cannot appear in MCP/REST discovery or be executed. Test both WordPress and official MCP Adapter on staging.
+5. Expand role, content revision, inventory race, OAuth security, logged activity purge and third-party integration testing.
 6. Add final WP.org screenshots/icons, changelog and stable release package once all gates pass.
 
 ## Public plugin scope
