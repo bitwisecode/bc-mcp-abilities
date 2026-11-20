@@ -1,0 +1,28 @@
+name: Elementor Agent Integration
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  real-elementor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Start isolated WordPress
+        run: npx --yes @wordpress/env start
+      - name: Install and activate real Elementor plugin
+        run: npx --yes @wordpress/env run cli wp plugin install elementor --activate
+      - name: Run Elementor create/edit/move/delete/undo/CSS integration
+        run: npx --yes @wordpress/env run cli wp eval-file /var/www/html/wp-content/plugins/bc-mcp-abilities/tests/elementor-integration.php
+      - name: Stop disposable WordPress
+        if: always()
+        run: npx --yes @wordpress/env stop || true
