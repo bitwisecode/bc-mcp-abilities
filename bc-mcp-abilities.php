@@ -39,6 +39,7 @@ BC_MCP_Abilities_Claude::init();
 BC_MCP_Abilities::init();
 BC_MCP_Abilities_Server::init();
 BC_MCP_Abilities_OAuth::init();
+register_activation_hook( __FILE__, array( 'BC_MCP_Abilities_OAuth', 'activate' ) );
 BC_MCP_Abilities_Connections::init();
 add_action( 'wp_abilities_api_init', array( 'BC_MCP_Abilities_Integrations', 'register' ), 20 );
 add_action( 'wp_abilities_api_init', array( 'BC_MCP_Abilities_Elementor', 'register' ), 20 );
