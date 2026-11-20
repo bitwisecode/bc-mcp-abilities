@@ -192,18 +192,18 @@ final class BC_MCP_Abilities_Server {
 
 		return array(
 			array(
-				'name'        => 'bc-list-abilities',
-				'title'       => 'List BC WordPress Abilities',
-				'description' => 'Discover permitted WordPress abilities registered by BC MCP Abilities.',
-				'inputSchema' => $schema,
+				'name'            => 'bc-list-abilities',
+				'title'           => 'List BC WordPress Abilities',
+				'description'     => 'Discover permitted WordPress abilities registered by BC MCP Abilities.',
+				'inputSchema'     => $schema,
 				'securitySchemes' => $auth_scheme,
-				'annotations' => array( 'readOnlyHint' => true ),
+				'annotations'     => array( 'readOnlyHint' => true ),
 			),
 			array(
-				'name'        => 'bc-get-ability-info',
-				'title'       => 'Describe a BC WordPress Ability',
-				'description' => 'Get the input schema, output schema and description of one BC ability before using it.',
-				'inputSchema' => array(
+				'name'            => 'bc-get-ability-info',
+				'title'           => 'Describe a BC WordPress Ability',
+				'description'     => 'Get the input schema, output schema and description of one BC ability before using it.',
+				'inputSchema'     => array(
 					'type'                 => 'object',
 					'properties'           => array(
 						'ability_name' => array(
@@ -215,13 +215,13 @@ final class BC_MCP_Abilities_Server {
 					'additionalProperties' => false,
 				),
 				'securitySchemes' => $auth_scheme,
-				'annotations' => array( 'readOnlyHint' => true ),
+				'annotations'     => array( 'readOnlyHint' => true ),
 			),
 			array(
-				'name'        => 'bc-execute-ability',
-				'title'       => 'Execute a Permitted BC WordPress Ability',
-				'description' => 'Execute a BC ability. WordPress permission and admin write opt-in controls always apply. Inspect the schema and confirm writes before calling.',
-				'inputSchema' => array(
+				'name'            => 'bc-execute-ability',
+				'title'           => 'Execute a Permitted BC WordPress Ability',
+				'description'     => 'Execute a BC ability. WordPress permission and admin write opt-in controls always apply. Inspect the schema and confirm writes before calling.',
+				'inputSchema'     => array(
 					'type'                 => 'object',
 					'properties'           => array(
 						'ability_name' => array(
@@ -241,7 +241,7 @@ final class BC_MCP_Abilities_Server {
 					'additionalProperties' => false,
 				),
 				'securitySchemes' => $auth_scheme,
-				'annotations' => array(
+				'annotations'     => array(
 					'readOnlyHint'    => false,
 					'destructiveHint' => true,
 				),
