@@ -143,4 +143,12 @@
 		item.querySelector('input[type="checkbox"]').addEventListener('change', updateCounts);
 	});
 	updateCounts();
+
+	Array.prototype.slice.call(root.querySelectorAll('[data-bc-clear-activity]')).forEach(function (form) {
+		form.addEventListener('submit', function (event) {
+			if (!window.confirm('Permanently clear the stored BC MCP activity history?')) {
+				event.preventDefault();
+			}
+		});
+	});
 })();
