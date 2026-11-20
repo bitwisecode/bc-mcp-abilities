@@ -17,6 +17,11 @@ final class BC_MCP_Abilities_Admin {
 	const OPTION = 'bc_mcp_abilities_enabled_writes';
 
 	/**
+	 * Denied read-only first-party ability slugs.
+	 */
+	const READ_DISABLED_OPTION = 'bc_mcp_abilities_disabled_reads';
+
+	/**
 	 * Human-readable descriptions for opt-in write abilities.
 	 *
 	 * @return array<string,string>
@@ -105,6 +110,17 @@ final class BC_MCP_Abilities_Admin {
 	 */
 	public static function register_setting() {
 		register_setting(
+			'bc_mcp_read_abilities',
+			self::READ_DISABLED_OPTION,
+			array(
+				'type'              => 'array',
+				'description'       => __( 'First-party read abilities hidden from all AI clients.', 'bc-mcp-abilities' ),
+				'default'           => array(),
+				'sanitize_callback' => array( __CLASS__, 'sanitize_disabled_reads' ),
+				'show_in_rest'      => false,
+			)
+		);
+		register_setting(
 			'bc_mcp_abilities',
 			self::OPTION,
 			array(
@@ -132,6 +148,33 @@ final class BC_MCP_Abilities_Admin {
 		$allowed = array_keys( self::writable_abilities() );
 
 		return array_values( array_intersect( $allowed, $values ) );
+	}
+
+	/**
+	 * Filter denied read-only slugs to actual first-party read abilities.
+	 *
+	 * @param mixed $value Submitted settings.
+	 * @return array
+	 */
+	public static function sanitize_disabled_reads( $value ) {
+		if ( ! is_array( $value ) ) {
+			return array();
+		}
+		$catalog = BC_MCP_Abilities::read_catalog();
+		$values  = array_map( 'sanitize_key', $value );
+		return array_values( array_intersect( array_keys( $catalog ), $values ) );
+	}
+
+	/**
+	 * Whether this read-only ability must remain unavailable to AI clients.
+	 *
+	 * @param string $slug Read ability slug.
+	 * @return bool
+	 */
+	public static function is_read_disabled( $slug ) {
+		$settings = get_option( self::READ_DISABLED_OPTION, array() );
+		$settings = is_array( $settings ) ? $settings : array();
+		return in_array( $slug, $settings, true );
 	}
 
 	/**
