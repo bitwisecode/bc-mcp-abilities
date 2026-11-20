@@ -54,9 +54,16 @@ final class BC_MCP_Abilities_Server {
 			'bc-mcp/v1',
 			'/server',
 			array(
-				'methods'             => 'POST',
-				'callback'            => array( __CLASS__, 'respond' ),
-				'permission_callback' => array( __CLASS__, 'authorize' ),
+				array(
+					'methods'             => 'POST',
+					'callback'            => array( __CLASS__, 'respond' ),
+					'permission_callback' => array( __CLASS__, 'authorize' ),
+				),
+				array(
+					'methods'             => 'GET, DELETE',
+					'callback'            => array( __CLASS__, 'unsupported_method' ),
+					'permission_callback' => '__return_true',
+				),
 			)
 		);
 		register_rest_route(
@@ -68,6 +75,17 @@ final class BC_MCP_Abilities_Server {
 				'permission_callback' => '__return_true',
 			)
 		);
+	}
+
+	/**
+	 * A stateless MCP server has no event stream or session to delete.
+	 *
+	 * @return WP_REST_Response
+	 */
+	public static function unsupported_method() {
+		$response = new WP_REST_Response( array( 'error' => 'Method not allowed.' ), 405 );
+		$response->header( 'Allow', 'POST' );
+		return $response;
 	}
 
 	/**
