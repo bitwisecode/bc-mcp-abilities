@@ -27,6 +27,10 @@ The plugin now contains an **independent WordPress MCP endpoint** at `/wp-json/b
 
 The existing Claude/MCP Adapter connection remains unchanged and can coexist. This is experimental code until OAuth end-to-end acceptance testing and security review finish.
 
+## Admin dashboard
+
+The WordPress admin screen under **Settings → BC MCP Abilities** includes a responsive dashboard: setup overview, ChatGPT/OAuth connection controls, searchable write-ability permissions, bounded sanitized diagnostics, and Claude Desktop instructions. Existing option names and security checks are preserved. The public plugin deliberately excludes Facebook, LinkedIn, and YouTube API integrations and social publishing.
+
 ## Setup
 
 1. Install on an isolated WordPress 6.9+ staging website.
