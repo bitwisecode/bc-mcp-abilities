@@ -11,7 +11,7 @@ Audited 20 November 2026 directly against the connected `Jobayer_WordPress_AI` t
 | WooCommerce | Not represented as dedicated tools in this connected Agent inventory | Product search/read, HPOS-compatible order reporting, inventory writes |
 | Frontend & web performance | Browser inspector/audit/compare/verify, Chromium self-test, PageSpeed Insights | Separate phase: cannot safely run headless Chromium within an ordinary shared-hosting WordPress plugin |
 | GA4/Search Console | Google API reports | Separate integration with site-admin credentials; not part of core WordPress abilities |
-| Social media | Facebook Page, YouTube, LinkedIn posting/media/analytics | Optional future integrations; user credentials and platform reviews required |
+| Social media | Facebook Page, YouTube, LinkedIn posting/media/analytics | **Explicitly excluded from this public plugin**; keep in separately controlled private services |
 
 ## Added in first implementation stage (13 abilities)
 
@@ -42,7 +42,8 @@ These are **developer preview** functions. Elementor structural edits use the sa
 - Full Elementor JSON import, arbitrary document replacement, custom widget settings: need strict sanitization, versioned fixtures and compatibility tests
 - Custom post type revision rollback after independent changes: requires protected snapshots or native revisions with conflict checks
 - Frontend DOM audit/replay: separate browser diagnostics. PageSpeed: initial site-scoped read-only module implemented
-- Third-party platform integrations (GSC, GA4, Facebook, YouTube, LinkedIn): optional future modules, with their own OAuth/permissions
+- External analytics (GSC, GA4): potential optional modules subject to scoped credentials, permission reviews, and user opt-in.
+- Facebook, LinkedIn, and YouTube posting/analytics: explicitly excluded from this public plugin and roadmap.
 
 ## Acceptance gates
 

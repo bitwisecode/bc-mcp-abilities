@@ -27,6 +27,7 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-elem
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-server.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-oauth.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-connections.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-ui.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-performance.php';
 BC_MCP_Abilities_Admin::init();
 BC_MCP_Abilities_Claude::init();

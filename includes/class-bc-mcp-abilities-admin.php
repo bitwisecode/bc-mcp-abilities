@@ -51,6 +51,7 @@ final class BC_MCP_Abilities_Admin {
 	public static function init() {
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 		add_action( 'admin_init', array( __CLASS__, 'register_setting' ) );
+		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_assets' ) );
 	}
 
 	/**
@@ -65,6 +66,31 @@ final class BC_MCP_Abilities_Admin {
 			'manage_options',
 			'bc-mcp-abilities',
 			array( __CLASS__, 'render' )
+		);
+	}
+
+	/**
+	 * Enqueue isolated admin assets only on this plugin's settings screen.
+	 *
+	 * @param string $hook_suffix WordPress admin page identifier.
+	 * @return void
+	 */
+	public static function enqueue_assets( $hook_suffix ) {
+		if ( 'settings_page_bc-mcp-abilities' !== $hook_suffix || ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+		wp_enqueue_style(
+			'bc-mcp-settings',
+			plugins_url( 'assets/admin.css', dirname( __DIR__ ) . '/bc-mcp-abilities.php' ),
+			array(),
+			BC_MCP_ABILITIES_VERSION
+		);
+		wp_enqueue_script(
+			'bc-mcp-settings',
+			plugins_url( 'assets/admin.js', dirname( __DIR__ ) . '/bc-mcp-abilities.php' ),
+			array(),
+			BC_MCP_ABILITIES_VERSION,
+			true
 		);
 	}
 
@@ -123,48 +149,6 @@ final class BC_MCP_Abilities_Admin {
 	 * @return void
 	 */
 	public static function render() {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			return;
-		}
-
-		$endpoint = rest_url( 'mcp/mcp-adapter-default-server' );
-		?>
-		<div class="wrap">
-			<h1><?php esc_html_e( 'BC MCP Abilities', 'bc-mcp-abilities' ); ?></h1>
-			<?php BC_MCP_Abilities_Connections::render(); ?>
-			<?php BC_MCP_Abilities_Claude::render(); ?>
-			<p><?php esc_html_e( 'Abilities use WordPress core and do not require the MCP Adapter. For MCP client connections, install and configure the official WordPress MCP Adapter separately.', 'bc-mcp-abilities' ); ?></p>
-			<p>
-				<strong><?php esc_html_e( 'Default MCP endpoint (only when MCP Adapter is active):', 'bc-mcp-abilities' ); ?></strong>
-				<code><?php echo esc_html( $endpoint ); ?></code>
-			</p>
-			<p><?php esc_html_e( 'Read-only abilities are available to authorized WordPress users. All write abilities are disabled for MCP/REST clients until you enable them here. Enabling a tool never bypasses WordPress capability checks.', 'bc-mcp-abilities' ); ?></p>
-			<form method="post" action="options.php">
-				<?php settings_fields( 'bc_mcp_abilities' ); ?>
-				<input type="hidden" name="<?php echo esc_attr( self::OPTION ); ?>" value="" />
-				<table class="form-table" role="presentation">
-					<tbody>
-						<?php foreach ( self::writable_abilities() as $slug => $description ) : ?>
-							<tr>
-								<th scope="row"><?php echo esc_html( $slug ); ?></th>
-								<td>
-									<label>
-										<input
-											type="checkbox"
-											name="<?php echo esc_attr( self::OPTION ); ?>[]"
-											value="<?php echo esc_attr( $slug ); ?>"
-											<?php checked( self::is_enabled( $slug ) ); ?>
-										/>
-										<?php echo esc_html( $description ); ?>
-									</label>
-								</td>
-							</tr>
-						<?php endforeach; ?>
-					</tbody>
-				</table>
-				<?php submit_button( __( 'Save Ability Permissions', 'bc-mcp-abilities' ) ); ?>
-			</form>
-		</div>
-		<?php
+		BC_MCP_Abilities_UI::render();
 	}
 }
