@@ -49,6 +49,14 @@ $seo_input = array(
 $changed = wp_get_ability( 'bc-mcp-abilities/yoast-seo-update' )->execute( $seo_input );
 $assert( ! is_wp_error( $changed ) && 'Temporary SEO test title' === get_post_meta( $post_id, '_yoast_wpseo_title', true ), 'Yoast update failed.' );
 $assert( is_wp_error( BC_MCP_Abilities_Release_Integrations::yoast_update( $seo_input ) ), 'Stale SEO metadata revision should fail.' );
+$yoast_reader = wp_get_ability( 'yoast-seo/get-post-seo-data' );
+$assert( $yoast_reader, 'The current Yoast SEO post data read ability is required for indexable verification.' );
+$presented = $yoast_reader->execute( array( 'post_id' => $post_id ) );
+$assert( ! is_wp_error( $presented ) && is_array( $presented ) && ! empty( $presented[0] ), 'Yoast native post SEO data read failed.' );
+$assert( 'Temporary SEO test title' === (string) ( $presented[0]['seo_title'] ?? '' ), 'Yoast SEO indexable title is stale.' );
+$assert( 'Temporary SEO test description' === (string) ( $presented[0]['meta_description'] ?? '' ), 'Yoast SEO indexable meta description is stale.' );
+$assert( false !== strpos( (string) ( $presented[0]['seo_title_rendered'] ?? '' ), 'Temporary SEO test title' ), 'Yoast front-end rendered SEO title is stale.' );
+
 
 $product = new WC_Product_Simple();
 $product->set_name( 'BC MCP temporary price test' );
