@@ -10,13 +10,14 @@ Release remains blocked until all gates pass.
 - [ ] PHP 7.4, 8.0, 8.2, 8.4 compatibility
 
 ## Security and access tests
-- [ ] Anonymous users cannot execute abilities
-- [ ] Subscribers cannot access content and media abilities
+- [x] Anonymous execution denial covered by disposable WordPress smoke tests (current branch).
+- [x] Subscribers denied read and write access in disposable WordPress smoke tests (current branch).
 - [ ] Editors cannot enable administrative write permissions
 - [ ] Write abilities disabled by default and must fail before activation
 - [ ] Admin activation enables only the specifically selected write ability
 - [ ] WordPress current_user_can checks each target object
-- [ ] No arbitrary code execution or theme/plugin-file modifications
+- [x] New release-hardening module introduces no arbitrary code execution or filesystem writes.
+- [ ] Independently audit existing source-editing and upload callbacks
 - [ ] Taxonomy assignment requires editing the specific post and the taxonomy's assign_terms capability
 - [ ] Term creation requires manage_terms and edit_terms on that specific taxonomy
 - [ ] Term assignment rejects stale revision tokens, duplicate IDs and terms from another taxonomy
