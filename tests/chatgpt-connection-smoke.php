@@ -53,6 +53,7 @@ $list = $call( 'tools/list', 2 );
 $assert( 200 === $list->get_status(), 'ChatGPT must discover tool descriptors before OAuth linking.' );
 $tools = $list->get_data()['result']['tools'];
 $assert( 3 === count( $tools ), 'Expected three MCP tools.' );
+$assert( 'bc-list-abilities' === $tools[0]['name'], 'Expected ability discovery tool.' );
 foreach ( $tools as $tool ) {
 	$assert( ! empty( $tool['securitySchemes'][0]['type'] ) && 'oauth2' === $tool['securitySchemes'][0]['type'], 'MCP tool must advertise OAuth.' );
 	$assert( in_array( 'mcp', $tool['securitySchemes'][0]['scopes'], true ), 'MCP tool is missing its scope.' );
@@ -63,6 +64,9 @@ $assert( 401 === $unauthorized->get_status(), 'WordPress ability execution must 
 
 $invalid_method = $call( 'unexpected-activity', 4 );
 $assert( 401 === $invalid_method->get_status(), 'Unknown methods must not bypass authorization.' );
+
+$unknown = $call( 'unexpected-activity', 5 );
+$assert( 401 === $unknown->get_status(), 'Unknown methods must remain OAuth-protected.' );
 
 update_option( BC_MCP_Abilities_Server::OPTION, $previous_mcp );
 update_option( BC_MCP_Abilities_OAuth::OPTION, $previous_oauth );
