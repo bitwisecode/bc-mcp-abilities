@@ -65,6 +65,20 @@ $server = rest_get_server();
 $routes = $server->get_routes();
 $expect( isset( $routes['/bc-mcp/v1/server'] ), 'Native WordPress MCP REST route did not register.' );
 $expect( isset( $routes['/bc-mcp/v1/oauth/resource'] ), 'OAuth protected-resource REST route did not register.' );
+$rewrite_version = get_option( 'bc_mcp_oauth_rewrite_version', '0' );
+BC_MCP_Abilities_OAuth::activate();
+$expect( '3' === (string) get_option( 'bc_mcp_oauth_rewrite_version', '0' ), 'Activation did not refresh OAuth rewrite version.' );
+global $wp_rewrite;
+$registered = array_keys( (array) $wp_rewrite->extra_rules_top );
+$found = false;
+foreach ( $registered as $rule ) {
+	if ( false !== strpos( $rule, 'oauth-protected-resource/wp-json/bc-mcp/v1/server' ) ) {
+		$found = true;
+		break;
+	}
+}
+$expect( $found, 'OAuth well-known protected-resource rewrite was not registered.' );
+
 
 $request = new WP_REST_Request( 'POST', '/bc-mcp/v1/server' );
 $request->set_body(
