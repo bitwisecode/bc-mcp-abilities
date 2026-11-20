@@ -195,6 +195,7 @@ final class BC_MCP_Abilities_Server {
 							'type'                 => 'object',
 							'additionalProperties' => true,
 						),
+						'confirmed'    => array( 'type' => 'boolean', 'description' => 'True only after the user explicitly approves this WordPress write.' ),
 					),
 					'required'             => array( 'ability_name', 'parameters' ),
 					'additionalProperties' => false,
@@ -275,6 +276,10 @@ final class BC_MCP_Abilities_Server {
 	 */
 	private static function tool_result( $value, $is_error = false ) {
 		$json = wp_json_encode( $value );
+		if ( false !== $json && strlen( $json ) > 2 * 1024 * 1024 ) {
+			$json = '{"error":"Result too large. Narrow the WordPress query."}';
+			$is_error = true;
+		}
 		return array(
 			'content' => array(
 				array(
@@ -350,6 +355,11 @@ final class BC_MCP_Abilities_Server {
 					return self::success( $id, self::tool_result( self::ability_info( $ability ) ) );
 				}
 				if ( 'bc-execute-ability' === $name ) {
+					$slug = substr( (string) $target, strlen( 'bc-mcp-abilities/' ) );
+					$writes = array_keys( BC_MCP_Abilities_Admin::writable_abilities() );
+					if ( in_array( $slug, $writes, true ) && true !== ( $args['confirmed'] ?? false ) ) {
+						return self::success( $id, self::tool_result( array( 'error' => 'Explicit user confirmation is required for WordPress writes.' ), true ) );
+					}
 					$input  = isset( $args['parameters'] ) && is_array( $args['parameters'] ) ? $args['parameters'] : array();
 					$output = $ability->execute( $input );
 					if ( is_wp_error( $output ) ) {
