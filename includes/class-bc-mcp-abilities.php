@@ -24,6 +24,11 @@ final class BC_MCP_Abilities {
 	 * @return array
 	 */
 	public static function read_catalog() {
+		// The core Abilities registry initializes lazily. Settings processing can
+		// run before any caller has requested an ability in this PHP process.
+		if ( ! self::$read_catalog && function_exists( 'wp_get_abilities' ) ) {
+			wp_get_abilities();
+		}
 		return self::$read_catalog;
 	}
 
