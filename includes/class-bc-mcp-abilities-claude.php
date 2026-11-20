@@ -183,13 +183,11 @@ final class BC_MCP_Abilities_Claude {
 		</ol>
 		<p><a class="button button-primary button-hero" href="<?php echo esc_url( $url ); ?>"><?php esc_html_e( 'Download Claude Extension (.mcpb)', 'bc-mcp-abilities' ); ?></a></p>
 		<p class="description"><?php esc_html_e( 'Credentials are not included in the download or stored by BC MCP Abilities. Claude securely collects them. Use a dedicated WordPress account with minimal permissions.', 'bc-mcp-abilities' ); ?></p>
-		<p><strong><?php esc_html_e( 'First Claude prompt:', 'bc-mcp-abilities' ); ?></strong>
-			<code><?php esc_html_e( 'Discover WordPress abilities beginning with bc-mcp-abilities/. Do not modify anything.', 'bc-mcp-abilities' ); ?></code>
-		</p>
+		<p class="description"><?php esc_html_e( 'The connected WordPress user can access only the actions permitted by their WordPress role and this plugin\'s settings.', 'bc-mcp-abilities' ); ?></p>
 		<p><a target="_blank" rel="noopener noreferrer" href="https://support.claude.com/en/articles/10949351-getting-started-with-local-mcp-servers-on-claude-desktop">
 			<?php esc_html_e( 'Claude Desktop extension help', 'bc-mcp-abilities' ); ?>
 		</a></p>
-		<p class="description"><?php esc_html_e( 'Claude in a web browser requires OAuth. For now this is a Claude Desktop connection using MCP Adapter.', 'bc-mcp-abilities' ); ?></p>
+		<p class="description"><?php esc_html_e( 'This optional desktop extension uses the MCP Adapter and a WordPress Application Password. For OAuth connections, use the URL guidance under Connections.', 'bc-mcp-abilities' ); ?></p>
 		<?php
 	}
 }
