@@ -27,6 +27,44 @@ final class BC_MCP_Abilities_UI {
 		);
 	}
 
+
+	/**
+	 * Return a friendly, translatable label for each available editing action.
+	 *
+	 * Keep the underlying ability slug visible separately for technical users.
+	 *
+	 * @param string $slug First-party ability slug.
+	 * @return string
+	 */
+	private static function write_ability_label( $slug ) {
+		$labels = array(
+			'create-draft'              => __( 'Create a draft', 'bc-mcp-abilities' ),
+			'update-content'            => __( 'Edit a post or page', 'bc-mcp-abilities' ),
+			'restore-revision'          => __( 'Restore an earlier version', 'bc-mcp-abilities' ),
+			'elementor-update-text'     => __( 'Edit Elementor text', 'bc-mcp-abilities' ),
+			'elementor-undo'            => __( 'Undo Elementor changes', 'bc-mcp-abilities' ),
+			'wc-update-stock'           => __( 'Update WooCommerce stock', 'bc-mcp-abilities' ),
+			'create-taxonomy-term'      => __( 'Create categories or tags', 'bc-mcp-abilities' ),
+			'assign-post-terms'         => __( 'Assign categories or tags', 'bc-mcp-abilities' ),
+			'create-menu'               => __( 'Create a navigation menu', 'bc-mcp-abilities' ),
+			'add-menu-item'             => __( 'Add a menu item', 'bc-mcp-abilities' ),
+			'rank-math-update'          => __( 'Update Rank Math SEO', 'bc-mcp-abilities' ),
+			'yoast-seo-update'          => __( 'Update Yoast SEO', 'bc-mcp-abilities' ),
+			'wc-update-prices'          => __( 'Edit WooCommerce prices', 'bc-mcp-abilities' ),
+			'upload-image'              => __( 'Import an image', 'bc-mcp-abilities' ),
+			'update-media-alt'          => __( 'Edit image alt text', 'bc-mcp-abilities' ),
+			'create-custom-draft'       => __( 'Create a custom content draft', 'bc-mcp-abilities' ),
+			'update-custom-content'     => __( 'Edit custom content', 'bc-mcp-abilities' ),
+			'elementor-create-document' => __( 'Create an Elementor draft', 'bc-mcp-abilities' ),
+			'elementor-update-settings' => __( 'Edit Elementor settings', 'bc-mcp-abilities' ),
+			'elementor-add-element'     => __( 'Add an Elementor element', 'bc-mcp-abilities' ),
+			'elementor-delete-element'  => __( 'Remove an Elementor element', 'bc-mcp-abilities' ),
+			'elementor-move-element'    => __( 'Move an Elementor element', 'bc-mcp-abilities' ),
+			'elementor-regenerate-css'  => __( 'Refresh Elementor styles', 'bc-mcp-abilities' ),
+		);
+		return isset( $labels[ $slug ] ) ? $labels[ $slug ] : ucwords( str_replace( '-', ' ', $slug ) );
+	}
+
 	/**
 	 * Render a permission group with searchable controls.
 	 *
@@ -49,9 +87,9 @@ final class BC_MCP_Abilities_UI {
 			<div class="bc-permission-list">
 				<?php foreach ( $available as $slug => $description ) : ?>
 					<?php $enabled = BC_MCP_Abilities_Admin::is_enabled( $slug ); ?>
-					<label class="bc-permission" data-bc-permission data-bc-search-text="<?php echo esc_attr( strtolower( $slug . ' ' . $description ) ); ?>">
+					<label class="bc-permission" data-bc-permission data-bc-search-text="<?php echo esc_attr( strtolower( self::write_ability_label( $slug ) . ' ' . $slug . ' ' . $description ) ); ?>">
 						<span class="bc-permission-copy">
-							<strong><?php echo esc_html( ucwords( str_replace( '-', ' ', $slug ) ) ); ?></strong>
+							<strong><?php echo esc_html( self::write_ability_label( $slug ) ); ?></strong>
 							<span class="bc-permission-description"><?php echo esc_html( $description ); ?></span>
 							<code><?php echo esc_html( 'bc-mcp-abilities/' . $slug ); ?></code>
 						</span>
@@ -260,8 +298,8 @@ final class BC_MCP_Abilities_UI {
 								<td><?php echo esc_html( gmdate( 'Y-m-d H:i:s', $event['time'] ) ); ?></td>
 								<td><?php echo esc_html( '#' . $event['user_id'] ); ?></td>
 								<td><code><?php echo esc_html( $event['ability'] ); ?></code></td>
-								<td><?php echo esc_html( $event['kind'] ); ?></td>
-								<td><?php echo esc_html( $event['outcome'] ); ?></td>
+								<td><?php echo esc_html( 'write' === $event['kind'] ? __( 'Edit', 'bc-mcp-abilities' ) : __( 'Read', 'bc-mcp-abilities' ) ); ?></td>
+								<td><?php echo esc_html( 'error' === $event['outcome'] ? __( 'Failed', 'bc-mcp-abilities' ) : __( 'Completed', 'bc-mcp-abilities' ) ); ?></td>
 							</tr>
 						<?php endforeach; ?>
 					</tbody></table>
