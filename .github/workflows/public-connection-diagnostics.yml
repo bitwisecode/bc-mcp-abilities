@@ -1,0 +1,45 @@
+name: WPToolix Public MCP Connectivity Diagnostics
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe public metadata from outside WordPress hosting
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://wptoolix.com"
+          for path in \
+            "/.well-known/oauth-protected-resource/wp-json/bc-mcp/v1/server" \
+            "/.well-known/oauth-authorization-server/bc-mcp" \
+            "/wp-json/bc-mcp/v1/oauth/resource"; do
+            code=$(curl -sS -L --max-redirs 0 --max-time 15 -o /tmp/public-mcp.json -w "%{http_code}" "$base$path")
+            echo "$path: HTTP $code"
+            if [[ "$code" != "200" ]]; then
+              echo "Unexpected public metadata HTTP status from GitHub runner"
+              exit 1
+            fi
+            jq -e . /tmp/public-mcp.json >/dev/null
+          done
+      - name: Probe unauthenticated MCP initialization safely (no writes)
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -sS --max-time 20 --max-redirs 0 \
+            -D /tmp/mcp-headers.txt -o /tmp/mcp-result.json \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json, text/event-stream" \
+            --data '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"bc-diagnostics","version":"1.0"}}}' \
+            "https://wptoolix.com/wp-json/bc-mcp/v1/server"
+          echo "HTTP status from GitHub runner:"
+          head -n 1 /tmp/mcp-headers.txt
+          echo "Challenge header (if present):"
+          grep -i '^www-authenticate:' /tmp/mcp-headers.txt || true
+          echo "MCP response keys:"
+          jq -r 'keys[]?' /tmp/mcp-result.json 2>/dev/null || true
+          # Current site is expected to return 401 before the fix is installed.
