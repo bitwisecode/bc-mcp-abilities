@@ -41,7 +41,7 @@ These are **developer preview** functions. Elementor structural edits use the sa
 - Arbitrary PHP/theme/plugin source edits, shell commands, privileged self-impersonation, direct SQL, role elevation: intentionally excluded from public WordPress.org edition
 - Full Elementor JSON import, arbitrary document replacement, custom widget settings: need strict sanitization, versioned fixtures and compatibility tests
 - Custom post type revision rollback after independent changes: requires protected snapshots or native revisions with conflict checks
-- Frontend DOM audit/replay and Google PageSpeed: separate read-only diagnostic phase
+- Frontend DOM audit/replay: separate browser diagnostics. PageSpeed: initial site-scoped read-only module implemented
 - Third-party platform integrations (GSC, GA4, Facebook, YouTube, LinkedIn): optional future modules, with their own OAuth/permissions
 
 ## Acceptance gates
@@ -51,3 +51,7 @@ These are **developer preview** functions. Elementor structural edits use the sa
 3. Test permission denials, stale revision rejection, duplicate IDs, invalid JSON, cycle prevention, and concurrent edits.
 4. Keep this PR separate from ongoing ChatGPT OAuth connector troubleshooting.
 5. Do not deploy these structural write abilities on a live production site without explicit administrator opt-in and staging acceptance.
+
+## Site diagnostics, stage 2
+
+- `pagespeed-audit`: administrator-only Google PageSpeed Insights for an HTTPS same-site path; mobile or desktop, allowlisted Lighthouse categories, 1-hour transient caching, response-size limit, and bounded findings. This ability does not run Chromium on Hostinger, accept arbitrary external URLs, or include GA4/Search Console credentials. Google API may rate-limit unauthenticated requests.
