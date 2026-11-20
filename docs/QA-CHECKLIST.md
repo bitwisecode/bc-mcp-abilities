@@ -17,6 +17,12 @@ Release remains blocked until all gates pass.
 - [ ] Admin activation enables only the specifically selected write ability
 - [ ] WordPress current_user_can checks each target object
 - [ ] No arbitrary code execution or theme/plugin-file modifications
+- [ ] Taxonomy assignment requires editing the specific post and the taxonomy's assign_terms capability
+- [ ] Term creation requires manage_terms and edit_terms on that specific taxonomy
+- [ ] Term assignment rejects stale revision tokens, duplicate IDs and terms from another taxonomy
+- [ ] Menu item creation rejects inaccessible posts, unpublished content without proper rights, invalid parent and untrusted external URLs
+- [ ] Read-only ability exposure denylist hides opted-out abilities from discovery and rejects execution
+- [ ] Activity history omits passwords, tokens, OAuth codes, protected meta, request bodies and PII
 - [ ] Revision conflict rejects updates and restores
 - [ ] Revision restore accepts revisions belonging only to the requested post
 - [ ] Element IDs are validated, and missing Elementor is handled gracefully
