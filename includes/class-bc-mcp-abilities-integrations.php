@@ -183,7 +183,7 @@ final class BC_MCP_Abilities_Integrations {
 		$pending = array();
 		foreach ( $fields as $field => $key ) {
 			if ( array_key_exists( $field, $input ) ) {
-				$value = sanitize_text_field( $input[ $field ] );
+				$value = BC_MCP_Abilities::plain_text( $input[ $field ] );
 				if ( strlen( $value ) > 1000 ) {
 					return new WP_Error( 'bc_mcp_rank_math_length', __( 'SEO field exceeds the 1000-byte limit.', 'bc-mcp-abilities' ) );
 				}
@@ -193,7 +193,7 @@ final class BC_MCP_Abilities_Integrations {
 		$updates = count( $pending );
 		if ( $updates ) {
 			foreach ( $pending as $key => $value ) {
-				update_post_meta( $post->ID, $key, $value );
+				update_post_meta( $post->ID, $key, wp_slash( $value ) );
 			}
 		}
 		if ( 0 === $updates ) {

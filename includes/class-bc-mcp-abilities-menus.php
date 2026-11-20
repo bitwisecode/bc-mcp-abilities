@@ -256,8 +256,8 @@ final class BC_MCP_Abilities_Menus {
 		$types  = BC_MCP_Abilities_Content::editable_types();
 		if ( isset( $types[ $object ] ) ) {
 			$post = get_post( $id );
-			if ( ! $post || $post->post_type !== $object || ! current_user_can( 'edit_post', $id ) ) {
-				return new WP_Error( 'bc_mcp_menu_item_denied', __( 'That post cannot be used as a menu item.', 'bc-mcp-abilities' ) );
+			if ( ! $post || $post->post_type !== $object || 'publish' !== $post->post_status || ! current_user_can( 'edit_post', $id ) ) {
+				return new WP_Error( 'bc_mcp_menu_item_denied', __( 'Only published content you can edit can be added to a menu.', 'bc-mcp-abilities' ) );
 			}
 			$type = 'post_type';
 		} else {

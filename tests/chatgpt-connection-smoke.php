@@ -117,7 +117,18 @@ $reader = wp_insert_user(
 	)
 );
 $assert( ! is_wp_error( $editor ) && ! is_wp_error( $reader ), 'Could not create smoke-test users.' );
-$mint     = static function ( $user_id, $resource, $scope ) {
+$grant    = static function ( $user_id ) {
+	$id     = bin2hex( random_bytes( 16 ) );
+	$grants = BC_MCP_Abilities_OAuth::grants( $user_id );
+	$grants[ $id ] = array(
+		'client'       => 'bc_smoke',
+		'created_at'   => time(),
+		'last_used_at' => time(),
+	);
+	update_user_option( $user_id, BC_MCP_Abilities_OAuth::GRANTS_OPTION, $grants );
+	return $id;
+};
+$mint     = static function ( $user_id, $resource, $scope, $grant_id = null ) use ( $grant ) {
 	$token = bin2hex( random_bytes( 32 ) );
 	set_transient(
 		'bc_mcp_access_' . hash( 'sha256', $token ),
@@ -126,6 +137,7 @@ $mint     = static function ( $user_id, $resource, $scope ) {
 			'resource' => $resource,
 			'client'   => 'bc_smoke',
 			'scope'    => $scope,
+			'grant'    => null === $grant_id ? $grant( $user_id ) : $grant_id,
 		),
 		300
 	);
@@ -176,6 +188,50 @@ $assert( 403 === $authed( $mint( $editor, $endpoint, 'offline_access' ), 'tools/
 $assert( 401 === $authed( $mint( $reader, $endpoint, 'mcp' ), 'tools/call', array( 'name' => 'bc-list-abilities' ) )->get_status(), 'Users without edit_posts must be rejected.' );
 delete_transient( 'bc_mcp_access_' . hash( 'sha256', $valid ) );
 $assert( 401 === $authed( $valid, 'tools/call', array( 'name' => 'bc-list-abilities' ) )->get_status(), 'Expired access tokens must be rejected.' );
+
+// Every token must belong to a live grant; revoking the grant revokes the token.
+$list_call = array(
+	'name'      => 'bc-list-abilities',
+	'arguments' => (object) array(),
+);
+$assert( 401 === $authed( $mint( $editor, $endpoint, 'mcp', '' ), 'tools/call', $list_call )->get_status(), 'Tokens without a grant must be rejected.' );
+$assert( 401 === $authed( $mint( $editor, $endpoint, 'mcp', 'unknown-grant' ), 'tools/call', $list_call )->get_status(), 'Tokens for an unknown grant must be rejected.' );
+
+$grant_id = $grant( $editor );
+$token    = $mint( $editor, $endpoint, 'mcp', $grant_id );
+$assert( 200 === $authed( $token, 'tools/call', $list_call )->get_status(), 'A token with a live grant must work.' );
+BC_MCP_Abilities_OAuth::revoke_grant( $editor, $grant_id );
+$assert( 401 === $authed( $token, 'tools/call', $list_call )->get_status(), 'Revoking a grant must revoke its tokens.' );
+
+$token = $mint( $editor, $endpoint, 'mcp' );
+$assert( 200 === $authed( $token, 'tools/call', $list_call )->get_status(), 'Fresh grant must work before password tests.' );
+$editor_user = get_userdata( $editor );
+$same_pass   = 'Same-pass-' . wp_generate_password( 12, false );
+wp_set_password( $same_pass, $editor );
+$token = $mint( $editor, $endpoint, 'mcp' );
+wp_set_password( $same_pass, $editor );
+$assert( 200 === $authed( $token, 'tools/call', $list_call )->get_status(), 'Re-hashing an unchanged password (as WordPress does at login) must not disconnect the user.' );
+wp_set_password( 'Changed-' . wp_generate_password( 12, false ), $editor );
+$assert( 401 === $authed( $token, 'tools/call', $list_call )->get_status(), 'Changing the password must revoke every connection of that user.' );
+
+$token = $mint( $editor, $endpoint, 'mcp' );
+wp_update_user(
+	array(
+		'ID'        => $editor,
+		'user_pass' => 'Profile-' . wp_generate_password( 12, false ),
+	)
+);
+$assert( 401 === $authed( $token, 'tools/call', $list_call )->get_status(), 'A password change from the profile screen must revoke connections.' );
+
+$token = $mint( $editor, $endpoint, 'mcp' );
+$editor_user = get_userdata( $editor );
+$editor_user->set_role( 'author' );
+$assert( 401 === $authed( $token, 'tools/call', $list_call )->get_status(), 'A role change must revoke connections.' );
+
+$token = $mint( $editor, $endpoint, 'mcp' );
+update_option( BC_MCP_Abilities_OAuth::OPTION, '0' );
+update_option( BC_MCP_Abilities_OAuth::OPTION, '1' );
+$assert( 401 === $authed( $token, 'tools/call', $list_call )->get_status(), 'Turning sign-in off must disconnect everyone; re-enabling must not revive old tokens.' );
 
 require_once ABSPATH . 'wp-admin/includes/user.php';
 wp_delete_user( $editor );

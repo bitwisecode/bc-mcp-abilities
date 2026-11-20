@@ -128,6 +128,7 @@ final class BC_MCP_Abilities_UI {
 		<?php if ( ! is_ssl() ) : ?>
 			<div class="bc-alert bc-alert-danger"><?php esc_html_e( 'A secure HTTPS connection is required. Enable HTTPS on your website to use WordPress sign-in.', 'bc-mcp-abilities' ); ?></div>
 		<?php endif; ?>
+		<?php self::compatibility_notices(); ?>
 		<div class="bc-card">
 			<div class="bc-card-title"><h3><?php esc_html_e( 'Connection preferences', 'bc-mcp-abilities' ); ?></h3><p><?php esc_html_e( 'Choose how AI assistants can connect to your WordPress website.', 'bc-mcp-abilities' ); ?></p></div>
 			<form method="post" action="options.php">
@@ -140,7 +141,7 @@ final class BC_MCP_Abilities_UI {
 					<span class="bc-switch"><input type="checkbox" name="<?php echo esc_attr( BC_MCP_Abilities_Server::OPTION ); ?>" value="1" <?php checked( $server_on ); ?> /><span class="bc-switch-track" aria-hidden="true"></span></span>
 				</label>
 				<label class="bc-setting-row">
-					<span><strong><?php esc_html_e( 'Secure WordPress sign-in', 'bc-mcp-abilities' ); ?></strong><small><?php esc_html_e( 'Allow users to sign in with WordPress and approve access when connecting an AI assistant.', 'bc-mcp-abilities' ); ?></small></span>
+					<span><strong><?php esc_html_e( 'Secure WordPress sign-in', 'bc-mcp-abilities' ); ?></strong><small><?php esc_html_e( 'Allow users to sign in with WordPress and approve access when connecting an AI assistant. Turning this or the MCP connection off disconnects every connected assistant.', 'bc-mcp-abilities' ); ?></small></span>
 					<span class="bc-switch"><input type="checkbox" name="<?php echo esc_attr( BC_MCP_Abilities_OAuth::OPTION ); ?>" value="1" <?php checked( $oauth_on ); ?> <?php disabled( ! is_ssl() ); ?> /><span class="bc-switch-track" aria-hidden="true"></span></span>
 				</label>
 				<label class="bc-setting-row">
@@ -189,7 +190,93 @@ final class BC_MCP_Abilities_UI {
 				<p class="bc-client-note"><?php esc_html_e( 'This Claude URL is provided by a separate, optional MCP integration. It will work only when that provider is installed and enabled.', 'bc-mcp-abilities' ); ?></p>
 			</div>
 		</div>
+		<?php self::connected_assistants(); ?>
+		<p class="bc-muted"><?php esc_html_e( 'These settings control the built-in ChatGPT connection only. Read-only and enabled editing actions also remain available, under the same WordPress permissions, through the WordPress Abilities REST API and the official MCP Adapter to users who authenticate with an Application Password. Hide read-only actions or disable editing actions under Abilities & permissions to restrict every connection method.', 'bc-mcp-abilities' ); ?></p>
 		<p class="bc-muted"><?php esc_html_e( 'The connection indicator reflects your saved settings. It does not confirm that an external AI assistant is connected.', 'bc-mcp-abilities' ); ?></p>
+		<?php
+	}
+
+	/**
+	 * Warn about site configurations that prevent OAuth discovery.
+	 *
+	 * @return void
+	 */
+	private static function compatibility_notices() {
+		if ( ! is_ssl() && 'https' === wp_parse_url( home_url(), PHP_URL_SCHEME ) ) {
+			echo '<div class="bc-alert bc-alert-danger">' . esc_html__( 'Your site address uses HTTPS, but WordPress does not detect HTTPS for this request. If your site is behind a proxy, load balancer or CDN, configure WordPress to trust the forwarded HTTPS header (for example X-Forwarded-Proto).', 'bc-mcp-abilities' ) . '</div>';
+		}
+		if ( '' === (string) get_option( 'permalink_structure' ) ) {
+			printf(
+				'<div class="bc-alert bc-alert-danger">%s <a href="%s">%s</a></div>',
+				esc_html__( 'The ChatGPT connection needs pretty permalinks. With plain permalinks, the sign-in and discovery addresses cannot be reached.', 'bc-mcp-abilities' ),
+				esc_url( admin_url( 'options-permalink.php' ) ),
+				esc_html__( 'Change permalink settings', 'bc-mcp-abilities' )
+			);
+		}
+		$path = (string) wp_parse_url( home_url(), PHP_URL_PATH );
+		if ( '' !== trim( $path, '/' ) ) {
+			echo '<div class="bc-alert">' . esc_html__( 'This website is installed in a subdirectory. Assistants that only look for OAuth discovery documents at the domain root may not connect. ChatGPT follows the discovery link this plugin sends, so test the connection after setup.', 'bc-mcp-abilities' ) . '</div>';
+		}
+	}
+
+	/**
+	 * List approved AI connections with revoke controls.
+	 *
+	 * @return void
+	 */
+	private static function connected_assistants() {
+		$grants  = BC_MCP_Abilities_OAuth::all_grants();
+		$clients = BC_MCP_Abilities_OAuth::clients();
+		$format  = get_option( 'date_format' ) . ' ' . get_option( 'time_format' );
+		$action  = admin_url( 'admin-post.php' );
+		?>
+		<div class="bc-card">
+			<div class="bc-card-title"><h3><?php esc_html_e( 'Connected assistants', 'bc-mcp-abilities' ); ?></h3><p><?php esc_html_e( 'Each approval a WordPress user gave an AI assistant. Revoking one ends its access immediately. Changing a user\'s password or role also disconnects that user.', 'bc-mcp-abilities' ); ?></p></div>
+			<?php if ( ! $grants ) : ?>
+				<div class="bc-empty"><strong><?php esc_html_e( 'No assistants are connected', 'bc-mcp-abilities' ); ?></strong></div>
+			<?php else : ?>
+				<div class="bc-table-scroll"><table class="widefat bc-events"><thead><tr>
+					<th><?php esc_html_e( 'WordPress user', 'bc-mcp-abilities' ); ?></th><th><?php esc_html_e( 'Assistant', 'bc-mcp-abilities' ); ?></th><th><?php esc_html_e( 'Connected', 'bc-mcp-abilities' ); ?></th><th><?php esc_html_e( 'Last used', 'bc-mcp-abilities' ); ?></th><th><span class="screen-reader-text"><?php esc_html_e( 'Actions', 'bc-mcp-abilities' ); ?></span></th>
+				</tr></thead><tbody>
+				<?php foreach ( $grants as $grant ) : ?>
+					<?php
+					$user   = get_userdata( $grant['user_id'] );
+					$client = isset( $clients[ $grant['client'] ] ) ? $clients[ $grant['client'] ] : null;
+					?>
+					<tr>
+						<td><?php echo esc_html( $user ? $user->display_name . ' (' . $user->user_login . ')' : '#' . $grant['user_id'] ); ?></td>
+						<td><?php echo esc_html( $client ? (string) ( $client['client_name'] ?? '' ) : __( 'Removed client', 'bc-mcp-abilities' ) ); ?></td>
+						<td><?php echo esc_html( $grant['created_at'] ? wp_date( $format, $grant['created_at'] ) : '—' ); ?></td>
+						<td><?php echo esc_html( $grant['last_used_at'] ? wp_date( $format, $grant['last_used_at'] ) : '—' ); ?></td>
+						<td>
+							<form method="post" action="<?php echo esc_url( $action ); ?>">
+								<input type="hidden" name="action" value="bc_mcp_oauth_revoke_grant" />
+								<input type="hidden" name="user_id" value="<?php echo esc_attr( (string) $grant['user_id'] ); ?>" />
+								<input type="hidden" name="grant_id" value="<?php echo esc_attr( $grant['grant_id'] ); ?>" />
+								<?php wp_nonce_field( 'bc_mcp_oauth_revoke_grant' ); ?>
+								<?php submit_button( __( 'Revoke', 'bc-mcp-abilities' ), 'secondary small', 'submit', false ); ?>
+							</form>
+						</td>
+					</tr>
+				<?php endforeach; ?>
+				</tbody></table></div>
+			<?php endif; ?>
+			<p class="bc-muted">
+				<?php
+				printf(
+					/* translators: 1: number of registered OAuth clients, 2: maximum. */
+					esc_html__( 'Registered assistant clients: %1$d of %2$d. Unused registrations are removed automatically.', 'bc-mcp-abilities' ),
+					(int) count( $clients ),
+					(int) BC_MCP_Abilities_OAuth::MAX_CLIENTS
+				);
+				?>
+			</p>
+			<form method="post" action="<?php echo esc_url( $action ); ?>" data-bc-revoke-all>
+				<input type="hidden" name="action" value="bc_mcp_oauth_revoke_all" />
+				<?php wp_nonce_field( 'bc_mcp_oauth_revoke_all' ); ?>
+				<?php submit_button( __( 'Disconnect all assistants', 'bc-mcp-abilities' ), 'secondary', 'submit', false ); ?>
+			</form>
+		</div>
 		<?php
 	}
 

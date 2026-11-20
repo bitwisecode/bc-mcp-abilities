@@ -24,6 +24,7 @@ import json
 import re
 import secrets
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -110,7 +111,29 @@ def login(jar, user, password):
     return status in (302, 303) and any(c.name.startswith("wordpress_logged_in") for c in jar)
 
 
-def oauth_token(user, password):
+def login_via_redirect(jar, user, password, authorize_url):
+    """Start logged out, as a fresh browser does, and follow wp-login back."""
+    status, headers, _ = send("GET", authorize_url, jar=jar)
+    location = header(headers, "Location")
+    if status != 302 or "wp-login.php" not in location:
+        return None, f"authorize did not redirect to wp-login ({status} {location[:120]})"
+    redirect_to = urllib.parse.parse_qs(urllib.parse.urlparse(location).query).get("redirect_to", [""])[0]
+    send("GET", location, jar=jar)
+    status, headers, _ = send(
+        "POST",
+        BASE + "/wp-login.php",
+        {"log": user, "pwd": password, "wp-submit": "Log In", "testcookie": "1", "redirect_to": redirect_to},
+        jar=jar,
+        form=True,
+        headers={"Cookie": "wordpress_test_cookie=WP%20Cookie%20check"},
+    )
+    back = header(headers, "Location")
+    if status not in (302, 303) or not back:
+        return None, f"login did not redirect back ({status})"
+    return back, ""
+
+
+def oauth_token(user, password, logged_out_start=False, details=None):
     """Return (client_id, token_response) after a complete DCR + consent + PKCE exchange."""
     status, _, body = send("POST", BASE + "/bc-mcp/oauth/register", {"client_name": "ChatGPT e2e", "redirect_uris": [REDIRECT], "token_endpoint_auth_method": "none"})
     if status != 201:
@@ -126,12 +149,20 @@ def oauth_token(user, password):
         "code_challenge_method": "S256",
         "resource": MCP,
         "scope": "mcp offline_access",
-        "state": "e2e-state",
+        "state": "e2e state/with+chars",
     }
+    authorize_url = BASE + "/bc-mcp/oauth/authorize?" + urllib.parse.urlencode(query)
     jar = CookieJar()
-    if not login(jar, user, password):
+    if logged_out_start:
+        authorize_url, error = login_via_redirect(jar, user, password, authorize_url)
+        if not authorize_url:
+            return client_id, {"error": "logged_out_flow", "detail": error}
+    elif not login(jar, user, password):
         return client_id, {"error": "login_failed"}
-    status, _, page = send("GET", BASE + "/bc-mcp/oauth/authorize?" + urllib.parse.urlencode(query), jar=jar)
+    status, page_headers, page = send("GET", authorize_url, jar=jar)
+    if details is not None:
+        details["consent_headers"] = page_headers
+        details["consent_page"] = page
     if status == 403:
         return client_id, {"error": "access_denied", "status": 403}
     nonce = re.search(r'name="_wpnonce" value="([^"]+)"', page)
@@ -142,7 +173,10 @@ def oauth_token(user, password):
     form["bc_decision"] = "approve"
     status, headers, _ = send("POST", BASE + "/bc-mcp/oauth/authorize", form, jar=jar, form=True)
     location = header(headers, "Location")
-    code = urllib.parse.parse_qs(urllib.parse.urlparse(location).query).get("code", [""])[0]
+    callback = urllib.parse.parse_qs(urllib.parse.urlparse(location).query)
+    code = callback.get("code", [""])[0]
+    if details is not None:
+        details["callback_state"] = callback.get("state", [""])[0]
     if not code:
         return client_id, {"error": "no_code", "status": status}
     status, _, body = send(
@@ -186,10 +220,20 @@ for tool in tools:
     check(isinstance(schema.get("properties"), dict), f"{tool.get('name')} inputSchema.properties is a JSON object", json.dumps(schema)[:120])
 
 # 3. Full OAuth flow.
-client_id, tokens = oauth_token(USER, PASSWORD)
+details = {}
+client_id, tokens = oauth_token(USER, PASSWORD, details=details)
 access = tokens.get("access_token", "")
 check(bool(access), "DCR + consent + PKCE token exchange issues an access token", tokens)
 check(tokens.get("token_type") == "Bearer", "token_type is Bearer", tokens)
+consent_headers = details.get("consent_headers", {})
+check(header(consent_headers, "X-Frame-Options").upper() == "DENY", "consent page refuses framing (X-Frame-Options)", header(consent_headers, "X-Frame-Options"))
+check("frame-ancestors 'none'" in header(consent_headers, "Content-Security-Policy"), "consent page refuses framing (CSP frame-ancestors)", header(consent_headers, "Content-Security-Policy"))
+check("ChatGPT e2e" in details.get("consent_page", ""), "consent page names the registered client")
+check(details.get("callback_state") == "e2e state/with+chars", "state is returned to the client unchanged", details.get("callback_state"))
+
+# 3b. A browser that is not yet signed in to WordPress (the common first-time path).
+_, logged_out = oauth_token(USER, PASSWORD, logged_out_start=True)
+check(bool(logged_out.get("access_token")), "a logged-out user goes through wp-login and back to consent with the request intact", logged_out)
 
 # 4. Authenticated MCP session.
 status, _, body = rpc("initialize", 1, {"protocolVersion": "2025-11-25", "capabilities": {}, "clientInfo": {"name": "e2e", "version": "1"}}, token=access)
@@ -200,7 +244,7 @@ status, _, body = rpc("tools/call", 3, {"name": "bc-list-abilities", "arguments"
 result = json.loads(body).get("result", {}) if status == 200 else {}
 listed = json.loads(result.get("content", [{}])[0].get("text", "{}")) if result else {}
 check(status == 200 and result.get("isError") is False and len(listed.get("abilities", [])) > 0, "tools/call bc-list-abilities runs as the authorized user", f"{status} {body[:200]}")
-status, _, body = rpc("tools/call", 4, {"name": "bc-get-ability-info", "arguments": {"ability_name": "bc-mcp-abilities/site-info"}}, token=access)
+status, _, body = rpc("tools/call", 4, {"name": "bc-get-ability-info", "arguments": {"ability_name": "bc-mcp-abilities/list-content"}}, token=access)
 check(status == 200 and '"isError":false' in body, "tools/call bc-get-ability-info succeeds", f"{status} {body[:200]}")
 status, _, body = rpc("tools/call", 5, {"name": "bc-execute-ability", "arguments": {"ability_name": "bc-mcp-abilities/list-content", "parameters": {}}}, token=access)
 check(status == 200 and '"isError":false' in body, "read-only bc-execute-ability list-content succeeds", f"{status} {body[:200]}")
@@ -230,11 +274,26 @@ if refresh:
     status, _, body = send("POST", BASE + "/bc-mcp/oauth/token", {"grant_type": "refresh_token", "refresh_token": refresh, "client_id": client_id, "resource": MCP}, form=True)
     rotated = json.loads(body) if status == 200 else {}
     check(bool(rotated.get("access_token")) and rotated.get("refresh_token") != refresh, "refresh token rotates", body[:160])
+    status, _, _ = rpc("tools/call", 10, {"name": "bc-list-abilities", "arguments": {}}, token=rotated.get("access_token", ""))
+    check(status == 200, "rotated access token works", status)
     status, _, _ = send("POST", BASE + "/bc-mcp/oauth/token", {"grant_type": "refresh_token", "refresh_token": refresh, "client_id": client_id, "resource": MCP}, form=True)
     check(status == 400, "replayed refresh token is rejected", status)
-    send("POST", BASE + "/bc-mcp/oauth/revoke", {"client_id": client_id, "token": rotated.get("access_token", "")}, form=True)
-    status, _, _ = rpc("tools/call", 10, {"name": "bc-list-abilities", "arguments": {}}, token=rotated.get("access_token", ""))
-    check(status == 401, "revoked access token is rejected", status)
+    status, _, _ = rpc("tools/call", 11, {"name": "bc-list-abilities", "arguments": {}}, token=rotated.get("access_token", ""))
+    check(status == 200, "an immediate retry (client race) does not revoke the connection", status)
+    print("Waiting 31 seconds to replay outside the retry window...")
+    time.sleep(31)
+    status, _, _ = send("POST", BASE + "/bc-mcp/oauth/token", {"grant_type": "refresh_token", "refresh_token": refresh, "client_id": client_id, "resource": MCP}, form=True)
+    check(status == 400, "late replay of a rotated refresh token is rejected", status)
+    status, _, _ = rpc("tools/call", 12, {"name": "bc-list-abilities", "arguments": {}}, token=rotated.get("access_token", ""))
+    check(status == 401, "late refresh-token replay revokes the whole connection", status)
+    status, _, _ = send("POST", BASE + "/bc-mcp/oauth/token", {"grant_type": "refresh_token", "refresh_token": rotated.get("refresh_token", ""), "client_id": client_id, "resource": MCP}, form=True)
+    check(status == 400, "the newest refresh token is also revoked after replay", status)
+
+    # Explicit revocation on a fresh connection.
+    fresh_client, fresh = oauth_token(USER, PASSWORD)
+    send("POST", BASE + "/bc-mcp/oauth/revoke", {"client_id": fresh_client, "token": fresh.get("access_token", "")}, form=True)
+    status, _, _ = rpc("tools/call", 13, {"name": "bc-list-abilities", "arguments": {}}, token=fresh.get("access_token", ""))
+    check(bool(fresh.get("access_token")) and status == 401, "revoked access token is rejected", status)
 
 # 7. Insufficient WordPress permissions.
 if LOW_USER:

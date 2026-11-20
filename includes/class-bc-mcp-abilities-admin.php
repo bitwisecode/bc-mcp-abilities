@@ -103,6 +103,15 @@ final class BC_MCP_Abilities_Admin {
 			BC_MCP_ABILITIES_VERSION,
 			true
 		);
+		wp_localize_script(
+			'bc-mcp-settings',
+			'bcMcpSettings',
+			array(
+				'copied'        => __( 'Copied!', 'bc-mcp-abilities' ),
+				'confirmClear'  => __( 'Permanently clear the stored BC MCP activity history?', 'bc-mcp-abilities' ),
+				'confirmRevoke' => __( 'Disconnect every connected AI assistant? Users will need to connect again.', 'bc-mcp-abilities' ),
+			)
+		);
 	}
 
 	/**

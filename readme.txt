@@ -8,7 +8,7 @@ Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Independent, permission-checked WordPress Abilities plus an optional built-in MCP endpoint and OAuth; works with the official MCP Adapter when available.
+Permission-checked WordPress Abilities for AI agents, with an optional built-in MCP endpoint and OAuth. Works with the official MCP Adapter.
 
 == Description ==
 
@@ -42,9 +42,11 @@ When an authorized administrator explicitly enables and invokes the image-import
 
 = Local data and security history =
 
-The plugin stores connection configuration, registered OAuth clients, short-lived OAuth authorization/access data, administrator-selected ability permissions and at most 100 execution audit records. Audit entries include the timestamp, numeric WordPress user ID, action name, read/edit type and outcome, and expire after up to seven days. They do not contain prompts, request bodies, tokens, passwords or response data. Administrators can export or clear local audit history. Additional connection diagnostics are off unless enabled by an administrator, and retain sanitized events for no more than 24 hours.
+The plugin stores connection configuration, registered OAuth clients, short-lived OAuth authorization/access data, a list of each user's approved assistant connections, administrator-selected ability permissions and at most 100 execution audit records. Audit entries include the timestamp, numeric WordPress user ID, action name, read/edit type and outcome, and expire after up to seven days. They do not contain prompts, request bodies, tokens, passwords or response data. Administrators can export or clear local audit history. Additional connection diagnostics are off unless enabled by an administrator, and retain sanitized events for no more than 24 hours.
 
-Uninstall removes plugin-owned settings, registered OAuth clients, audit history and Elementor recovery data. Temporary OAuth credentials expire automatically; existing access credentials become invalid after plugin removal. Uninstall does not delete ordinary WordPress posts, pages, products or media.
+Administrators can see and revoke connected assistants under Settings > BC MCP Abilities > Connections. Changing a user's password or role, or turning the MCP connection or WordPress sign-in off, disconnects the affected assistants. Unused client registrations are removed automatically.
+
+Uninstall removes plugin-owned settings, registered OAuth clients, connection approvals, stored OAuth codes and tokens, audit history and Elementor recovery data, on every site of a multisite network. On sites with a persistent object cache, cached temporary credentials expire on their own; all existing credentials become invalid after plugin removal. Uninstall does not delete ordinary WordPress posts, pages, products or media.
 
 == Supported Integrations ==
 
@@ -59,7 +61,7 @@ No Facebook, LinkedIn or YouTube social posting, scheduling or account API integ
 
 1. Install on WordPress 6.9 or later.
 2. Activate the plugin.
-3. Use the native WordPress Abilities API, optionally enable the built-in MCP/OAuth connection in Settings, or install the official MCP Adapter.
+3. Use the native WordPress Abilities API, optionally enable the built-in MCP/OAuth connection in Settings, or install the official MCP Adapter. The built-in connection requires HTTPS and pretty permalinks.
 4. Grant WordPress users only the capabilities they actually need.
 
 == Frequently Asked Questions ==
@@ -77,3 +79,5 @@ No. Every ability requires a logged-in WordPress user with appropriate permissio
 * Added user-permission and per-action editing controls, read-only exposure settings, protected activity history, and connection troubleshooting.
 * Included supported Elementor, WooCommerce, Rank Math, Yoast SEO, taxonomy, media, and classic navigation menu operations.
 * Enabled bounded inventory, SEO and pricing changes with revision checking and security safeguards.
+* Connection management: view and revoke connected assistants, automatic cleanup of unused client registrations, and automatic disconnection on password or role changes.
+* Declared WooCommerce High-Performance Order Storage compatibility.

@@ -6,7 +6,6 @@ on:
       - 'bc-mcp-abilities.php'
       - 'includes/**'
       - 'assets/**'
-      - 'claude-extension/**'
       - 'uninstall.php'
       - 'readme.txt'
       - 'LICENSE'
@@ -26,11 +25,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p dist/bc-mcp-abilities/includes dist/bc-mcp-abilities/assets dist/bc-mcp-abilities/claude-extension/server
+          mkdir -p dist/bc-mcp-abilities/includes dist/bc-mcp-abilities/assets
           cp bc-mcp-abilities.php readme.txt LICENSE uninstall.php dist/bc-mcp-abilities/
           cp includes/*.php dist/bc-mcp-abilities/includes/
           cp assets/admin.css assets/admin.js dist/bc-mcp-abilities/assets/
-          cp claude-extension/server/index.js dist/bc-mcp-abilities/claude-extension/server/
           (cd dist && zip -qr bc-mcp-abilities.zip bc-mcp-abilities)
           unzip -l dist/bc-mcp-abilities.zip
       - name: Upload staging build

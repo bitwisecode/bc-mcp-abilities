@@ -60,18 +60,9 @@ foreach ( $all_abilities as $slug ) {
 	}
 }
 
-$manifest = BC_MCP_Abilities_Claude::manifest();
-if (
-	'0.3' !== $manifest['manifest_version'] ||
-	! isset( $manifest['server']['entry_point'] ) ||
-	'server/index.js' !== $manifest['server']['entry_point'] ||
-	BC_MCP_Abilities_Claude::endpoint() !== $manifest['user_config']['site_url']['default'] ||
-	empty( $manifest['user_config']['application_password']['sensitive'] )
-) {
-	WP_CLI::error( 'The Claude Desktop extension manifest is incomplete or insecure.' );
-}
-if ( ! is_readable( dirname( __DIR__ ) . '/claude-extension/server/index.js' ) ) {
-	WP_CLI::error( 'The Claude Desktop extension bridge is missing from the plugin.' );
+// The Claude Desktop .mcpb extension was removed; nothing may still serve it.
+if ( class_exists( 'BC_MCP_Abilities_Claude' ) || has_action( 'admin_post_bc_mcp_download_claude' ) || file_exists( dirname( __DIR__ ) . '/claude-extension' ) ) {
+	WP_CLI::error( 'The removed Claude Desktop extension is still present.' );
 }
 
 $old_user = get_current_user_id();
