@@ -39,6 +39,8 @@ final class BC_MCP_Abilities_Admin {
 			'create-menu'               => __( 'Create an empty classic WordPress navigation menu', 'bc-mcp-abilities' ),
 			'add-menu-item'             => __( 'Add an existing page, post or public taxonomy term to a classic menu', 'bc-mcp-abilities' ),
 			'rank-math-update'          => __( 'Edit Rank Math title, description and focus keywords', 'bc-mcp-abilities' ),
+			'yoast-seo-update'          => __( 'Edit Yoast SEO titles, descriptions and focus keywords with revision checks', 'bc-mcp-abilities' ),
+			'wc-update-prices'          => __( 'Update one simple product or variation regular/sale prices with revision checking', 'bc-mcp-abilities' ),
 			'upload-image'              => __( 'Import public HTTPS images into Media Library', 'bc-mcp-abilities' ),
 			'update-media-alt'          => __( 'Update image alternative text', 'bc-mcp-abilities' ),
 			'create-custom-draft'       => __( 'Create an eligible custom post type draft', 'bc-mcp-abilities' ),
