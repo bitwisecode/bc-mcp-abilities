@@ -3,7 +3,7 @@
  * Plugin Name: BC MCP Abilities
  * Plugin URI: https://github.com/bitwisecode/bc-mcp-abilities
  * Description: Independent, permission-checked WordPress Abilities for AI agents. Optional MCP Adapter integration.
- * Version: 0.1.0-dev
+ * Version: 1.0.0
  * Author: BitwiseCode
  * Author URI: https://bitwisecode.com
  * License: GPLv2 or later
@@ -15,7 +15,7 @@
  */
 
 defined( 'ABSPATH' ) || exit;
-define( 'BC_MCP_ABILITIES_VERSION', '0.1.0-dev' );
+define( 'BC_MCP_ABILITIES_VERSION', '1.0.0' );
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-admin.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-audit.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-claude.php';
