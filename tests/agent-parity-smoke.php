@@ -55,10 +55,16 @@ $slugs = array(
 	'elementor-delete-element',
 	'elementor-move-element',
 	'elementor-regenerate-css',
+	'pagespeed-audit',
 );
 foreach ( $slugs as $slug ) {
 	$assert( wp_get_ability( 'bc-mcp-abilities/' . $slug ), 'Missing Agent parity ability: ' . $slug );
 }
+
+$assert( true === wp_get_ability( 'bc-mcp-abilities/pagespeed-audit' )->check_permissions( array() ), 'Admin should be able to run PageSpeed audits.' );
+$assert( is_wp_error( BC_MCP_Abilities_Performance::audit( array( 'path' => '//evil.com' ) ) ), 'External URL paths must be denied.' );
+$assert( is_wp_error( BC_MCP_Abilities_Performance::audit( array( 'path' => '/../../secret' ) ) ), 'Traversal paths must be denied.' );
+$assert( is_wp_error( BC_MCP_Abilities_Performance::audit( array( 'path' => '/', 'categories' => array( 'other' ) ) ) ), 'Unknown categories must be denied.' );
 
 $types = wp_get_ability( 'bc-mcp-abilities/content-types' )->execute( array() );
 $assert( ! is_wp_error( $types ), 'Content types read failed.' );
