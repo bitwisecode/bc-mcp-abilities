@@ -331,6 +331,7 @@ final class BC_MCP_Abilities_OAuth {
 			'created_at'    => time(),
 		);
 		update_option( self::CLIENTS_OPTION, $clients, false );
+		self::trace( 'registration', 'registered' );
 
 		self::json(
 			array(
@@ -427,6 +428,7 @@ final class BC_MCP_Abilities_OAuth {
 			}
 			$choice = self::field( 'bc_decision', self::submitted() );
 			if ( 'approve' !== $choice ) {
+				self::trace( 'authorization', 'denied' );
 				self::client_redirect(
 					$auth,
 					array(
@@ -445,6 +447,7 @@ final class BC_MCP_Abilities_OAuth {
 				),
 				5 * MINUTE_IN_SECONDS
 			);
+			self::trace( 'authorization', 'approved' );
 			self::client_redirect(
 				$auth,
 				array(
@@ -492,6 +495,59 @@ final class BC_MCP_Abilities_OAuth {
 		</main></body></html>
 		<?php
 		exit;
+	}
+
+	/**
+	 * Enforce resource binding without requiring the optional RFC 8707 token parameter.
+	 *
+	 * A missing token-request resource retains the originally authorized
+	 * resource. A supplied resource must match that grant exactly.
+	 *
+	 * @param string $requested Resource from the token request, possibly empty.
+	 * @param string $granted   Original authorization's resource.
+	 * @return bool
+	 */
+	public static function valid_token_resource( $requested, $granted ) {
+		if ( ! is_string( $requested ) || ! is_string( $granted ) || BC_MCP_Abilities_Server::endpoint() !== $granted ) {
+			return false;
+		}
+		return '' === $requested || hash_equals( $granted, $requested );
+	}
+
+	/**
+	 * Write a bounded OAuth diagnostic event, without credentials or request identifiers.
+	 *
+	 * @param string $event  Known protocol stage.
+	 * @param string $result Known stage outcome.
+	 * @return void
+	 */
+	public static function trace( $event, $result ) {
+		if ( '1' !== (string) get_option( 'bc_mcp_oauth_debug_enabled', '0' ) ) {
+			return;
+		}
+
+		$allowed_events = array( 'registration', 'authorization', 'token', 'refresh', 'revoke' );
+		$allowed_results = array( 'received', 'registered', 'approved', 'denied', 'invalid_client', 'invalid_grant', 'invalid_resource', 'invalid_pkce_or_redirect', 'replay', 'issued', 'refreshed', 'revoked', 'unsupported_grant' );
+		if ( ! in_array( $event, $allowed_events, true ) || ! in_array( $result, $allowed_results, true ) ) {
+			return;
+		}
+
+		$events = get_option( 'bc_mcp_oauth_debug_events', array() );
+		$events = is_array( $events ) ? $events : array();
+		$events = array_values(
+			array_filter(
+				$events,
+				static function ( $item ) {
+					return is_array( $item ) && isset( $item['time'] ) && time() - absint( $item['time'] ) < DAY_IN_SECONDS;
+				}
+			)
+		);
+		$events[] = array(
+			'time'   => time(),
+			'event'  => $event,
+			'result' => $result,
+		);
+		update_option( 'bc_mcp_oauth_debug_events', array_slice( $events, -25 ), false );
 	}
 
 	/**
@@ -580,8 +636,22 @@ final class BC_MCP_Abilities_OAuth {
 		$grant  = self::field( 'grant_type', self::submitted() );
 		$client = self::field( 'client_id', self::submitted() );
 		$uri    = self::field( 'resource', self::submitted() );
-		if ( ! isset( self::clients()[ $client ] ) || BC_MCP_Abilities_Server::endpoint() !== $uri ) {
+		if ( 'authorization_code' === $grant ) {
+			self::trace( 'token', 'received' );
+		} elseif ( 'refresh_token' === $grant ) {
+			self::trace( 'refresh', 'received' );
+		} else {
+			self::trace( 'token', 'unsupported_grant' );
+		}
+
+		$clients = self::clients();
+		if ( ! isset( $clients[ $client ] ) ) {
+			self::trace( 'token', 'invalid_client' );
 			self::fail( 'invalid_client' );
+		}
+		if ( '' !== $uri && BC_MCP_Abilities_Server::endpoint() !== $uri ) {
+			self::trace( 'token', 'invalid_resource' );
+			self::fail( 'invalid_target' );
 		}
 
 		if ( 'authorization_code' === $grant ) {
@@ -589,27 +659,42 @@ final class BC_MCP_Abilities_OAuth {
 			$hash   = hash( 'sha256', $code );
 			$stored = get_transient( 'bc_mcp_auth_code_' . $hash );
 			if ( ! is_array( $stored ) || ! isset( $stored['auth'], $stored['user_id'] ) ) {
+				self::trace( 'token', 'invalid_grant' );
 				self::fail( 'invalid_grant' );
 			}
 			$auth = $stored['auth'];
-			if ( $auth['client_id'] !== $client || self::field( 'redirect_uri', self::submitted() ) !== $auth['redirect_uri'] || $auth['resource'] !== $uri || ! self::pkce_valid( self::field( 'code_verifier', self::submitted() ), $auth['challenge'] ) ) {
+			if ( ! self::valid_token_resource( $uri, $auth['resource'] ) ) {
+				self::trace( 'token', 'invalid_resource' );
+				self::fail( 'invalid_target' );
+			}
+			if ( $auth['client_id'] !== $client || self::field( 'redirect_uri', self::submitted() ) !== $auth['redirect_uri'] || ! self::pkce_valid( self::field( 'code_verifier', self::submitted() ), $auth['challenge'] ) ) {
+				self::trace( 'token', 'invalid_pkce_or_redirect' );
 				self::fail( 'invalid_grant' );
 			}
 			if ( ! self::consume_lock( $hash ) ) {
+				self::trace( 'token', 'replay' );
 				self::fail( 'invalid_grant' );
 			}
 			delete_transient( 'bc_mcp_auth_code_' . $hash );
-			self::json( self::issue_tokens( $auth, $stored['user_id'] ) );
+			$issued = self::issue_tokens( $auth, $stored['user_id'] );
+			self::trace( 'token', 'issued' );
+			self::json( $issued );
 		}
 
 		if ( 'refresh_token' === $grant ) {
 			$refresh = self::field( 'refresh_token', self::submitted() );
 			$hash    = hash( 'sha256', $refresh );
 			$stored  = get_transient( 'bc_mcp_refresh_' . $hash );
-			if ( ! is_array( $stored ) || ( $stored['client'] ?? '' ) !== $client || ( $stored['resource'] ?? '' ) !== $uri || ! get_userdata( $stored['user_id'] ?? 0 ) ) {
+			if ( ! is_array( $stored ) || ( $stored['client'] ?? '' ) !== $client || ! get_userdata( $stored['user_id'] ?? 0 ) ) {
+				self::trace( 'refresh', 'invalid_grant' );
 				self::fail( 'invalid_grant' );
 			}
+			if ( ! self::valid_token_resource( $uri, $stored['resource'] ) ) {
+				self::trace( 'refresh', 'invalid_resource' );
+				self::fail( 'invalid_target' );
+			}
 			if ( ! self::consume_lock( $hash ) ) {
+				self::trace( 'refresh', 'replay' );
 				self::fail( 'invalid_grant' );
 			}
 			delete_transient( 'bc_mcp_refresh_' . $hash );
@@ -618,7 +703,9 @@ final class BC_MCP_Abilities_OAuth {
 				'resource'  => $stored['resource'],
 				'scope'     => $stored['scope'],
 			);
-			self::json( self::issue_tokens( $auth, $stored['user_id'] ) );
+			$issued = self::issue_tokens( $auth, $stored['user_id'] );
+			self::trace( 'refresh', 'refreshed' );
+			self::json( $issued );
 		}
 		self::fail( 'unsupported_grant_type' );
 	}
