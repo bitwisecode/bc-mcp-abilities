@@ -254,3 +254,23 @@
 @media (max-width: 520px) {
 	#bc-mcp-admin .bc-client-card .bc-copy-field .bc-copy-button { width: 100%; flex: 1 0 100%; }
 }
+
+/* Scoped first-party read controls and privacy-preserving ability audit. */
+#bc-mcp-admin .bc-read-exposure-form { padding: 5px 26px 24px; border-top: 1px solid var(--bc-line); }
+#bc-mcp-admin .bc-read-exposure-form > .bc-muted { margin: 13px 0 20px; }
+#bc-mcp-admin .bc-readonly-list { padding: 0; border-top: 1px solid #e6edf4; }
+#bc-mcp-admin .bc-read-toggle { display: flex; align-items: center; justify-content: space-between; gap: 22px; cursor: pointer; padding: 15px 0; border-bottom: 1px solid #edf1f5; }
+#bc-mcp-admin .bc-read-toggle > span:first-child { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; gap: 5px; }
+#bc-mcp-admin .bc-read-toggle strong { font-size: 12px; font-weight: 700; color: var(--bc-ink); }
+#bc-mcp-admin .bc-read-toggle code { font-size: 11px; color: #647588; overflow-wrap: anywhere; }
+#bc-mcp-admin .bc-read-toggle small { font-size: 11px; line-height: 1.55; color: var(--bc-muted); }
+#bc-mcp-admin .bc-read-exposure-form .bc-form-actions { padding-top: 23px; }
+#bc-mcp-admin .bc-activity-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 23px; }
+#bc-mcp-admin .bc-activity-actions form { margin: 0; }
+#bc-mcp-admin .bc-activity-actions .button { padding-left: 17px; padding-right: 17px; }
+#bc-mcp-admin .bc-activity-actions form:last-child .button { color: #a52727; border-color: #e4b8b8; }
+#bc-mcp-admin .bc-activity-actions form:last-child .button:hover { background: #fff2f2; }
+@media (max-width: 520px) {
+  #bc-mcp-admin .bc-read-exposure-form { padding: 5px 17px 20px; }
+  #bc-mcp-admin .bc-readonly-catalog > summary { padding: 20px 17px; }
+}

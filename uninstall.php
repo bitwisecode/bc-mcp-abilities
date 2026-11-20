@@ -12,6 +12,9 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 }
 
 delete_option( 'bc_mcp_abilities_enabled_writes' );
+delete_option( 'bc_mcp_abilities_disabled_reads' );
+delete_option( 'bc_mcp_abilities_activity' );
+wp_clear_scheduled_hook( 'bc_mcp_prune_activity' );
 delete_option( 'bc_mcp_standalone_enabled' );
 delete_option( 'bc_mcp_oauth_enabled' );
 delete_option( 'bc_mcp_oauth_registered_clients' );

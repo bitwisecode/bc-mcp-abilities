@@ -17,6 +17,7 @@
 defined( 'ABSPATH' ) || exit;
 define( 'BC_MCP_ABILITIES_VERSION', '0.1.0-dev' );
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-admin.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-audit.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-claude.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-integrations.php';
@@ -32,6 +33,7 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-perf
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-taxonomies.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-menus.php';
 BC_MCP_Abilities_Admin::init();
+BC_MCP_Abilities_Audit::init();
 BC_MCP_Abilities_Claude::init();
 BC_MCP_Abilities::init();
 BC_MCP_Abilities_Server::init();

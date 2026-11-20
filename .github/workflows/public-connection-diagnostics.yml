@@ -18,13 +18,20 @@ jobs:
             "/.well-known/oauth-protected-resource/wp-json/bc-mcp/v1/server" \
             "/.well-known/oauth-authorization-server/bc-mcp" \
             "/wp-json/bc-mcp/v1/oauth/resource"; do
-            code=$(curl -sS -L --max-redirs 0 --max-time 15 -o /tmp/public-mcp.json -w "%{http_code}" "$base$path")
-            echo "$path: HTTP $code"
+            # Permit a short HTTPS canonical redirect chain, but never a different host.
+            result=$(curl -sS --location --max-redirs 3 --proto-redir '=https' --max-time 20 \
+              -o /tmp/public-mcp.json -w '%{http_code} %{url_effective}' "$base$path")
+            read -r code final_url <<< "$result"
+            echo "$path: HTTP $code; final URL $final_url"
+            if [[ "$final_url" != "$base" && "$final_url" != "$base/"* ]]; then
+              echo "OAuth metadata redirected away from the expected HTTPS origin"
+              exit 1
+            fi
             if [[ "$code" != "200" ]]; then
               echo "Unexpected public metadata HTTP status from GitHub runner"
               exit 1
             fi
-            jq -e . /tmp/public-mcp.json >/dev/null
+            jq -e 'type == "object"' /tmp/public-mcp.json >/dev/null
           done
       - name: Probe unauthenticated MCP initialization safely (no writes)
         shell: bash

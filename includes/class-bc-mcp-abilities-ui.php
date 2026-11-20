@@ -208,42 +208,78 @@ final class BC_MCP_Abilities_UI {
 	 * @return void
 	 */
 	private static function read_only_catalog() {
-		if ( ! function_exists( 'wp_get_abilities' ) ) {
-			return;
-		}
-		$items       = array();
-		$write_slugs = BC_MCP_Abilities_Admin::writable_abilities();
-		foreach ( (array) wp_get_abilities() as $ability ) {
-			if ( ! is_object( $ability ) || ! method_exists( $ability, 'get_name' ) ) {
-				continue;
-			}
-			$name = $ability->get_name();
-			if ( 0 !== strpos( $name, 'bc-mcp-abilities/' ) ) {
-				continue;
-			}
-			$slug = substr( $name, strlen( 'bc-mcp-abilities/' ) );
-			if ( isset( $write_slugs[ $slug ] ) ) {
-				continue;
-			}
-			$items[] = $ability;
-		}
+		$items = BC_MCP_Abilities::read_catalog();
 		?>
 		<details class="bc-card bc-readonly-catalog">
 			<summary>
-				<span><strong><?php esc_html_e( 'Read-only ability catalog', 'bc-mcp-abilities' ); ?></strong><small><?php esc_html_e( 'Explore what authenticated WordPress users can inspect without changing data.', 'bc-mcp-abilities' ); ?></small></span>
-				<span class="bc-readonly-number"><?php echo esc_html( (string) count( $items ) ); ?> <?php esc_html_e( 'abilities', 'bc-mcp-abilities' ); ?></span>
+				<span><strong><?php esc_html_e( 'Read-only exposure', 'bc-mcp-abilities' ); ?></strong><small><?php esc_html_e( 'Hide selected read abilities from WordPress AI discovery and execution.', 'bc-mcp-abilities' ); ?></small></span>
+				<span class="bc-readonly-number"><?php echo esc_html( (string) count( $items ) ); ?> <?php esc_html_e( 'read abilities', 'bc-mcp-abilities' ); ?></span>
 			</summary>
-			<div class="bc-readonly-list">
-				<?php foreach ( $items as $ability ) : ?>
-					<div class="bc-readonly-item">
-						<strong><?php echo esc_html( $ability->get_label() ); ?></strong>
-						<code><?php echo esc_html( $ability->get_name() ); ?></code>
-						<p><?php echo esc_html( $ability->get_description() ); ?></p>
-					</div>
-				<?php endforeach; ?>
-			</div>
-			<p class="bc-muted"><?php esc_html_e( 'Read-only access is enforced through each operation’s WordPress capability checks. No extra permission switch is provided here.', 'bc-mcp-abilities' ); ?></p>
+			<form method="post" action="options.php" class="bc-read-exposure-form">
+				<?php settings_fields( 'bc_mcp_read_abilities' ); ?>
+				<input type="hidden" name="<?php echo esc_attr( BC_MCP_Abilities_Admin::READ_DISABLED_OPTION ); ?>[]" value="" />
+				<p class="bc-muted"><?php esc_html_e( 'Checked abilities are hidden. All read abilities are available by default to users with the appropriate WordPress permissions. A hidden ability is not registered on subsequent requests; you can re-enable it here at any time.', 'bc-mcp-abilities' ); ?></p>
+				<div class="bc-readonly-list">
+					<?php foreach ( $items as $slug => $item ) : ?>
+						<label class="bc-read-toggle">
+							<span><strong><?php echo esc_html( $item['label'] ); ?></strong><code><?php echo esc_html( 'bc-mcp-abilities/' . $slug ); ?></code><small><?php echo esc_html( $item['description'] ); ?></small></span>
+							<span class="bc-switch">
+								<input type="checkbox" name="<?php echo esc_attr( BC_MCP_Abilities_Admin::READ_DISABLED_OPTION ); ?>[]" value="<?php echo esc_attr( $slug ); ?>" <?php checked( BC_MCP_Abilities_Admin::is_read_disabled( $slug ) ); ?> />
+								<span class="bc-switch-track" aria-hidden="true"></span>
+								<span class="screen-reader-text"><?php echo esc_html( sprintf( /* translators: %s: ability label. */ __( 'Hide %s from AI clients', 'bc-mcp-abilities' ), $item['label'] ) ); ?></span>
+							</span>
+						</label>
+					<?php endforeach; ?>
+				</div>
+				<div class="bc-form-actions"><?php submit_button( __( 'Save read-only exposure', 'bc-mcp-abilities' ), 'primary', 'submit', false ); ?></div>
+			</form>
 		</details>
+		<?php
+	}
+
+	/**
+	 * Show limited, privacy-preserving execution history.
+	 *
+	 * @return void
+	 */
+	private static function activity() {
+		$events = array_reverse( BC_MCP_Abilities_Audit::recent() );
+		?>
+		<div class="bc-section-header">
+			<div><p class="bc-eyebrow"><?php esc_html_e( 'Audit trail', 'bc-mcp-abilities' ); ?></p><h2><?php esc_html_e( 'Ability activity', 'bc-mcp-abilities' ); ?></h2><p><?php esc_html_e( 'The 100 most recent executions, retained for up to seven days. Stores only user IDs, ability names, read/write type and outcomes.', 'bc-mcp-abilities' ); ?></p></div>
+		</div>
+		<div class="bc-card">
+			<div class="bc-card-title"><h3><?php esc_html_e( 'Recent execution history', 'bc-mcp-abilities' ); ?></h3><p><?php esc_html_e( 'No tool input, API keys, authorization headers, generated content or result payloads are logged.', 'bc-mcp-abilities' ); ?></p></div>
+			<?php if ( ! $events ) : ?>
+				<div class="bc-empty"><strong><?php esc_html_e( 'No activity yet', 'bc-mcp-abilities' ); ?></strong><p><?php esc_html_e( 'Run a permitted ability through ChatGPT, Claude, or WordPress and its outcome will appear here.', 'bc-mcp-abilities' ); ?></p></div>
+			<?php else : ?>
+				<div class="bc-table-scroll">
+					<table class="widefat bc-events"><thead><tr><th><?php esc_html_e( 'Time (UTC)', 'bc-mcp-abilities' ); ?></th><th><?php esc_html_e( 'WordPress user', 'bc-mcp-abilities' ); ?></th><th><?php esc_html_e( 'Ability', 'bc-mcp-abilities' ); ?></th><th><?php esc_html_e( 'Type', 'bc-mcp-abilities' ); ?></th><th><?php esc_html_e( 'Outcome', 'bc-mcp-abilities' ); ?></th></tr></thead><tbody>
+						<?php foreach ( $events as $event ) : ?>
+							<tr>
+								<td><?php echo esc_html( gmdate( 'Y-m-d H:i:s', $event['time'] ) ); ?></td>
+								<td><?php echo esc_html( '#' . $event['user_id'] ); ?></td>
+								<td><code><?php echo esc_html( $event['ability'] ); ?></code></td>
+								<td><?php echo esc_html( $event['kind'] ); ?></td>
+								<td><?php echo esc_html( $event['outcome'] ); ?></td>
+							</tr>
+						<?php endforeach; ?>
+					</tbody></table>
+				</div>
+			<?php endif; ?>
+			<div class="bc-activity-actions">
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+					<input type="hidden" name="action" value="bc_mcp_export_activity" />
+					<?php wp_nonce_field( 'bc_mcp_export_activity' ); ?>
+					<?php submit_button( __( 'Export CSV', 'bc-mcp-abilities' ), 'secondary', 'submit', false ); ?>
+				</form>
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" data-bc-clear-activity>
+					<input type="hidden" name="action" value="bc_mcp_clear_activity" />
+					<?php wp_nonce_field( 'bc_mcp_clear_activity' ); ?>
+					<?php submit_button( __( 'Clear history', 'bc-mcp-abilities' ), 'secondary', 'submit', false ); ?>
+				</form>
+			</div>
+		</div>
 		<?php
 	}
 
@@ -299,6 +335,7 @@ final class BC_MCP_Abilities_UI {
 					<button type="button" role="tab" class="bc-tab is-active" id="bc-tab-overview" data-bc-tab="overview" aria-controls="bc-panel-overview" aria-selected="true"><span class="dashicons dashicons-dashboard" aria-hidden="true"></span><?php esc_html_e( 'Overview', 'bc-mcp-abilities' ); ?></button>
 					<button type="button" role="tab" class="bc-tab" id="bc-tab-connections" data-bc-tab="connections" aria-controls="bc-panel-connections" aria-selected="false"><span class="dashicons dashicons-admin-links" aria-hidden="true"></span><?php esc_html_e( 'Connections', 'bc-mcp-abilities' ); ?></button>
 					<button type="button" role="tab" class="bc-tab" id="bc-tab-abilities" data-bc-tab="abilities" aria-controls="bc-panel-abilities" aria-selected="false"><span class="dashicons dashicons-admin-settings" aria-hidden="true"></span><?php esc_html_e( 'Abilities & permissions', 'bc-mcp-abilities' ); ?></button>
+					<button type="button" role="tab" class="bc-tab" id="bc-tab-activity" data-bc-tab="activity" aria-controls="bc-panel-activity" aria-selected="false"><span class="dashicons dashicons-clipboard" aria-hidden="true"></span><?php esc_html_e( 'Activity history', 'bc-mcp-abilities' ); ?></button>
 					<button type="button" role="tab" class="bc-tab" id="bc-tab-diagnostics" data-bc-tab="diagnostics" aria-controls="bc-panel-diagnostics" aria-selected="false"><span class="dashicons dashicons-list-view" aria-hidden="true"></span><?php esc_html_e( 'Diagnostics', 'bc-mcp-abilities' ); ?></button>
 					<div class="bc-sidebar-footer"><span class="dashicons dashicons-lock" aria-hidden="true"></span><span><?php esc_html_e( 'Write access is off by default. Existing WordPress capabilities always apply.', 'bc-mcp-abilities' ); ?></span></div>
 				</nav>
@@ -348,6 +385,7 @@ final class BC_MCP_Abilities_UI {
 							</form>
 						</div>
 					</section>
+					<section class="bc-tab-panel" id="bc-panel-activity" role="tabpanel" aria-labelledby="bc-tab-activity"><?php self::activity(); ?></section>
 					<section class="bc-tab-panel" id="bc-panel-diagnostics" role="tabpanel" aria-labelledby="bc-tab-diagnostics"><?php self::diagnostics(); ?></section>
 				</main>
 			</div>

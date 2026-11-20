@@ -14,7 +14,7 @@ Independent, permission-checked WordPress Abilities plus an optional built-in MC
 
 BC MCP Abilities registers 45 WordPress-native abilities in the pre-release development branch, covering content, media, WooCommerce, Rank Math and guarded Elementor operations. It includes a built-in MCP and OAuth connection that is disabled by default, and works without an external server. The official MCP Adapter remains optional for compatibility. All write abilities require an administrator opt-in and WordPress permission checks.
 
-This is development software. Test on staging only.
+This is development software. Test on staging only. Administrators may now hide specific read-only abilities from discovery and execution, and view a bounded seven-day activity log without recording tool arguments, content, response payloads, tokens or passwords.
 
 == Installation ==
 
