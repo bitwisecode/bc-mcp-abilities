@@ -2,13 +2,13 @@
 
 Reference: [Jobayer AI Agent](https://github.com/jobayerhossan/jobayer-wordpress-ai), v0.7.0. The competitor ZIP, Enable Abilities for MCP 2.17.1, was analyzed separately; its source has not been copied.
 
-## Implemented on the WordPress Abilities API (45 on pre-release branch, pending CI)
+## Implemented on the WordPress Abilities API (48 on pre-release branch, pending CI)
 
 - **Core:** site information, post/page search/read, create drafts, revision-guarded updates, list/restore revisions, bounded same-site HEAD checks, plus allowed public custom post types, draft creation and revision-guarded custom edits.
 - **Media:** list/read attachments, update image alternative text, download public HTTPS images into Media Library with MIME and 8 MB size limits.
 - **Elementor:** read documents and elements; safe widget text/settings edits; guarded node add/delete/move; export/validate JSON; draft document creation and CSS regeneration. Writes use an expected revision, a pre-save snapshot and one-level undo.
-- **Rank Math:** read and edit allowlisted SEO meta values with metadata concurrency tokens.
-- **WooCommerce:** search/read product inventory and variations, HPOS-compatible PII-free order reports, and stock updates for individually managed products and variations with concurrency tokens.
+- **Rank Math and Yoast SEO:** read and edit strictly allowlisted title, description and focus keyword metadata with concurrency tokens.
+- **WooCommerce:** search/read product inventory and variations, HPOS-compatible PII-free order reports, stock updates and **guarded regular/sale price editing for individual simple products and variations** with distinct pricing revision tokens.
 - **Taxonomies (first v1 batch):** discover public eligible taxonomies and terms, read post term assignments, create allowed terms, and revision-guarded assignment edits with WordPress taxonomy capabilities.
 - **Navigation (first v1 batch):** read classic navigation menus/items; create an empty menu; add a permitted post or term without allowing arbitrary external URLs.
 - **Site diagnostics:** PageSpeed Insights scores, lab metrics and bounded findings for this site's public HTTPS paths.
@@ -48,6 +48,6 @@ The settings interface is being redesigned as a standalone, responsive WordPress
 
 ## Long-term integrations
 
-ACF, Yoast/SEOPress, custom post types, taxonomy management and advanced WooCommerce workflows can be layered in independent modules after the initial release.
+ACF, SEOPress, custom post types, taxonomy management and advanced WooCommerce workflows can be layered in independent modules after the initial release.
 
 See [QA checklist](QA-CHECKLIST.md), [security notes](SECURITY.md), and [competitor analysis](COMPETITOR-REVIEW.md).

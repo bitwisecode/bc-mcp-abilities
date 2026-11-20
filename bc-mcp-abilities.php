@@ -32,6 +32,7 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-ui.p
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-performance.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-taxonomies.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-menus.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-release-integrations.php';
 BC_MCP_Abilities_Admin::init();
 BC_MCP_Abilities_Audit::init();
 BC_MCP_Abilities_Claude::init();
@@ -47,3 +48,4 @@ add_action( 'wp_abilities_api_init', array( 'BC_MCP_Abilities_Elementor_Agent', 
 add_action( 'wp_abilities_api_init', array( 'BC_MCP_Abilities_Performance', 'register' ), 20 );
 add_action( 'wp_abilities_api_init', array( 'BC_MCP_Abilities_Taxonomies', 'register' ), 20 );
 add_action( 'wp_abilities_api_init', array( 'BC_MCP_Abilities_Menus', 'register' ), 20 );
+add_action( 'wp_abilities_api_init', array( 'BC_MCP_Abilities_Release_Integrations', 'register' ), 20 );
