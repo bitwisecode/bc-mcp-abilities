@@ -42,6 +42,12 @@ The WordPress admin screen under **Settings → BC MCP Abilities** includes a re
 
 Taxonomy term changes and classic menu writes require explicit per-ability administrator opt-in. Term assignment requires an exact revision check; a menu item can reference only an existing permitted post or public taxonomy term, not an arbitrary external URL.
 
+## Additional pre-release SEO and commerce abilities
+
+Yoast SEO support provides `yoast-seo-read` and administrator-opted-in `yoast-seo-update` for post/page SEO title, description and focus keyword values with exact metadata revision checks. Yoast may require an indexable refresh/reindex for search-facing output after editing its post meta.
+
+WooCommerce `wc-update-prices` changes only an individual simple product or variation regular/sale price. It requires the `pricing_revision` returned by `wc-product`, manage_woocommerce and edit_products capabilities, the product's edit_post permission and explicit admin opt-in. Pricing values must be nonnegative decimals and a sale price must be below the regular price; stale tokens are rejected. Bulk writes, customer information and unrelated product fields are out of scope.
+
 ## Setup
 
 1. Install on an isolated WordPress 6.9+ staging website.
