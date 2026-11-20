@@ -154,7 +154,9 @@ final class BC_MCP_Abilities_UI {
 					<th><?php esc_html_e( 'Time (UTC)', 'bc-mcp-abilities' ); ?></th><th><?php esc_html_e( 'Stage', 'bc-mcp-abilities' ); ?></th><th><?php esc_html_e( 'Result', 'bc-mcp-abilities' ); ?></th><th><?php esc_html_e( 'MCP method', 'bc-mcp-abilities' ); ?></th><th><?php esc_html_e( 'Authorization', 'bc-mcp-abilities' ); ?></th><th><?php esc_html_e( 'Detail', 'bc-mcp-abilities' ); ?></th>
 				</tr></thead><tbody>
 					<?php foreach ( $events as $event ) : ?>
-						<?php if ( ! is_array( $event ) || empty( $event['time'] ) || time() - absint( $event['time'] ) >= DAY_IN_SECONDS ) { continue; } ?>
+						<?php if ( ! is_array( $event ) || empty( $event['time'] ) || time() - absint( $event['time'] ) >= DAY_IN_SECONDS ) {
+						continue;
+					} ?>
 						<tr>
 							<td><?php echo esc_html( gmdate( 'Y-m-d H:i:s', absint( $event['time'] ) ) ); ?></td>
 							<td><?php echo esc_html( sanitize_key( (string) ( $event['event'] ?? '' ) ) ); ?></td>
@@ -181,7 +183,7 @@ final class BC_MCP_Abilities_UI {
 		if ( ! function_exists( 'wp_get_abilities' ) ) {
 			return;
 		}
-		$items = array();
+		$items       = array();
 		$write_slugs = BC_MCP_Abilities_Admin::writable_abilities();
 		foreach ( (array) wp_get_abilities() as $ability ) {
 			if ( ! is_object( $ability ) || ! method_exists( $ability, 'get_name' ) ) {
@@ -226,9 +228,9 @@ final class BC_MCP_Abilities_UI {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
-		$writes       = BC_MCP_Abilities_Admin::writable_abilities();
-		$enabled      = array_filter( array_keys( $writes ), array( 'BC_MCP_Abilities_Admin', 'is_enabled' ) );
-		$total        = 0;
+		$writes  = BC_MCP_Abilities_Admin::writable_abilities();
+		$enabled = array_filter( array_keys( $writes ), array( 'BC_MCP_Abilities_Admin', 'is_enabled' ) );
+		$total   = 0;
 		if ( function_exists( 'wp_get_abilities' ) ) {
 			foreach ( (array) wp_get_abilities() as $ability ) {
 				if ( is_object( $ability ) && method_exists( $ability, 'get_name' ) && 0 === strpos( $ability->get_name(), 'bc-mcp-abilities/' ) ) {
@@ -239,11 +241,12 @@ final class BC_MCP_Abilities_UI {
 		$server_on = BC_MCP_Abilities_Server::enabled();
 		$oauth_on  = BC_MCP_Abilities_OAuth::enabled();
 		$groups    = array(
-			__( 'Content & posts', 'bc-mcp-abilities' )  => array( 'create-draft', 'update-content', 'restore-revision', 'create-custom-draft', 'update-custom-content' ),
-			__( 'Elementor', 'bc-mcp-abilities' )        => array( 'elementor-update-text', 'elementor-undo', 'elementor-create-document', 'elementor-update-settings', 'elementor-add-element', 'elementor-delete-element', 'elementor-move-element', 'elementor-regenerate-css' ),
+			__( 'Content & posts', 'bc-mcp-abilities' ) => array( 'create-draft', 'update-content', 'restore-revision', 'create-custom-draft', 'update-custom-content' ),
+			__( 'Elementor', 'bc-mcp-abilities' )       => array( 'elementor-update-text', 'elementor-undo', 'elementor-create-document', 'elementor-update-settings', 'elementor-add-element', 'elementor-delete-element', 'elementor-move-element', 'elementor-regenerate-css' ),
 			__( 'WooCommerce', 'bc-mcp-abilities' )     => array( 'wc-update-stock' ),
 			__( 'SEO & media', 'bc-mcp-abilities' )     => array( 'rank-math-update', 'upload-image', 'update-media-alt' ),
 		);
+
 		$grouped = array();
 		foreach ( $groups as $slugs ) {
 			$grouped = array_merge( $grouped, $slugs );
@@ -255,7 +258,7 @@ final class BC_MCP_Abilities_UI {
 		?>
 		<div class="wrap bc-mcp-admin" id="bc-mcp-admin">
 			<div class="bc-hero">
-				<div class="bc-hero-brand"><div class="bc-brand-mark" aria-hidden="true">BC</div><span><?php esc_html_e( 'BITWISECODE / WORDPRESS', 'bc-mcp-abilities' ); ?></span></div>
+				<div class="bc-hero-brand"><div class="bc-brand-mark" aria-hidden="true">BC</div><span><?php esc_html_e( 'BITWISECODE / WordPress', 'bc-mcp-abilities' ); ?></span></div>
 				<div class="bc-hero-row">
 					<div><h1><?php esc_html_e( 'MCP Abilities', 'bc-mcp-abilities' ); ?></h1><p><?php esc_html_e( 'Your control center for secure AI-powered WordPress workflows.', 'bc-mcp-abilities' ); ?></p></div>
 					<div class="bc-hero-version"><?php echo esc_html( BC_MCP_ABILITIES_VERSION ); ?> <span><?php esc_html_e( 'Developer preview', 'bc-mcp-abilities' ); ?></span></div>
@@ -312,7 +315,9 @@ final class BC_MCP_Abilities_UI {
 									<div class="bc-search-wrap"><span class="dashicons dashicons-search" aria-hidden="true"></span><input type="search" data-bc-search placeholder="<?php esc_attr_e( 'Search abilities...', 'bc-mcp-abilities' ); ?>" aria-label="<?php esc_attr_e( 'Search write abilities', 'bc-mcp-abilities' ); ?>" /></div>
 									<span class="bc-count"><strong data-bc-enabled-count><?php echo esc_html( (string) count( $enabled ) ); ?></strong> / <?php echo esc_html( (string) count( $writes ) ); ?> <?php esc_html_e( 'enabled', 'bc-mcp-abilities' ); ?></span>
 								</div>
-								<?php foreach ( $groups as $title => $slugs ) { self::ability_group( $title, $slugs, $writes ); } ?>
+								<?php foreach ( $groups as $title => $slugs ) : ?>
+									<?php self::ability_group( $title, $slugs, $writes ); ?>
+								<?php endforeach; ?>
 								<p class="bc-search-empty" data-bc-no-results hidden><?php esc_html_e( 'No matching permissions found.', 'bc-mcp-abilities' ); ?></p>
 								<div class="bc-sticky-actions"><p><?php esc_html_e( 'Save changes to apply permission settings.', 'bc-mcp-abilities' ); ?></p><?php submit_button( __( 'Save permissions', 'bc-mcp-abilities' ), 'primary', 'submit', false ); ?></div>
 							</form>
