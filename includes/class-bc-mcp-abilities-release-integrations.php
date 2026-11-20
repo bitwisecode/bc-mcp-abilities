@@ -198,7 +198,7 @@ final class BC_MCP_Abilities_Release_Integrations {
 			if ( ! is_string( $input[ $field ] ) || strlen( $input[ $field ] ) > 1000 ) {
 				return new WP_Error( 'bc_mcp_yoast_field_invalid', __( 'SEO field must be text within 1000 bytes.', 'bc-mcp-abilities' ) );
 			}
-			$native_input[ $native_field ] = sanitize_text_field( $input[ $field ] );
+			$native_input[ $native_field ] = BC_MCP_Abilities::plain_text( $input[ $field ] );
 		}
 		$focus_supplied = array_key_exists( 'focus_keyword', $input );
 		if ( $focus_supplied && ( ! is_string( $input['focus_keyword'] ) || strlen( $input['focus_keyword'] ) > 1000 ) ) {
@@ -229,7 +229,7 @@ final class BC_MCP_Abilities_Release_Integrations {
 		}
 
 		if ( $focus_supplied ) {
-			update_post_meta( $post->ID, '_yoast_wpseo_focuskw', sanitize_text_field( $input['focus_keyword'] ) );
+			update_post_meta( $post->ID, '_yoast_wpseo_focuskw', wp_slash( BC_MCP_Abilities::plain_text( $input['focus_keyword'] ) ) );
 		}
 		$updated = self::yoast_state( $post->ID );
 		if ( count( $native_input ) > 1 ) {

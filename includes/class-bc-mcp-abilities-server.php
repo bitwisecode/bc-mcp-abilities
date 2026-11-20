@@ -220,13 +220,15 @@ final class BC_MCP_Abilities_Server {
 		if ( is_wp_error( $user ) || ! $user ) {
 			$reason = is_wp_error( $user ) ? $user->get_error_code() : '';
 			$detail = array(
-				'bc_mcp_oauth_missing'      => 'token_missing',
-				'bc_mcp_oauth_malformed'    => 'token_malformed',
-				'bc_mcp_oauth_unknown'      => 'token_unknown_or_expired',
-				'bc_mcp_oauth_wrong_target' => 'token_resource_mismatch',
-				'bc_mcp_oauth_scope'        => 'token_scope_insufficient',
-				'bc_mcp_oauth_denied'       => 'user_not_permitted',
-				'bc_mcp_oauth_disabled'     => 'oauth_disabled',
+				'bc_mcp_oauth_missing'        => 'token_missing',
+				'bc_mcp_oauth_malformed'      => 'token_malformed',
+				'bc_mcp_oauth_unknown'        => 'token_unknown_or_expired',
+				'bc_mcp_oauth_wrong_target'   => 'token_resource_mismatch',
+				'bc_mcp_oauth_scope'          => 'token_scope_insufficient',
+				'bc_mcp_oauth_denied'         => 'user_not_permitted',
+				'bc_mcp_oauth_disabled'       => 'oauth_disabled',
+				'bc_mcp_oauth_revoked'        => 'token_revoked',
+				'bc_mcp_oauth_client_removed' => 'client_removed',
 			);
 			$detail = $detail[ $reason ] ?? 'token_invalid';
 			// RFC 6750 section 3.1: no error code when the request carried no credential.
@@ -287,7 +289,7 @@ final class BC_MCP_Abilities_Server {
 	 * @return void
 	 */
 	public static function challenge( $error = '' ) {
-		$metadata = esc_url_raw( home_url( '/.well-known/oauth-protected-resource/wp-json/bc-mcp/v1/server' ) );
+		$metadata = esc_url_raw( home_url( '/' . BC_MCP_Abilities_OAuth::resource_metadata_path() ) );
 		$value    = 'Bearer resource_metadata="' . $metadata . '", scope="mcp"';
 		if ( in_array( $error, array( 'invalid_token', 'insufficient_scope' ), true ) ) {
 			$value .= ', error="' . $error . '"';
@@ -606,6 +608,9 @@ final class BC_MCP_Abilities_Server {
 			return self::tool_result( array( 'error' => 'Unknown BC ability.' ), true );
 		}
 		if ( 'bc-get-ability-info' === $name ) {
+			if ( true !== $ability->check_permissions( array() ) ) {
+				return self::tool_result( array( 'error' => 'This ability is not available to the connected WordPress user.' ), true );
+			}
 			return self::tool_result( self::ability_info( $ability ) );
 		}
 		if ( 'bc-execute-ability' === $name ) {

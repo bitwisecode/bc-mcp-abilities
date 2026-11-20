@@ -157,6 +157,23 @@ final class BC_MCP_Abilities {
 	}
 
 	/**
+	 * Single-line plain text that keeps literal percent signs.
+	 *
+	 * The core sanitize_text_field() deletes anything that looks like a percent-encoded
+	 * octet, which corrupts SEO template variables such as %%category%% or
+	 * %date%. This strips tags and control whitespace without that step.
+	 *
+	 * @param mixed $value Submitted value.
+	 * @return string
+	 */
+	public static function plain_text( $value ) {
+		$value = wp_check_invalid_utf8( (string) $value );
+		$value = wp_pre_kses_less_than( $value );
+		$value = wp_strip_all_tags( $value, true );
+		return trim( (string) preg_replace( '/[\r\n\t ]+/', ' ', $value ) );
+	}
+
+	/**
 	 * Can read using the native WordPress Abilities API.
 	 *
 	 * @param mixed $slug Callback input.
@@ -199,7 +216,7 @@ final class BC_MCP_Abilities {
 			'minimum' => 1,
 		);
 		$string  = array( 'type' => 'string' );
-		self::add( 'site-info', 'Get Site Information', 'Read site, version, theme, and enabled plugin metadata; requires edit_posts.', self::schema(), 'site_info' );
+		self::add( 'site-info', 'Get Site Information', 'Read site, version, theme, and enabled plugin metadata; administrators only.', self::schema(), 'site_info' );
 		self::add(
 			'list-content',
 			'List Posts and Pages',
@@ -458,7 +475,7 @@ final class BC_MCP_Abilities {
 	public static function create_draft( $input ) {
 		$type = isset( $input['post_type'] ) ? $input['post_type'] : '';
 		if ( ! in_array( $type, array( 'post', 'page' ), true ) || ! current_user_can( get_post_type_object( $type )->cap->create_posts ) ) {
-			return new WP_Error( 'bc_mcp_create_forbidden', 'Not allowed to create this post type.' );
+			return new WP_Error( 'bc_mcp_create_forbidden', __( 'Not allowed to create this post type.', 'bc-mcp-abilities' ) );
 		}
 		$id = wp_insert_post(
 			array(
@@ -488,7 +505,7 @@ final class BC_MCP_Abilities {
 			return $post;
 		}
 		if ( ! hash_equals( self::revision( $post ), (string) $input['revision'] ) ) {
-			return new WP_Error( 'bc_mcp_revision_conflict', 'Content changed since it was read. Fetch a fresh revision before retrying.' );
+			return new WP_Error( 'bc_mcp_revision_conflict', __( 'Content changed since it was read. Fetch a fresh revision before retrying.', 'bc-mcp-abilities' ) );
 		}
 		$updates = array( 'ID' => $post->ID );
 		foreach ( array(
@@ -501,7 +518,7 @@ final class BC_MCP_Abilities {
 			}
 		}
 		if ( 1 === count( $updates ) ) {
-			return new WP_Error( 'bc_mcp_empty_update', 'Supply at least one content field to update.' );
+			return new WP_Error( 'bc_mcp_empty_update', __( 'Supply at least one content field to update.', 'bc-mcp-abilities' ) );
 		}
 		$id = wp_update_post( wp_slash( $updates ), true );
 		return is_wp_error( $id ) ? $id : self::ok( self::post_data( get_post( $id ) ) );
@@ -611,7 +628,7 @@ final class BC_MCP_Abilities {
 		$id   = absint( $input['attachment_id'] );
 		$post = get_post( $id );
 		if ( ! $post || 'attachment' !== $post->post_type || ! current_user_can( 'edit_post', $id ) ) {
-			return new WP_Error( 'bc_mcp_media_forbidden', 'Attachment unavailable or editing not permitted.' );
+			return new WP_Error( 'bc_mcp_media_forbidden', __( 'Attachment unavailable or editing not permitted.', 'bc-mcp-abilities' ) );
 		}
 		return self::ok(
 			array(
@@ -636,7 +653,7 @@ final class BC_MCP_Abilities {
 		$id   = absint( $input['attachment_id'] );
 		$post = get_post( $id );
 		if ( ! $post || 'attachment' !== $post->post_type || ! wp_attachment_is_image( $id ) || ! current_user_can( 'edit_post', $id ) ) {
-			return new WP_Error( 'bc_mcp_media_forbidden', 'Image unavailable or editing not permitted.' );
+			return new WP_Error( 'bc_mcp_media_forbidden', __( 'Image unavailable or editing not permitted.', 'bc-mcp-abilities' ) );
 		}
 		$alt = sanitize_text_field( $input['alt_text'] );
 		update_post_meta( $id, '_wp_attachment_image_alt', $alt );
@@ -660,12 +677,12 @@ final class BC_MCP_Abilities {
 			return $post;
 		}
 		if ( ! did_action( 'elementor/loaded' ) ) {
-			return new WP_Error( 'bc_mcp_elementor_missing', 'Elementor must be active.' );
+			return new WP_Error( 'bc_mcp_elementor_missing', __( 'Elementor must be active.', 'bc-mcp-abilities' ) );
 		}
 		$raw  = get_post_meta( $post->ID, '_elementor_data', true );
 		$tree = is_array( $raw ) ? $raw : json_decode( (string) $raw, true );
 		if ( ! is_array( $tree ) ) {
-			return new WP_Error( 'bc_mcp_elementor_invalid', 'Elementor document has no valid element tree.' );
+			return new WP_Error( 'bc_mcp_elementor_invalid', __( 'Elementor document has no valid element tree.', 'bc-mcp-abilities' ) );
 		}
 		return self::ok(
 			array(
@@ -719,11 +736,11 @@ final class BC_MCP_Abilities {
 		}
 		$id = (string) $input['element_id'];
 		if ( ! preg_match( '/^[a-zA-Z0-9_-]{1,64}$/', $id ) ) {
-			return new WP_Error( 'bc_mcp_elementor_bad_id', 'Invalid element ID.' );
+			return new WP_Error( 'bc_mcp_elementor_bad_id', __( 'Invalid element ID.', 'bc-mcp-abilities' ) );
 		}
 		$element = self::find_element( $document['data']['elements'], $id );
 		if ( null === $element ) {
-			return new WP_Error( 'bc_mcp_elementor_not_found', 'Element not found.' );
+			return new WP_Error( 'bc_mcp_elementor_not_found', __( 'Element not found.', 'bc-mcp-abilities' ) );
 		}
 		return self::ok(
 			array(
@@ -743,7 +760,7 @@ final class BC_MCP_Abilities {
 	public static function check_url( $input ) {
 		$path = isset( $input['path'] ) ? (string) $input['path'] : '/';
 		if ( '' === $path || '/' !== $path[0] || 0 === strpos( $path, '//' ) || false !== strpos( $path, '\\' ) || false !== strpos( $path, '#' ) ) {
-			return new WP_Error( 'bc_mcp_invalid_path', 'Use a root-relative same-site path starting with a single slash.' );
+			return new WP_Error( 'bc_mcp_invalid_path', __( 'Use a root-relative same-site path starting with a single slash.', 'bc-mcp-abilities' ) );
 		}
 		$url      = home_url( $path );
 		$response = wp_safe_remote_head(

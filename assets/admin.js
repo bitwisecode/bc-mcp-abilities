@@ -10,6 +10,10 @@
 	var panels = Array.prototype.slice.call(root.querySelectorAll('.bc-tab-panel'));
 	var known = tabs.map(function (tab) { return tab.getAttribute('data-bc-tab'); });
 	var storeKey = 'bc_mcp_dashboard_active_tab';
+	var strings = window.bcMcpSettings || {};
+	function text(key, fallback) {
+		return typeof strings[key] === 'string' ? strings[key] : fallback;
+	}
 
 	function switchTo(name, focus) {
 		if (known.indexOf(name) === -1) {
@@ -87,7 +91,7 @@
 				return;
 			}
 			function copied() {
-				copy.textContent = 'Copied!';
+				copy.textContent = text('copied', 'Copied!');
 				window.setTimeout(function () { copy.textContent = originalLabel; }, 1800);
 			}
 			if (navigator.clipboard && window.isSecureContext) {
@@ -146,7 +150,15 @@
 
 	Array.prototype.slice.call(root.querySelectorAll('[data-bc-clear-activity]')).forEach(function (form) {
 		form.addEventListener('submit', function (event) {
-			if (!window.confirm('Permanently clear the stored BC MCP activity history?')) {
+			if (!window.confirm(text('confirmClear', 'Permanently clear the stored BC MCP activity history?'))) {
+				event.preventDefault();
+			}
+		});
+	});
+
+	Array.prototype.slice.call(root.querySelectorAll('[data-bc-revoke-all]')).forEach(function (form) {
+		form.addEventListener('submit', function (event) {
+			if (!window.confirm(text('confirmRevoke', 'Disconnect every connected AI assistant?'))) {
 				event.preventDefault();
 			}
 		});

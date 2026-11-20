@@ -57,6 +57,28 @@ $assert( 'Temporary SEO test title' === (string) ( $presented[0]['seo_title'] ??
 $assert( 'Temporary SEO test description' === (string) ( $presented[0]['meta_description'] ?? '' ), 'Yoast SEO indexable meta description is stale.' );
 $assert( false !== strpos( (string) ( $presented[0]['seo_title_rendered'] ?? '' ), 'Temporary SEO test title' ), 'Yoast front-end rendered SEO title is stale.' );
 
+// Yoast snippet variables must survive the write path unchanged.
+$vars_state = wp_get_ability( 'bc-mcp-abilities/yoast-seo-read' )->execute( array( 'post_id' => $post_id ) );
+$vars       = wp_get_ability( 'bc-mcp-abilities/yoast-seo-update' )->execute(
+	array(
+		'post_id'           => $post_id,
+		'expected_revision' => $vars_state['data']['revision'],
+		'title'             => '%%title%% %%sep%% %%category%%',
+		'description'       => 'Updated %%date%% for %%sitename%%',
+		'focus_keyword'     => '100% cotton',
+	)
+);
+$assert( ! is_wp_error( $vars ), 'Yoast update with snippet variables failed.' );
+$assert( '%%title%% %%sep%% %%category%%' === get_post_meta( $post_id, '_yoast_wpseo_title', true ), 'Yoast snippet variables in the title were corrupted.' );
+$assert( 'Updated %%date%% for %%sitename%%' === get_post_meta( $post_id, '_yoast_wpseo_metadesc', true ), 'Yoast snippet variables in the description were corrupted.' );
+$assert( '100% cotton' === get_post_meta( $post_id, '_yoast_wpseo_focuskw', true ), 'Focus keyword with a percent sign was corrupted.' );
+
+// WooCommerce must see the HPOS compatibility declaration.
+if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) && method_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil', 'get_compatible_plugins_for_feature' ) ) {
+	$hpos = \Automattic\WooCommerce\Utilities\FeaturesUtil::get_compatible_plugins_for_feature( 'custom_order_tables' );
+	$assert( in_array( 'bc-mcp-abilities/bc-mcp-abilities.php', (array) ( $hpos['compatible'] ?? array() ), true ), 'Plugin must be declared HPOS compatible.' );
+}
+
 
 $product = new WC_Product_Simple();
 $product->set_name( 'BC MCP temporary price test' );

@@ -40,6 +40,16 @@ BC_MCP_Abilities::init();
 BC_MCP_Abilities_Server::init();
 BC_MCP_Abilities_OAuth::init();
 register_activation_hook( __FILE__, array( 'BC_MCP_Abilities_OAuth', 'activate' ) );
+register_deactivation_hook( __FILE__, array( 'BC_MCP_Abilities_OAuth', 'deactivate' ) );
+add_action(
+	'before_woocommerce_init',
+	static function () {
+		// Orders are read only through wc_get_orders(), which supports HPOS.
+		if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
+			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+		}
+	}
+);
 BC_MCP_Abilities_Connections::init();
 add_action( 'wp_abilities_api_init', array( 'BC_MCP_Abilities_Integrations', 'register' ), 20 );
 add_action( 'wp_abilities_api_init', array( 'BC_MCP_Abilities_Elementor', 'register' ), 20 );
