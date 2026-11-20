@@ -177,6 +177,7 @@ def oauth_token(user, password, logged_out_start=False, details=None):
     code = callback.get("code", [""])[0]
     if details is not None:
         details["callback_state"] = callback.get("state", [""])[0]
+        details.update({"code": code, "verifier": verifier, "client_id": client_id})
     if not code:
         return client_id, {"error": "no_code", "status": status}
     status, _, body = send(
@@ -232,8 +233,19 @@ check("ChatGPT e2e" in details.get("consent_page", ""), "consent page names the 
 check(details.get("callback_state") == "e2e state/with+chars", "state is returned to the client unchanged", details.get("callback_state"))
 
 # 3b. A browser that is not yet signed in to WordPress (the common first-time path).
-_, logged_out = oauth_token(USER, PASSWORD, logged_out_start=True)
+lo_details = {}
+_, logged_out = oauth_token(USER, PASSWORD, logged_out_start=True, details=lo_details)
 check(bool(logged_out.get("access_token")), "a logged-out user goes through wp-login and back to consent with the request intact", logged_out)
+
+
+def redeem_again(d):
+    return send("POST", BASE + "/bc-mcp/oauth/token", {"grant_type": "authorization_code", "code": d.get("code", ""), "client_id": d.get("client_id", ""), "redirect_uri": REDIRECT, "code_verifier": d.get("verifier", ""), "resource": MCP}, form=True)[0]
+
+
+# 3c. An immediate duplicate code exchange (a client retry) is refused but keeps the connection.
+check(redeem_again(lo_details) == 400, "an already-redeemed authorization code is rejected")
+status, _, _ = rpc("tools/list", 3, token=logged_out.get("access_token", ""))
+check(status == 200, "an immediate duplicate code exchange does not revoke the new connection", status)
 
 # 4. Authenticated MCP session.
 status, _, body = rpc("initialize", 1, {"protocolVersion": "2025-11-25", "capabilities": {}, "clientInfo": {"name": "e2e", "version": "1"}}, token=access)
@@ -288,6 +300,11 @@ if refresh:
     check(status == 401, "late refresh-token replay revokes the whole connection", status)
     status, _, _ = send("POST", BASE + "/bc-mcp/oauth/token", {"grant_type": "refresh_token", "refresh_token": rotated.get("refresh_token", ""), "client_id": client_id, "resource": MCP}, form=True)
     check(status == 400, "the newest refresh token is also revoked after replay", status)
+
+    # The 31-second wait above also puts the earlier code outside the retry window.
+    check(redeem_again(lo_details) == 400, "late replay of a used authorization code is rejected")
+    status, _, _ = rpc("tools/list", 14, token=logged_out.get("access_token", ""))
+    check(status == 401, "late authorization-code replay revokes the connection it created", status)
 
     # Explicit revocation on a fresh connection.
     fresh_client, fresh = oauth_token(USER, PASSWORD)

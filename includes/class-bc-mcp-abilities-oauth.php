@@ -1160,6 +1160,25 @@ final class BC_MCP_Abilities_OAuth {
 	}
 
 	/**
+	 * React to a one-use credential presented again.
+	 *
+	 * Inside REUSE_GRACE seconds of the first use this is almost always the
+	 * same client retrying a request that raced or timed out, so the
+	 * connection is kept. Later reuse is treated as theft and ends the grant.
+	 *
+	 * @param string $hash     Hash of the code/token.
+	 * @param int    $user_id  Grant owner.
+	 * @param string $grant_id Grant identifier.
+	 * @return void
+	 */
+	private static function handle_replay( $hash, $user_id, $grant_id ) {
+		$age = self::lock_age( $hash );
+		if ( null === $age || $age > self::REUSE_GRACE ) {
+			self::revoke_grant( $user_id, $grant_id );
+		}
+	}
+
+	/**
 	 * Remove an expired single-use lock.
 	 *
 	 * @param string $key Option to delete.
@@ -1204,7 +1223,17 @@ final class BC_MCP_Abilities_OAuth {
 		if ( 'authorization_code' === $grant ) {
 			$code   = self::field( 'code', self::submitted() );
 			$hash   = hash( 'sha256', $code );
-			$stored = get_transient( 'bc_mcp_auth_code_' . $hash );
+			$key    = 'bc_mcp_auth_code_' . $hash;
+			$stored = get_transient( $key );
+			if ( is_array( $stored ) && ! empty( $stored['used'] ) ) {
+				// RFC 6749 §4.1.2: a code presented again after it was redeemed
+				// revokes the tokens it issued.
+				if ( ( $stored['client'] ?? '' ) === $client ) {
+					self::handle_replay( $hash, absint( $stored['user_id'] ?? 0 ), (string) ( $stored['grant'] ?? '' ) );
+				}
+				self::trace( 'token', 'replay' );
+				self::fail( 'invalid_grant' );
+			}
 			if ( ! is_array( $stored ) || ! isset( $stored['auth'], $stored['user_id'], $stored['grant'] ) ) {
 				self::trace( 'token', 'invalid_grant' );
 				self::fail( 'invalid_grant' );
@@ -1219,12 +1248,21 @@ final class BC_MCP_Abilities_OAuth {
 				self::fail( 'invalid_grant' );
 			}
 			if ( ! self::consume_lock( $hash ) ) {
-				// RFC 6749 §4.1.2: a reused code revokes what it issued.
-				self::revoke_grant( (int) $stored['user_id'], (string) $stored['grant'] );
+				self::handle_replay( $hash, (int) $stored['user_id'], (string) $stored['grant'] );
 				self::trace( 'token', 'replay' );
 				self::fail( 'invalid_grant' );
 			}
-			delete_transient( 'bc_mcp_auth_code_' . $hash );
+			// Keep a tombstone for the code's remaining life so a later replay is recognised.
+			set_transient(
+				$key,
+				array(
+					'used'    => true,
+					'client'  => $client,
+					'user_id' => (int) $stored['user_id'],
+					'grant'   => (string) $stored['grant'],
+				),
+				10 * MINUTE_IN_SECONDS
+			);
 			if ( ! self::grant_valid( (int) $stored['user_id'], (string) $stored['grant'], $client, true ) ) {
 				self::trace( 'token', 'invalid_grant' );
 				self::fail( 'invalid_grant' );
@@ -1246,12 +1284,8 @@ final class BC_MCP_Abilities_OAuth {
 			$user_id  = absint( $stored['user_id'] ?? 0 );
 			$grant_id = (string) ( $stored['grant'] ?? '' );
 			if ( ! empty( $stored['used'] ) ) {
-				// A rotated-out refresh token came back: treat as theft and end
-				// the whole grant, unless it is a near-simultaneous client retry.
-				$age = self::lock_age( $hash );
-				if ( null === $age || $age > self::REUSE_GRACE ) {
-					self::revoke_grant( $user_id, $grant_id );
-				}
+				// A rotated-out refresh token came back: treat as theft.
+				self::handle_replay( $hash, $user_id, $grant_id );
 				self::trace( 'refresh', 'replay' );
 				self::fail( 'invalid_grant' );
 			}
