@@ -37,6 +37,8 @@ Release remains blocked until all gates pass.
 - [ ] Application Password authentication honors connected user's role
 - [ ] Elementor installed/disabled flows tested
 - [ ] No PHP warnings with WP_DEBUG on
+- [ ] Run real Yoast SEO + WooCommerce integration workflow with pricing/metadata round-trip and stale revision checks.
+- [ ] Verify Yoast indexables rebuild or refresh after metadata writes on staging
 - [ ] Proper uninstall retains content and removes only plugin-owned configuration with user consent
 
 ## WordPress.org release
