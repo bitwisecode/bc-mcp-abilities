@@ -17,18 +17,27 @@ final class BC_MCP_Abilities_Release_Integrations {
 	 * @return void
 	 */
 	public static function register() {
-		$id = array(
+		$id         = array(
 			'type'    => 'integer',
 			'minimum' => 1,
 		);
-		$revision = array(
+		$revision   = array(
 			'type'    => 'string',
 			'pattern' => '^[a-f0-9]{64}$',
 		);
 		$seo_fields = array(
-			'title'         => array( 'type' => 'string', 'maxLength' => 1000 ),
-			'description'   => array( 'type' => 'string', 'maxLength' => 1000 ),
-			'focus_keyword' => array( 'type' => 'string', 'maxLength' => 1000 ),
+			'title'         => array(
+				'type'      => 'string',
+				'maxLength' => 1000,
+			),
+			'description'   => array(
+				'type'      => 'string',
+				'maxLength' => 1000,
+			),
+			'focus_keyword' => array(
+				'type'      => 'string',
+				'maxLength' => 1000,
+			),
 		);
 		BC_MCP_Abilities::add(
 			'yoast-seo-read',
@@ -173,7 +182,7 @@ final class BC_MCP_Abilities_Release_Integrations {
 		if ( ! hash_equals( $state['revision'], (string) $input['expected_revision'] ) ) {
 			return new WP_Error( 'bc_mcp_yoast_conflict', __( 'Yoast SEO fields have changed; fetch the latest revision.', 'bc-mcp-abilities' ) );
 		}
-		$keys = array(
+		$keys    = array(
 			'title'         => '_yoast_wpseo_title',
 			'description'   => '_yoast_wpseo_metadesc',
 			'focus_keyword' => '_yoast_wpseo_focuskw',
@@ -227,11 +236,11 @@ final class BC_MCP_Abilities_Release_Integrations {
 	 */
 	public static function pricing_state( $product ) {
 		return array(
-			'product_id'        => (int) $product->get_id(),
-			'regular_price'     => (string) $product->get_regular_price(),
-			'sale_price'        => (string) $product->get_sale_price(),
-			'currency'          => get_woocommerce_currency(),
-			'pricing_revision'  => self::price_revision( $product ),
+			'product_id'       => (int) $product->get_id(),
+			'regular_price'    => (string) $product->get_regular_price(),
+			'sale_price'       => (string) $product->get_sale_price(),
+			'currency'         => get_woocommerce_currency(),
+			'pricing_revision' => self::price_revision( $product ),
 		);
 	}
 
