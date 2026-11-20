@@ -34,6 +34,10 @@ final class BC_MCP_Abilities_Audit {
 	public static function init() {
 		add_action( 'admin_post_bc_mcp_clear_activity', array( __CLASS__, 'clear' ) );
 		add_action( 'admin_post_bc_mcp_export_activity', array( __CLASS__, 'export' ) );
+		add_action( 'bc_mcp_prune_activity', array( __CLASS__, 'prune' ) );
+		if ( ! wp_next_scheduled( 'bc_mcp_prune_activity' ) ) {
+			wp_schedule_event( time() + HOUR_IN_SECONDS, 'daily', 'bc_mcp_prune_activity' );
+		}
 	}
 
 	/**
@@ -63,6 +67,24 @@ final class BC_MCP_Abilities_Audit {
 			);
 		}
 		return array_slice( $events, -self::MAX_EVENTS );
+	}
+
+	/**
+	 * Remove expired records from persistent storage on WordPress cron.
+	 *
+	 * @return void
+	 */
+	public static function prune() {
+		$stored = get_option( self::OPTION, array() );
+		$events = self::recent();
+		if ( is_array( $stored ) && count( $events ) === count( $stored ) ) {
+			return;
+		}
+		if ( $events ) {
+			update_option( self::OPTION, $events, false );
+		} else {
+			delete_option( self::OPTION );
+		}
 	}
 
 	/**
