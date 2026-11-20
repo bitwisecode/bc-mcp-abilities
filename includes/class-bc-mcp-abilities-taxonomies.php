@@ -172,7 +172,7 @@ final class BC_MCP_Abilities_Taxonomies {
 	 * @return WP_Post|WP_Error
 	 */
 	private static function post( $id ) {
-		$post = get_post( absint( $id ) );
+		$post  = get_post( absint( $id ) );
 		$types = BC_MCP_Abilities_Content::editable_types();
 		if ( ! $post || ! isset( $types[ $post->post_type ] ) || ! current_user_can( 'edit_post', $post->ID ) ) {
 			return new WP_Error( 'bc_mcp_taxonomy_post_denied', __( 'Post is unavailable or editing is not permitted.', 'bc-mcp-abilities' ) );
@@ -204,7 +204,13 @@ final class BC_MCP_Abilities_Taxonomies {
 	 */
 	public static function list_taxonomies() {
 		$items = array();
-		foreach ( get_taxonomies( array( 'public' => true, 'show_ui' => true ), 'objects' ) as $tax ) {
+		foreach ( get_taxonomies(
+			array(
+				'public'  => true,
+				'show_ui' => true,
+			),
+			'objects'
+		) as $tax ) {
 			if ( is_wp_error( self::taxonomy( $tax->name ) ) ) {
 				continue;
 			}
@@ -333,7 +339,12 @@ final class BC_MCP_Abilities_Taxonomies {
 			return $created;
 		}
 		$term = get_term( $created['term_id'], $tax->name );
-		return self::ok( array( 'taxonomy' => $tax->name, 'term' => self::term_data( $term ) ) );
+		return self::ok(
+			array(
+				'taxonomy' => $tax->name,
+				'term'     => self::term_data( $term ),
+			)
+		);
 	}
 
 	/**
