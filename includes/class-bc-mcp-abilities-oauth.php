@@ -526,15 +526,15 @@ final class BC_MCP_Abilities_OAuth {
 			return;
 		}
 
-		$allowed_events = array( 'registration', 'authorization', 'token', 'refresh', 'revoke' );
+		$allowed_events  = array( 'registration', 'authorization', 'token', 'refresh', 'revoke' );
 		$allowed_results = array( 'received', 'registered', 'approved', 'denied', 'invalid_client', 'invalid_grant', 'invalid_resource', 'invalid_pkce_or_redirect', 'replay', 'issued', 'refreshed', 'revoked', 'unsupported_grant' );
 		if ( ! in_array( $event, $allowed_events, true ) || ! in_array( $result, $allowed_results, true ) ) {
 			return;
 		}
 
-		$events = get_option( 'bc_mcp_oauth_debug_events', array() );
-		$events = is_array( $events ) ? $events : array();
-		$events = array_values(
+		$events   = get_option( 'bc_mcp_oauth_debug_events', array() );
+		$events   = is_array( $events ) ? $events : array();
+		$events   = array_values(
 			array_filter(
 				$events,
 				static function ( $item ) {
@@ -698,7 +698,7 @@ final class BC_MCP_Abilities_OAuth {
 				self::fail( 'invalid_grant' );
 			}
 			delete_transient( 'bc_mcp_refresh_' . $hash );
-			$auth = array(
+			$auth   = array(
 				'client_id' => $client,
 				'resource'  => $stored['resource'],
 				'scope'     => $stored['scope'],
