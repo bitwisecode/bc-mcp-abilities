@@ -1,0 +1,32 @@
+name: Standalone branch WordPressCS autoformat
+on:
+  push:
+    branches: [feat/standalone-chatgpt-oauth]
+permissions:
+  contents: write
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/standalone-chatgpt-oauth
+          persist-credentials: true
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist
+      - name: Apply automatic WordPress coding style fixes
+        run: ./vendor/bin/phpcbf || test "$?" -eq 1
+      - name: Commit formatting
+        run: |
+          if ! git diff --quiet -- includes/; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add includes/
+            git commit -m "style: apply WPCS to standalone transport and OAuth"
+            git push origin HEAD:feat/standalone-chatgpt-oauth
+          fi
