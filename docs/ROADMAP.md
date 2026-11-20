@@ -41,7 +41,7 @@ Facebook, LinkedIn and YouTube integrations, scheduling, profile/page posting, m
 
 ## Admin experience
 
-The settings interface is being redesigned as a standalone, responsive WordPress dashboard with connection controls, searchable write permission groups, diagnostics, Claude setup and clear overview/status indicators. Existing option keys, WordPress capability checks, and nonce-based save handling remain unchanged.
+The settings interface is being redesigned as a standalone, responsive WordPress dashboard with connection controls, searchable write permission groups, diagnostics, and combined ChatGPT/Claude OAuth URL instructions on the Connections screen, plus clear overview/status indicators. The legacy Claude extension download is no longer shown in the public admin dashboard. Existing option keys, WordPress capability checks, and nonce-based save handling remain unchanged.
 
 ## Long-term integrations
 
