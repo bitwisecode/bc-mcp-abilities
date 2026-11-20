@@ -32,6 +32,14 @@ final class BC_MCP_Abilities_Admin {
 			'rank-math-update'      => __( 'Edit Rank Math title, description and focus keywords', 'bc-mcp-abilities' ),
 			'upload-image'          => __( 'Import public HTTPS images into Media Library', 'bc-mcp-abilities' ),
 			'update-media-alt'      => __( 'Update image alternative text', 'bc-mcp-abilities' ),
+			'create-custom-draft'   => __( 'Create an eligible custom post type draft', 'bc-mcp-abilities' ),
+			'update-custom-content' => __( 'Edit custom content with revision protection', 'bc-mcp-abilities' ),
+			'elementor-create-document' => __( 'Create an empty Elementor draft post or page', 'bc-mcp-abilities' ),
+			'elementor-update-settings' => __( 'Edit safe Elementor widget settings with undo', 'bc-mcp-abilities' ),
+			'elementor-add-element' => __( 'Add supported Elementor widgets and containers', 'bc-mcp-abilities' ),
+			'elementor-delete-element' => __( 'Delete Elementor elements with recovery snapshot', 'bc-mcp-abilities' ),
+			'elementor-move-element' => __( 'Reorder or move Elementor elements', 'bc-mcp-abilities' ),
+			'elementor-regenerate-css' => __( 'Regenerate one Elementor document CSS file', 'bc-mcp-abilities' ),
 		);
 	}
 
