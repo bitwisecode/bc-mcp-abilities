@@ -195,3 +195,5 @@
 @media (prefers-reduced-motion: reduce) {
 	#bc-mcp-admin *, #bc-mcp-admin *::after { transition: none !important; }
 }
+
+#bc-mcp-admin .bc-permission[hidden], #bc-mcp-admin .bc-permission-group[hidden], #bc-mcp-admin .bc-search-empty[hidden] { display: none !important; }
