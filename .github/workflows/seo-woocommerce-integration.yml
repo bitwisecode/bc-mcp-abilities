@@ -1,0 +1,31 @@
+name: Yoast SEO and WooCommerce Integration
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  seo-woocommerce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Start disposable WordPress
+        run: npx --yes @wordpress/env start
+      - name: Install WooCommerce on disposable site
+        run: npx --yes @wordpress/env run cli wp plugin install woocommerce --activate
+      - name: Install Yoast SEO on disposable site
+        run: npx --yes @wordpress/env run cli wp plugin install wordpress-seo --activate
+      - name: Test SEO fields and product price guards
+        run: npx --yes @wordpress/env run cli wp eval-file /var/www/html/wp-content/plugins/bc-mcp-abilities/tests/seo-pricing-integration.php
+      - name: Stop disposable WordPress
+        if: always()
+        run: npx --yes @wordpress/env stop || true
