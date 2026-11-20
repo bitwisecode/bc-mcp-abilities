@@ -73,11 +73,11 @@ final class BC_MCP_Abilities_UI {
 	 * @return void
 	 */
 	private static function connections() {
-		$server_on      = BC_MCP_Abilities_Server::enabled();
-		$oauth_on       = '1' === (string) get_option( BC_MCP_Abilities_OAuth::OPTION, '0' );
-		$debug_on       = '1' === (string) get_option( 'bc_mcp_oauth_debug_enabled', '0' );
-		$endpoint       = BC_MCP_Abilities_Server::endpoint();
-		$claude_oauth   = rest_url( 'mcp/mcp-oauth-server' );
+		$server_on    = BC_MCP_Abilities_Server::enabled();
+		$oauth_on     = '1' === (string) get_option( BC_MCP_Abilities_OAuth::OPTION, '0' );
+		$debug_on     = '1' === (string) get_option( 'bc_mcp_oauth_debug_enabled', '0' );
+		$endpoint     = BC_MCP_Abilities_Server::endpoint();
+		$claude_oauth = rest_url( 'mcp/mcp-oauth-server' );
 		?>
 		<div class="bc-section-header">
 			<div>
