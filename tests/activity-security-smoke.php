@@ -63,6 +63,7 @@ wp_set_current_user( 0 );
 $assert( false === BC_MCP_Abilities::can_read( 'list-taxonomies' ), 'Anonymous user can read.' );
 $assert( false === BC_MCP_Abilities::can_write( 'create-menu' ), 'Anonymous user can write.' );
 
+require_once ABSPATH . 'wp-admin/includes/user.php';
 $subscriber = wp_create_user( 'bc_mcp_audit_subscriber_' . wp_rand( 1000, 9999 ), wp_generate_password( 24 ), 'bc-mcp-sub-' . wp_rand( 1000, 9999 ) . '@example.invalid' );
 $assert( ! is_wp_error( $subscriber ), 'Temporary subscriber could not be created.' );
 $sub_user = get_user_by( 'id', $subscriber );
