@@ -20,6 +20,10 @@ jobs:
           node-version: '24'
       - name: Start disposable WordPress
         run: npx --yes @wordpress/env start
+      - name: Enable production-style Yoast indexables only inside test WordPress
+        run: |
+          npx --yes @wordpress/env run cli wp config set WP_ENVIRONMENT_TYPE production
+          npx --yes @wordpress/env run cli wp eval 'if ( "production" !== wp_get_environment_type() ) { WP_CLI::error( "Yoast needs production indexables to register its SEO abilities." ); }'
       - name: Install WooCommerce on disposable site
         run: npx --yes @wordpress/env run cli wp plugin install woocommerce --activate
       - name: Install Yoast SEO on disposable site
