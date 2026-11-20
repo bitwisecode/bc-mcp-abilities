@@ -433,22 +433,22 @@ final class BC_MCP_Abilities_Elementor_Agent {
 	 * @param bool   $done     Whether insertion succeeded.
 	 * @return array
 	 */
-	private static function insert( $nodes, $parent, $new, $position, &$done ) {
-		if ( '' === $parent ) {
-			array_splice( $nodes, min( $position, count( $nodes ) ), 0, array( $new ) );
+	private static function insert( $nodes, $parent_id, $new_node, $position, &$done ) {
+		if ( '' === $parent_id ) {
+			array_splice( $nodes, min( $position, count( $nodes ) ), 0, array( $new_node ) );
 			$done = true;
 			return $nodes;
 		}
 		foreach ( $nodes as $index => $node ) {
-			if ( $node['id'] === $parent && in_array( $node['elType'], array( 'container', 'section', 'column' ), true ) ) {
+			if ( $node['id'] === $parent_id && in_array( $node['elType'], array( 'container', 'section', 'column' ), true ) ) {
 				$children = isset( $node['elements'] ) && is_array( $node['elements'] ) ? $node['elements'] : array();
-				array_splice( $children, min( $position, count( $children ) ), 0, array( $new ) );
+				array_splice( $children, min( $position, count( $children ) ), 0, array( $new_node ) );
 				$nodes[ $index ]['elements'] = $children;
 				$done = true;
 				return $nodes;
 			}
 			if ( ! empty( $node['elements'] ) ) {
-				$nodes[ $index ]['elements'] = self::insert( $node['elements'], $parent, $new, $position, $done );
+				$nodes[ $index ]['elements'] = self::insert( $node['elements'], $parent_id, $new_node, $position, $done );
 				if ( $done ) {
 					return $nodes;
 				}
@@ -623,7 +623,7 @@ final class BC_MCP_Abilities_Elementor_Agent {
 		$data = array(
 			'version'       => '0.4',
 			'title'         => $doc->post_title,
-			'type'          => (string) get_post_meta( $id, '_elementor_template_type', true ) ?: 'page',
+			'type'          => ( (string) get_post_meta( $id, '_elementor_template_type', true ) ? (string) get_post_meta( $id, '_elementor_template_type', true ) : 'page' ),
 			'content'       => $snapshot['tree'],
 			'page_settings' => (array) get_post_meta( $id, '_elementor_page_settings', true ),
 		);
