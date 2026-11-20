@@ -526,8 +526,8 @@ final class BC_MCP_Abilities_OAuth {
 			return;
 		}
 
-		$allowed_events  = array( 'registration', 'authorization', 'token', 'refresh', 'revoke' );
-		$allowed_results = array( 'received', 'registered', 'approved', 'denied', 'invalid_client', 'invalid_grant', 'invalid_resource', 'invalid_pkce_or_redirect', 'replay', 'issued', 'refreshed', 'revoked', 'unsupported_grant' );
+		$allowed_events  = array( 'registration', 'authorization', 'token', 'refresh', 'revoke', 'mcp' );
+		$allowed_results = array( 'received', 'registered', 'approved', 'denied', 'invalid_client', 'invalid_grant', 'invalid_resource', 'invalid_pkce_or_redirect', 'replay', 'issued', 'refreshed', 'revoked', 'unsupported_grant', 'initialized', 'listed', 'called', 'unauthorized', 'invalid_request', 'unknown_method' );
 		if ( ! in_array( $event, $allowed_events, true ) || ! in_array( $result, $allowed_results, true ) ) {
 			return;
 		}

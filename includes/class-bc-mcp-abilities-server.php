@@ -112,6 +112,7 @@ final class BC_MCP_Abilities_Server {
 		$user   = BC_MCP_Abilities_OAuth::bearer_user( $bearer );
 		if ( is_wp_error( $user ) || ! $user ) {
 			self::challenge();
+			BC_MCP_Abilities_OAuth::trace( 'mcp', 'unauthorized' );
 			return new WP_Error( 'bc_mcp_unauthorized', __( 'OAuth authorization required.', 'bc-mcp-abilities' ), array( 'status' => 401 ) );
 		}
 
@@ -162,12 +163,20 @@ final class BC_MCP_Abilities_Server {
 	 * @return WP_REST_Response
 	 */
 	private static function error( $id, $code, $message ) {
-		return self::success(
-			$id,
+		$response = new WP_REST_Response(
 			array(
-				'error' => $message,
-			)
+				'jsonrpc' => '2.0',
+				'id'      => $id,
+				'error'   => array(
+					'code'    => (int) $code,
+					'message' => (string) $message,
+				),
+			),
+			200
 		);
+		$response->header( 'MCP-Protocol-Version', '2025-11-25' );
+		$response->header( 'Cache-Control', 'no-store' );
+		return $response;
 	}
 
 	/**
@@ -341,21 +350,13 @@ final class BC_MCP_Abilities_Server {
 	public static function respond( $request ) {
 		$body = $request->get_body();
 		if ( strlen( (string) $body ) > 1024 * 1024 ) {
-			return self::success( null, array( 'error' => 'Request exceeds 1 MB.' ) );
+			BC_MCP_Abilities_OAuth::trace( 'mcp', 'invalid_request' );
+			return self::error( null, -32600, 'Request exceeds 1 MB.' );
 		}
 		$data = $request->get_json_params();
-		if ( ! is_array( $data ) || '2.0' !== ( $data['jsonrpc'] ?? '' ) || ! isset( $data['method'] ) ) {
-			return new WP_REST_Response(
-				array(
-					'jsonrpc' => '2.0',
-					'id'      => null,
-					'error'   => array(
-						'code'    => -32600,
-						'message' => 'Invalid JSON-RPC request.',
-					),
-				),
-				400
-			);
+		if ( ! is_array( $data ) || '2.0' !== ( $data['jsonrpc'] ?? '' ) || ! isset( $data['method'] ) || ! is_string( $data['method'] ) ) {
+			BC_MCP_Abilities_OAuth::trace( 'mcp', 'invalid_request' );
+			return self::error( null, -32600, 'Invalid JSON-RPC request.' );
 		}
 		$id     = array_key_exists( 'id', $data ) ? $data['id'] : null;
 		$method = (string) $data['method'];
@@ -363,6 +364,7 @@ final class BC_MCP_Abilities_Server {
 
 		switch ( $method ) {
 			case 'initialize':
+				BC_MCP_Abilities_OAuth::trace( 'mcp', 'initialized' );
 				return self::success(
 					$id,
 					array(
@@ -380,8 +382,10 @@ final class BC_MCP_Abilities_Server {
 			case 'ping':
 				return self::success( $id, (object) array() );
 			case 'tools/list':
+				BC_MCP_Abilities_OAuth::trace( 'mcp', 'listed' );
 				return self::success( $id, array( 'tools' => self::tools() ) );
 			case 'tools/call':
+				BC_MCP_Abilities_OAuth::trace( 'mcp', 'called' );
 				$name = isset( $params['name'] ) ? (string) $params['name'] : '';
 				$args = isset( $params['arguments'] ) && is_array( $params['arguments'] ) ? $params['arguments'] : array();
 				if ( 'bc-list-abilities' === $name ) {
@@ -411,16 +415,7 @@ final class BC_MCP_Abilities_Server {
 				return self::success( $id, self::tool_result( array( 'error' => 'Unknown MCP tool.' ), true ) );
 		}
 
-		return new WP_REST_Response(
-			array(
-				'jsonrpc' => '2.0',
-				'id'      => $id,
-				'error'   => array(
-					'code'    => -32601,
-					'message' => 'Method not found.',
-				),
-			),
-			200
-		);
+		BC_MCP_Abilities_OAuth::trace( 'mcp', 'unknown_method' );
+		return self::error( $id, -32601, 'Method not found.' );
 	}
 }
