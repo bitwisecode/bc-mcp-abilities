@@ -99,6 +99,15 @@ final class BC_MCP_Abilities_Server {
 			return new WP_Error( 'bc_mcp_disabled', __( 'Standalone MCP is disabled.', 'bc-mcp-abilities' ), array( 'status' => 404 ) );
 		}
 
+		// ChatGPT scans MCP tools before linking the WordPress account. These
+		// protocol methods only return static server metadata, never site data.
+		// Every tools/call still requires a valid OAuth Bearer token.
+		$message = $request->get_json_params();
+		$method  = is_array( $message ) && isset( $message['method'] ) && is_string( $message['method'] ) ? $message['method'] : '';
+		if ( is_array( $message ) && '2.0' === ( $message['jsonrpc'] ?? '' ) && in_array( $method, array( 'initialize', 'notifications/initialized', 'tools/list', 'ping' ), true ) ) {
+			return true;
+		}
+
 		$bearer = $request->get_header( 'authorization' );
 		$user   = BC_MCP_Abilities_OAuth::bearer_user( $bearer );
 		if ( is_wp_error( $user ) || ! $user ) {
@@ -120,7 +129,7 @@ final class BC_MCP_Abilities_Server {
 	 */
 	public static function challenge() {
 		$metadata = esc_url_raw( home_url( '/.well-known/oauth-protected-resource/wp-json/bc-mcp/v1/server' ) );
-		header( 'WWW-Authenticate: Bearer resource_metadata="' . $metadata . '", scope="mcp"' );
+		header( 'WWW-Authenticate: Bearer resource_metadata="' . $metadata . '", scope="mcp", error="invalid_token", error_description="WordPress OAuth sign-in required"' );
 	}
 
 	/**
@@ -172,20 +181,29 @@ final class BC_MCP_Abilities_Server {
 			'properties'           => array(),
 			'additionalProperties' => false,
 		);
+		// ChatGPT can read the three tool descriptors without authenticating,
+		// then present WordPress OAuth before executing any of them.
+		$auth_scheme = array(
+			array(
+				'type'   => 'oauth2',
+				'scopes' => array( 'mcp' ),
+			),
+		);
 
 		return array(
 			array(
-				'name'        => 'bc-list-abilities',
-				'title'       => 'List BC WordPress Abilities',
-				'description' => 'Discover permitted WordPress abilities registered by BC MCP Abilities.',
-				'inputSchema' => $schema,
-				'annotations' => array( 'readOnlyHint' => true ),
+				'name'            => 'bc-list-abilities',
+				'title'           => 'List BC WordPress Abilities',
+				'description'     => 'Discover permitted WordPress abilities registered by BC MCP Abilities.',
+				'inputSchema'     => $schema,
+				'securitySchemes' => $auth_scheme,
+				'annotations'     => array( 'readOnlyHint' => true ),
 			),
 			array(
-				'name'        => 'bc-get-ability-info',
-				'title'       => 'Describe a BC WordPress Ability',
-				'description' => 'Get the input schema, output schema and description of one BC ability before using it.',
-				'inputSchema' => array(
+				'name'            => 'bc-get-ability-info',
+				'title'           => 'Describe a BC WordPress Ability',
+				'description'     => 'Get the input schema, output schema and description of one BC ability before using it.',
+				'inputSchema'     => array(
 					'type'                 => 'object',
 					'properties'           => array(
 						'ability_name' => array(
@@ -196,13 +214,14 @@ final class BC_MCP_Abilities_Server {
 					'required'             => array( 'ability_name' ),
 					'additionalProperties' => false,
 				),
-				'annotations' => array( 'readOnlyHint' => true ),
+				'securitySchemes' => $auth_scheme,
+				'annotations'     => array( 'readOnlyHint' => true ),
 			),
 			array(
-				'name'        => 'bc-execute-ability',
-				'title'       => 'Execute a Permitted BC WordPress Ability',
-				'description' => 'Execute a BC ability. WordPress permission and admin write opt-in controls always apply. Inspect the schema and confirm writes before calling.',
-				'inputSchema' => array(
+				'name'            => 'bc-execute-ability',
+				'title'           => 'Execute a Permitted BC WordPress Ability',
+				'description'     => 'Execute a BC ability. WordPress permission and admin write opt-in controls always apply. Inspect the schema and confirm writes before calling.',
+				'inputSchema'     => array(
 					'type'                 => 'object',
 					'properties'           => array(
 						'ability_name' => array(
@@ -221,7 +240,8 @@ final class BC_MCP_Abilities_Server {
 					'required'             => array( 'ability_name', 'parameters' ),
 					'additionalProperties' => false,
 				),
-				'annotations' => array(
+				'securitySchemes' => $auth_scheme,
+				'annotations'     => array(
 					'readOnlyHint'    => false,
 					'destructiveHint' => true,
 				),
