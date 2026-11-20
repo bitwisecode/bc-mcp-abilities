@@ -144,6 +144,7 @@ final class BC_MCP_Abilities_WooCommerce {
 			'stock_quantity'     => $product->get_stock_quantity(),
 			'permalink'          => $product->get_permalink(),
 			'inventory_revision' => self::inventory_revision( $product ),
+			'pricing_revision'   => BC_MCP_Abilities_Release_Integrations::pricing_state( $product )['pricing_revision'],
 		);
 	}
 
