@@ -96,6 +96,39 @@ final class BC_MCP_Abilities_OAuth {
 	}
 
 	/**
+	 * Determine the HTTP method safely.
+	 *
+	 * @return string
+	 */
+	private static function request_method() {
+		if ( ! isset( $_SERVER['REQUEST_METHOD'] ) ) {
+			return '';
+		}
+		return strtoupper( sanitize_key( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) );
+	}
+
+	/**
+	 * Read OAuth protocol POST fields. OAuth clients cannot send WP nonces.
+	 * Authorization-code + PKCE and the form's own nonce secure the flow.
+	 *
+	 * @return array
+	 */
+	private static function submitted() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- OAuth token/registration endpoints require PKCE and client validation; consent POST verifies its nonce.
+		return $_POST;
+	}
+
+	/**
+	 * Read the incoming OAuth GET authorization request before consent.
+	 *
+	 * @return array
+	 */
+	private static function query_input() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public OAuth authorization requests include client state/PKCE; consent action uses a nonce.
+		return $_GET;
+	}
+
+	/**
 	 * Route OAuth requests and respond with JSON or a consent screen.
 	 *
 	 * @return void
@@ -112,7 +145,7 @@ final class BC_MCP_Abilities_OAuth {
 
 		switch ( $route ) {
 			case 'metadata':
-				if ( 'GET' !== $_SERVER['REQUEST_METHOD'] ) {
+				if ( 'GET' !== self::request_method() ) {
 					self::json( array( 'error' => 'invalid_request' ), 405 );
 				}
 				self::json( self::authorization_metadata() );
@@ -251,7 +284,7 @@ final class BC_MCP_Abilities_OAuth {
 	 * @return void
 	 */
 	private static function register_client() {
-		if ( 'POST' !== $_SERVER['REQUEST_METHOD'] ) {
+		if ( 'POST' !== self::request_method() ) {
 			self::fail( 'invalid_request', 405 );
 		}
 		$raw = file_get_contents( 'php://input' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- OAuth JSON request body.
@@ -362,17 +395,17 @@ final class BC_MCP_Abilities_OAuth {
 	 * @return void
 	 */
 	private static function authorize() {
-		if ( ! in_array( $_SERVER['REQUEST_METHOD'], array( 'GET', 'POST' ), true ) ) {
+		if ( ! in_array( self::request_method(), array( 'GET', 'POST' ), true ) ) {
 			self::fail( 'invalid_request', 405 );
 		}
-		$is_post = 'POST' === $_SERVER['REQUEST_METHOD'];
-		$input   = $is_post ? $_POST : $_GET; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth clients use state and PKCE, POST is nonce-protected below.
+		$is_post = 'POST' === self::request_method();
+		$input   = $is_post ? self::submitted() : self::query_input(); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth clients use state and PKCE, POST is nonce-protected below.
 		$auth    = self::validated_authorization( $input );
 		if ( is_wp_error( $auth ) ) {
 			self::fail( $auth->get_error_code() );
 		}
 		if ( ! is_user_logged_in() ) {
-			$destination = home_url( isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : '/bc-mcp/oauth/authorize' );
+			$destination = home_url( isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '/bc-mcp/oauth/authorize' );
 			wp_safe_redirect( wp_login_url( $destination ), 302 );
 			exit;
 		}
@@ -380,11 +413,11 @@ final class BC_MCP_Abilities_OAuth {
 			self::fail( 'access_denied', 403 );
 		}
 		if ( $is_post ) {
-			$nonce = self::field( '_wpnonce', $_POST );
+			$nonce = self::field( '_wpnonce', self::submitted() );
 			if ( ! wp_verify_nonce( $nonce, 'bc_mcp_oauth_consent_' . $auth['client_id'] ) ) {
 				self::fail( 'invalid_request', 403 );
 			}
-			$choice = self::field( 'bc_decision', $_POST );
+			$choice = self::field( 'bc_decision', self::submitted() );
 			if ( 'approve' !== $choice ) {
 				self::client_redirect(
 					$auth,
@@ -532,25 +565,25 @@ final class BC_MCP_Abilities_OAuth {
 	 * @return void
 	 */
 	private static function token() {
-		if ( 'POST' !== $_SERVER['REQUEST_METHOD'] ) {
+		if ( 'POST' !== self::request_method() ) {
 			self::fail( 'invalid_request', 405 );
 		}
-		$grant  = self::field( 'grant_type', $_POST );
-		$client = self::field( 'client_id', $_POST );
-		$uri    = self::field( 'resource', $_POST );
+		$grant  = self::field( 'grant_type', self::submitted() );
+		$client = self::field( 'client_id', self::submitted() );
+		$uri    = self::field( 'resource', self::submitted() );
 		if ( ! isset( self::clients()[ $client ] ) || BC_MCP_Abilities_Server::endpoint() !== $uri ) {
 			self::fail( 'invalid_client' );
 		}
 
 		if ( 'authorization_code' === $grant ) {
-			$code   = self::field( 'code', $_POST );
+			$code   = self::field( 'code', self::submitted() );
 			$hash   = hash( 'sha256', $code );
 			$stored = get_transient( 'bc_mcp_auth_code_' . $hash );
 			if ( ! is_array( $stored ) || ! isset( $stored['auth'], $stored['user_id'] ) ) {
 				self::fail( 'invalid_grant' );
 			}
 			$auth = $stored['auth'];
-			if ( $auth['client_id'] !== $client || $auth['redirect_uri'] !== self::field( 'redirect_uri', $_POST ) || $auth['resource'] !== $uri || ! self::pkce_valid( self::field( 'code_verifier', $_POST ), $auth['challenge'] ) ) {
+			if ( $auth['client_id'] !== $client || $auth['redirect_uri'] !== self::field( 'redirect_uri', self::submitted() ) || $auth['resource'] !== $uri || ! self::pkce_valid( self::field( 'code_verifier', self::submitted() ), $auth['challenge'] ) ) {
 				self::fail( 'invalid_grant' );
 			}
 			if ( ! self::consume_lock( $hash ) ) {
@@ -561,7 +594,7 @@ final class BC_MCP_Abilities_OAuth {
 		}
 
 		if ( 'refresh_token' === $grant ) {
-			$refresh = self::field( 'refresh_token', $_POST );
+			$refresh = self::field( 'refresh_token', self::submitted() );
 			$hash    = hash( 'sha256', $refresh );
 			$stored  = get_transient( 'bc_mcp_refresh_' . $hash );
 			if ( ! is_array( $stored ) || ( $stored['client'] ?? '' ) !== $client || ( $stored['resource'] ?? '' ) !== $uri || ! get_userdata( $stored['user_id'] ?? 0 ) ) {
@@ -587,11 +620,11 @@ final class BC_MCP_Abilities_OAuth {
 	 * @return void
 	 */
 	private static function revoke() {
-		if ( 'POST' !== $_SERVER['REQUEST_METHOD'] ) {
+		if ( 'POST' !== self::request_method() ) {
 			self::fail( 'invalid_request', 405 );
 		}
-		$client = self::field( 'client_id', $_POST );
-		$token  = self::field( 'token', $_POST );
+		$client = self::field( 'client_id', self::submitted() );
+		$token  = self::field( 'token', self::submitted() );
 		if ( ! isset( self::clients()[ $client ] ) || ! preg_match( '/^[a-f0-9]{64}$/', $token ) ) {
 			self::fail( 'invalid_request' );
 		}
