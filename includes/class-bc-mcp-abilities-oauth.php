@@ -785,6 +785,13 @@ final class BC_MCP_Abilities_OAuth {
 		if ( ! is_array( $record ) ) {
 			return new WP_Error( 'bc_mcp_oauth_unknown' );
 		}
+		// A stored token alone is not enough: the issuing client must still
+		// exist in this installation's OAuth client registry. This also makes
+		// tokens from a previously uninstalled instance unusable after reinstall.
+		$client_id = isset( $record['client'] ) && is_string( $record['client'] ) ? $record['client'] : '';
+		if ( '' === $client_id || ! isset( self::clients()[ $client_id ] ) ) {
+			return new WP_Error( 'bc_mcp_oauth_client_removed' );
+		}
 		if ( ( $record['resource'] ?? '' ) !== BC_MCP_Abilities_Server::endpoint() ) {
 			return new WP_Error( 'bc_mcp_oauth_wrong_target' );
 		}
