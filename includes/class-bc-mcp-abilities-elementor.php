@@ -84,7 +84,7 @@ final class BC_MCP_Abilities_Elementor {
 	 * @param int $post_id Post ID.
 	 * @return array|WP_Error
 	 */
-	private static function snapshot( $post_id ) {
+	public static function snapshot( $post_id ) {
 		if ( ! did_action( 'elementor/loaded' ) || ! class_exists( '\Elementor\Plugin' ) ) {
 			return new WP_Error( 'bc_mcp_elementor_unavailable', __( 'Elementor is not active.', 'bc-mcp-abilities' ) );
 		}
@@ -120,7 +120,7 @@ final class BC_MCP_Abilities_Elementor {
 	 * @param int   $count Number of visited nodes.
 	 * @return bool
 	 */
-	private static function valid_tree( $tree, $depth, &$count ) {
+	public static function valid_tree( $tree, $depth, &$count ) {
 		if ( ! is_array( $tree ) || $depth > 30 ) {
 			return false;
 		}
@@ -271,6 +271,73 @@ final class BC_MCP_Abilities_Elementor {
 	 * @param array $input Validated ability input.
 	 * @return array|WP_Error
 	 */
+	/**
+	 * Save a controlled Elementor structure change with one-level undo.
+	 *
+	 * @param int    $post_id          Elementor document ID.
+	 * @param string $expected_revision Current tree revision.
+	 * @param array  $updated          Validated Elementor element tree.
+	 * @return array|WP_Error
+	 */
+	public static function save_structure( $post_id, $expected_revision, $updated ) {
+		$snapshot = self::snapshot( $post_id );
+		if ( is_wp_error( $snapshot ) ) {
+			return $snapshot;
+		}
+		if ( ! hash_equals( $snapshot['revision'], (string) $expected_revision ) ) {
+			return new WP_Error( 'bc_mcp_elementor_conflict', __( 'Elementor layout changed. Reload the document before updating.', 'bc-mcp-abilities' ) );
+		}
+		$count = 0;
+		if ( ! self::valid_tree( $updated, 0, $count ) ) {
+			return new WP_Error( 'bc_mcp_elementor_structure', __( 'Elementor document has an invalid structure.', 'bc-mcp-abilities' ) );
+		}
+		$json = wp_json_encode( $updated );
+		if ( false === $json || strlen( $json ) > self::MAX_SIZE ) {
+			return new WP_Error( 'bc_mcp_elementor_large', __( 'Elementor document exceeds the safe size limit.', 'bc-mcp-abilities' ) );
+		}
+		// Recheck immediately before saving; concurrent third-party changes must
+		// never be intentionally overwritten by stale AI requests.
+		$fresh_before = self::snapshot( $post_id );
+		if ( is_wp_error( $fresh_before ) ) {
+			return $fresh_before;
+		}
+		if ( ! hash_equals( $snapshot['revision'], $fresh_before['revision'] ) ) {
+			return new WP_Error( 'bc_mcp_elementor_conflict', __( 'Elementor changed before the update was saved.', 'bc-mcp-abilities' ) );
+		}
+
+		$token  = wp_generate_uuid4();
+		$backup = array(
+			'token'         => $token,
+			'before'        => $snapshot['tree'],
+			'before_hash'   => $snapshot['revision'],
+			'after_hash'    => '',
+			'created_at'    => time(),
+			'owner_user_id' => get_current_user_id(),
+		);
+		if ( ! update_post_meta( $post_id, self::BACKUP_KEY, $backup ) ) {
+			return new WP_Error( 'bc_mcp_elementor_backup', __( 'Could not save the recovery snapshot. No changes were applied.', 'bc-mcp-abilities' ) );
+		}
+		$saved = $snapshot['document']->save( array( 'elements' => $updated ) );
+		if ( true !== $saved ) {
+			return new WP_Error( 'bc_mcp_elementor_save', __( 'Elementor rejected the change; a recovery snapshot was preserved.', 'bc-mcp-abilities' ) );
+		}
+		$fresh = self::snapshot( $post_id );
+		if ( is_wp_error( $fresh ) ) {
+			return $fresh;
+		}
+		$backup['after_hash'] = $fresh['revision'];
+		update_post_meta( $post_id, self::BACKUP_KEY, $backup );
+
+		return self::ok(
+			array(
+				'post_id'    => (int) $post_id,
+				'revision'   => $fresh['revision'],
+				'undo_token' => $token,
+				'elements'   => $count,
+			)
+		);
+	}
+
 	public static function undo( $input ) {
 		$post_id = absint( $input['post_id'] );
 		$backup  = get_post_meta( $post_id, self::BACKUP_KEY, true );
