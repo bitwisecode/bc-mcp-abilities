@@ -1,0 +1,284 @@
+<?php
+/**
+ * Premium, accessible settings dashboard for BC MCP Abilities.
+ *
+ * @package BCMCPAbilities
+ */
+
+defined( 'ABSPATH' ) || exit;
+
+/**
+ * View-only administration. All settings continue using the original
+ * WordPress Settings API registrations, sanitizers, and permission checks.
+ */
+final class BC_MCP_Abilities_UI {
+
+	/**
+	 * Render one human-readable connection status without claiming a live probe.
+	 *
+	 * @param bool $enabled Whether the feature is enabled in configuration.
+	 * @return void
+	 */
+	private static function status( $enabled ) {
+		printf(
+			'<span class="bc-status %1$s"><span class="bc-status-dot" aria-hidden="true"></span>%2$s</span>',
+			$enabled ? 'bc-status-on' : 'bc-status-off',
+			esc_html( $enabled ? __( 'Enabled', 'bc-mcp-abilities' ) : __( 'Disabled', 'bc-mcp-abilities' ) )
+		);
+	}
+
+	/**
+	 * Render a permission group with searchable controls.
+	 *
+	 * @param string $title Group title.
+	 * @param array  $slugs Registered ability keys.
+	 * @param array  $abilities All registered writable abilities.
+	 * @return void
+	 */
+	private static function ability_group( $title, $slugs, $abilities ) {
+		$available = array_intersect_key( $abilities, array_flip( $slugs ) );
+		if ( ! $available ) {
+			return;
+		}
+		?>
+		<section class="bc-permission-group" data-bc-group>
+			<div class="bc-group-heading">
+				<h3><?php echo esc_html( $title ); ?></h3>
+				<span><?php echo esc_html( (string) count( $available ) ); ?> <?php esc_html_e( 'permissions', 'bc-mcp-abilities' ); ?></span>
+			</div>
+			<div class="bc-permission-list">
+				<?php foreach ( $available as $slug => $description ) : ?>
+					<?php $enabled = BC_MCP_Abilities_Admin::is_enabled( $slug ); ?>
+					<label class="bc-permission" data-bc-permission data-bc-search-text="<?php echo esc_attr( strtolower( $slug . ' ' . $description ) ); ?>">
+						<span class="bc-permission-copy">
+							<strong><?php echo esc_html( ucwords( str_replace( '-', ' ', $slug ) ) ); ?></strong>
+							<span class="bc-permission-description"><?php echo esc_html( $description ); ?></span>
+							<code><?php echo esc_html( 'bc-mcp-abilities/' . $slug ); ?></code>
+						</span>
+						<span class="bc-switch">
+							<input type="checkbox" name="<?php echo esc_attr( BC_MCP_Abilities_Admin::OPTION ); ?>[]" value="<?php echo esc_attr( $slug ); ?>" <?php checked( $enabled ); ?> />
+							<span class="bc-switch-track" aria-hidden="true"></span>
+							<span class="screen-reader-text"><?php echo esc_html( sprintf( /* translators: %s: ability name. */ __( 'Allow %s', 'bc-mcp-abilities' ), $slug ) ); ?></span>
+						</span>
+					</label>
+				<?php endforeach; ?>
+			</div>
+		</section>
+		<?php
+	}
+
+	/**
+	 * Render the WordPress Settings API backed connection form.
+	 *
+	 * @return void
+	 */
+	private static function connections() {
+		$server_on = BC_MCP_Abilities_Server::enabled();
+		$oauth_on  = '1' === (string) get_option( BC_MCP_Abilities_OAuth::OPTION, '0' );
+		$debug_on  = '1' === (string) get_option( 'bc_mcp_oauth_debug_enabled', '0' );
+		$endpoint  = BC_MCP_Abilities_Server::endpoint();
+		?>
+		<div class="bc-section-header">
+			<div>
+				<p class="bc-eyebrow"><?php esc_html_e( 'Connection settings', 'bc-mcp-abilities' ); ?></p>
+				<h2><?php esc_html_e( 'ChatGPT &amp; MCP server', 'bc-mcp-abilities' ); ?></h2>
+				<p><?php esc_html_e( 'Connect ChatGPT directly to this WordPress site with the built-in MCP endpoint and OAuth authorization.', 'bc-mcp-abilities' ); ?></p>
+			</div>
+			<?php self::status( $server_on && $oauth_on && is_ssl() ); ?>
+		</div>
+		<?php if ( ! is_ssl() ) : ?>
+			<div class="bc-alert bc-alert-danger"><?php esc_html_e( 'HTTPS is required. Enable TLS for WordPress before turning on OAuth.', 'bc-mcp-abilities' ); ?></div>
+		<?php endif; ?>
+		<div class="bc-card">
+			<div class="bc-card-title"><h3><?php esc_html_e( 'Connection configuration', 'bc-mcp-abilities' ); ?></h3><p><?php esc_html_e( 'Changes are saved using WordPress settings and nonce validation.', 'bc-mcp-abilities' ); ?></p></div>
+			<form method="post" action="options.php">
+				<?php settings_fields( 'bc_mcp_connections' ); ?>
+				<input type="hidden" name="<?php echo esc_attr( BC_MCP_Abilities_Server::OPTION ); ?>" value="0" />
+				<input type="hidden" name="<?php echo esc_attr( BC_MCP_Abilities_OAuth::OPTION ); ?>" value="0" />
+				<input type="hidden" name="bc_mcp_oauth_debug_enabled" value="0" />
+				<label class="bc-setting-row">
+					<span><strong><?php esc_html_e( 'MCP server', 'bc-mcp-abilities' ); ?></strong><small><?php esc_html_e( 'Expose the built-in REST MCP endpoint to compatible clients.', 'bc-mcp-abilities' ); ?></small></span>
+					<span class="bc-switch"><input type="checkbox" name="<?php echo esc_attr( BC_MCP_Abilities_Server::OPTION ); ?>" value="1" <?php checked( $server_on ); ?> /><span class="bc-switch-track" aria-hidden="true"></span></span>
+				</label>
+				<label class="bc-setting-row">
+					<span><strong><?php esc_html_e( 'WordPress OAuth', 'bc-mcp-abilities' ); ?></strong><small><?php esc_html_e( 'Require WordPress authorization and scoped tokens for protected operations.', 'bc-mcp-abilities' ); ?></small></span>
+					<span class="bc-switch"><input type="checkbox" name="<?php echo esc_attr( BC_MCP_Abilities_OAuth::OPTION ); ?>" value="1" <?php checked( $oauth_on ); ?> <?php disabled( ! is_ssl() ); ?> /><span class="bc-switch-track" aria-hidden="true"></span></span>
+				</label>
+				<label class="bc-setting-row">
+					<span><strong><?php esc_html_e( 'Temporary diagnostics', 'bc-mcp-abilities' ); ?></strong><small><?php esc_html_e( 'Capture sanitized protocol events for troubleshooting; records expire after 24 hours and are deleted when switched off.', 'bc-mcp-abilities' ); ?></small></span>
+					<span class="bc-switch"><input type="checkbox" name="bc_mcp_oauth_debug_enabled" value="1" <?php checked( $debug_on ); ?> /><span class="bc-switch-track" aria-hidden="true"></span></span>
+				</label>
+				<div class="bc-form-actions">
+					<?php submit_button( __( 'Save connection settings', 'bc-mcp-abilities' ), 'primary', 'submit', false ); ?>
+				</div>
+			</form>
+		</div>
+		<div class="bc-card">
+			<div class="bc-card-title"><h3><?php esc_html_e( 'Your MCP endpoint', 'bc-mcp-abilities' ); ?></h3><p><?php esc_html_e( 'Use this exact URL when creating your ChatGPT custom MCP connector.', 'bc-mcp-abilities' ); ?></p></div>
+			<div class="bc-copy-field">
+				<input id="bc-mcp-server-url" type="text" value="<?php echo esc_attr( $endpoint ); ?>" readonly aria-label="<?php esc_attr_e( 'MCP server URL', 'bc-mcp-abilities' ); ?>" />
+				<button class="button bc-copy-button" type="button" data-bc-copy="bc-mcp-server-url"><?php esc_html_e( 'Copy URL', 'bc-mcp-abilities' ); ?></button>
+			</div>
+			<ol class="bc-steps">
+				<li><?php esc_html_e( 'Enable MCP server and WordPress OAuth, then save.', 'bc-mcp-abilities' ); ?></li>
+				<li><?php esc_html_e( 'In ChatGPT, add a custom MCP server using this endpoint and OAuth with Dynamic Client Registration.', 'bc-mcp-abilities' ); ?></li>
+				<li><?php esc_html_e( 'Authorize access from WordPress, then try listing abilities before enabling any writes.', 'bc-mcp-abilities' ); ?></li>
+			</ol>
+			<p class="bc-muted"><?php esc_html_e( 'Enabled indicates configuration, not a live connection test. The separate Claude MCP Adapter endpoint is not changed.', 'bc-mcp-abilities' ); ?></p>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Display bounded sanitized diagnostic history.
+	 *
+	 * @return void
+	 */
+	private static function diagnostics() {
+		$enabled = '1' === (string) get_option( 'bc_mcp_oauth_debug_enabled', '0' );
+		$events  = get_option( 'bc_mcp_oauth_debug_events', array() );
+		$events  = is_array( $events ) ? array_reverse( array_slice( $events, -BC_MCP_Abilities_OAuth::DEBUG_MAX_EVENTS ) ) : array();
+		?>
+		<div class="bc-section-header">
+			<div><p class="bc-eyebrow"><?php esc_html_e( 'Troubleshooting', 'bc-mcp-abilities' ); ?></p><h2><?php esc_html_e( 'Connection activity', 'bc-mcp-abilities' ); ?></h2><p><?php esc_html_e( 'Recent sanitized OAuth and MCP requests. No credentials, tokens, or request bodies are recorded.', 'bc-mcp-abilities' ); ?></p></div>
+			<?php self::status( $enabled ); ?>
+		</div>
+		<div class="bc-card">
+			<div class="bc-card-title"><h3><?php esc_html_e( 'Recent events', 'bc-mcp-abilities' ); ?></h3><p><?php esc_html_e( 'Maximum 50 events retained for up to 24 hours, newest first.', 'bc-mcp-abilities' ); ?></p></div>
+			<?php if ( ! $enabled ) : ?>
+				<div class="bc-empty"><span class="dashicons dashicons-shield-alt" aria-hidden="true"></span><strong><?php esc_html_e( 'Diagnostics are off', 'bc-mcp-abilities' ); ?></strong><p><?php esc_html_e( 'Turn on temporary diagnostics under Connections to investigate issues.', 'bc-mcp-abilities' ); ?></p><button type="button" class="button" data-bc-goto="connections"><?php esc_html_e( 'Open connection settings', 'bc-mcp-abilities' ); ?></button></div>
+			<?php elseif ( empty( $events ) ) : ?>
+				<div class="bc-empty"><strong><?php esc_html_e( 'No events yet', 'bc-mcp-abilities' ); ?></strong><p><?php esc_html_e( 'Reconnect your MCP client, then refresh this screen.', 'bc-mcp-abilities' ); ?></p></div>
+			<?php else : ?>
+				<div class="bc-table-scroll"><table class="widefat bc-events"><thead><tr>
+					<th><?php esc_html_e( 'Time (UTC)', 'bc-mcp-abilities' ); ?></th><th><?php esc_html_e( 'Stage', 'bc-mcp-abilities' ); ?></th><th><?php esc_html_e( 'Result', 'bc-mcp-abilities' ); ?></th><th><?php esc_html_e( 'MCP method', 'bc-mcp-abilities' ); ?></th><th><?php esc_html_e( 'Authorization', 'bc-mcp-abilities' ); ?></th><th><?php esc_html_e( 'Detail', 'bc-mcp-abilities' ); ?></th>
+				</tr></thead><tbody>
+					<?php foreach ( $events as $event ) : ?>
+						<?php if ( ! is_array( $event ) || empty( $event['time'] ) || time() - absint( $event['time'] ) >= DAY_IN_SECONDS ) { continue; } ?>
+						<tr>
+							<td><?php echo esc_html( gmdate( 'Y-m-d H:i:s', absint( $event['time'] ) ) ); ?></td>
+							<td><?php echo esc_html( sanitize_key( (string) ( $event['event'] ?? '' ) ) ); ?></td>
+							<td><?php echo esc_html( sanitize_key( (string) ( $event['result'] ?? '' ) ) ); ?></td>
+							<td><code><?php echo esc_html( (string) ( $event['method'] ?? '' ) ); ?></code></td>
+							<td><?php echo esc_html( (string) ( $event['auth'] ?? '' ) ); ?></td>
+							<td><?php echo esc_html( (string) ( $event['detail'] ?? '' ) ); ?></td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody></table></div>
+			<?php endif; ?>
+			<p class="bc-muted"><?php esc_html_e( 'Disable diagnostics when finished. Turning it off immediately deletes stored events.', 'bc-mcp-abilities' ); ?></p>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render the dashboard.
+	 *
+	 * @return void
+	 */
+	public static function render() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+		$writes       = BC_MCP_Abilities_Admin::writable_abilities();
+		$enabled      = array_filter( array_keys( $writes ), array( 'BC_MCP_Abilities_Admin', 'is_enabled' ) );
+		$total        = 0;
+		if ( function_exists( 'wp_get_abilities' ) ) {
+			foreach ( (array) wp_get_abilities() as $ability ) {
+				if ( is_object( $ability ) && method_exists( $ability, 'get_name' ) && 0 === strpos( $ability->get_name(), 'bc-mcp-abilities/' ) ) {
+					++$total;
+				}
+			}
+		}
+		$server_on = BC_MCP_Abilities_Server::enabled();
+		$oauth_on  = BC_MCP_Abilities_OAuth::enabled();
+		$groups    = array(
+			__( 'Content & posts', 'bc-mcp-abilities' )  => array( 'create-draft', 'update-content', 'restore-revision', 'create-custom-draft', 'update-custom-content' ),
+			__( 'Elementor', 'bc-mcp-abilities' )        => array( 'elementor-update-text', 'elementor-undo', 'elementor-create-document', 'elementor-update-settings', 'elementor-add-element', 'elementor-delete-element', 'elementor-move-element', 'elementor-regenerate-css' ),
+			__( 'WooCommerce', 'bc-mcp-abilities' )     => array( 'wc-update-stock' ),
+			__( 'SEO & media', 'bc-mcp-abilities' )     => array( 'rank-math-update', 'upload-image', 'update-media-alt' ),
+		);
+		$grouped = array();
+		foreach ( $groups as $slugs ) {
+			$grouped = array_merge( $grouped, $slugs );
+		}
+		$other = array_diff( array_keys( $writes ), $grouped );
+		if ( $other ) {
+			$groups[ __( 'Additional permissions', 'bc-mcp-abilities' ) ] = $other;
+		}
+		?>
+		<div class="wrap bc-mcp-admin" id="bc-mcp-admin">
+			<div class="bc-hero">
+				<div class="bc-hero-brand"><div class="bc-brand-mark" aria-hidden="true">BC</div><span><?php esc_html_e( 'BITWISECODE / WORDPRESS', 'bc-mcp-abilities' ); ?></span></div>
+				<div class="bc-hero-row">
+					<div><h1><?php esc_html_e( 'MCP Abilities', 'bc-mcp-abilities' ); ?></h1><p><?php esc_html_e( 'Your control center for secure AI-powered WordPress workflows.', 'bc-mcp-abilities' ); ?></p></div>
+					<div class="bc-hero-version"><?php echo esc_html( BC_MCP_ABILITIES_VERSION ); ?> <span><?php esc_html_e( 'Developer preview', 'bc-mcp-abilities' ); ?></span></div>
+				</div>
+			</div>
+			<?php if ( isset( $_GET['settings-updated'] ) && 'true' === sanitize_text_field( wp_unslash( $_GET['settings-updated'] ) ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Presentation-only success banner. ?>
+				<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Settings saved successfully.', 'bc-mcp-abilities' ); ?></p></div>
+			<?php endif; ?>
+			<div class="bc-layout">
+				<nav class="bc-sidebar" role="tablist" aria-label="<?php esc_attr_e( 'MCP settings sections', 'bc-mcp-abilities' ); ?>" aria-orientation="vertical">
+					<p class="bc-sidebar-label"><?php esc_html_e( 'WORKSPACE', 'bc-mcp-abilities' ); ?></p>
+					<button type="button" role="tab" class="bc-tab is-active" id="bc-tab-overview" data-bc-tab="overview" aria-controls="bc-panel-overview" aria-selected="true"><span class="dashicons dashicons-dashboard" aria-hidden="true"></span><?php esc_html_e( 'Overview', 'bc-mcp-abilities' ); ?></button>
+					<button type="button" role="tab" class="bc-tab" id="bc-tab-connections" data-bc-tab="connections" aria-controls="bc-panel-connections" aria-selected="false"><span class="dashicons dashicons-admin-links" aria-hidden="true"></span><?php esc_html_e( 'Connections', 'bc-mcp-abilities' ); ?></button>
+					<button type="button" role="tab" class="bc-tab" id="bc-tab-abilities" data-bc-tab="abilities" aria-controls="bc-panel-abilities" aria-selected="false"><span class="dashicons dashicons-admin-settings" aria-hidden="true"></span><?php esc_html_e( 'Abilities & permissions', 'bc-mcp-abilities' ); ?></button>
+					<button type="button" role="tab" class="bc-tab" id="bc-tab-diagnostics" data-bc-tab="diagnostics" aria-controls="bc-panel-diagnostics" aria-selected="false"><span class="dashicons dashicons-list-view" aria-hidden="true"></span><?php esc_html_e( 'Diagnostics', 'bc-mcp-abilities' ); ?></button>
+					<button type="button" role="tab" class="bc-tab" id="bc-tab-claude" data-bc-tab="claude" aria-controls="bc-panel-claude" aria-selected="false"><span class="dashicons dashicons-cloud" aria-hidden="true"></span><?php esc_html_e( 'Claude Desktop', 'bc-mcp-abilities' ); ?></button>
+					<div class="bc-sidebar-footer"><span class="dashicons dashicons-lock" aria-hidden="true"></span><span><?php esc_html_e( 'Write access is off by default. Existing WordPress capabilities always apply.', 'bc-mcp-abilities' ); ?></span></div>
+				</nav>
+				<main class="bc-workspace">
+					<section class="bc-tab-panel" id="bc-panel-overview" role="tabpanel" aria-labelledby="bc-tab-overview">
+						<div class="bc-section-header"><div><p class="bc-eyebrow"><?php esc_html_e( 'Workspace overview', 'bc-mcp-abilities' ); ?></p><h2><?php esc_html_e( 'Everything at a glance', 'bc-mcp-abilities' ); ?></h2><p><?php esc_html_e( 'Review your setup, enable only the operations you need, and inspect connection events.', 'bc-mcp-abilities' ); ?></p></div></div>
+						<div class="bc-stats">
+							<div class="bc-stat"><span class="bc-stat-icon dashicons dashicons-admin-network" aria-hidden="true"></span><strong><?php echo esc_html( (string) $total ); ?></strong><span><?php esc_html_e( 'Registered abilities', 'bc-mcp-abilities' ); ?></span></div>
+							<div class="bc-stat"><span class="bc-stat-icon dashicons dashicons-lock" aria-hidden="true"></span><strong><?php echo esc_html( (string) count( $enabled ) ); ?> <small>/ <?php echo esc_html( (string) count( $writes ) ); ?></small></strong><span><?php esc_html_e( 'Enabled write abilities', 'bc-mcp-abilities' ); ?></span></div>
+							<div class="bc-stat"><span class="bc-stat-icon dashicons dashicons-admin-links" aria-hidden="true"></span><strong><?php echo esc_html( $server_on && $oauth_on ? __( 'Ready', 'bc-mcp-abilities' ) : __( 'Setup', 'bc-mcp-abilities' ) ); ?></strong><span><?php esc_html_e( 'Connection configuration', 'bc-mcp-abilities' ); ?></span></div>
+						</div>
+						<div class="bc-overview-grid">
+							<div class="bc-card">
+								<div class="bc-card-title"><h3><?php esc_html_e( 'Connection health', 'bc-mcp-abilities' ); ?></h3><p><?php esc_html_e( 'Configuration overview, not a live network check.', 'bc-mcp-abilities' ); ?></p></div>
+								<div class="bc-overview-row"><span><?php esc_html_e( 'MCP endpoint', 'bc-mcp-abilities' ); ?></span><?php self::status( $server_on ); ?></div>
+								<div class="bc-overview-row"><span><?php esc_html_e( 'OAuth authorization', 'bc-mcp-abilities' ); ?></span><?php self::status( $oauth_on ); ?></div>
+								<div class="bc-overview-row"><span><?php esc_html_e( 'Claude MCP Adapter', 'bc-mcp-abilities' ); ?></span><?php self::status( BC_MCP_Abilities_Claude::adapter_active() ); ?></div>
+								<button type="button" class="button bc-outline-button" data-bc-goto="connections"><?php esc_html_e( 'Manage connections', 'bc-mcp-abilities' ); ?></button>
+							</div>
+							<div class="bc-card bc-card-accent">
+								<div class="bc-card-title"><h3><?php esc_html_e( 'Manage capabilities', 'bc-mcp-abilities' ); ?></h3><p><?php esc_html_e( 'Readable abilities are controlled by WordPress permissions. Writes require explicit opt-in and user confirmation.', 'bc-mcp-abilities' ); ?></p></div>
+								<p class="bc-spotlight-number"><?php echo esc_html( (string) count( $writes ) ); ?></p>
+								<p class="bc-muted"><?php esc_html_e( 'Available write permission switches', 'bc-mcp-abilities' ); ?></p>
+								<button type="button" class="button button-primary" data-bc-goto="abilities"><?php esc_html_e( 'Manage abilities', 'bc-mcp-abilities' ); ?></button>
+							</div>
+						</div>
+						<div class="bc-alert"><span class="dashicons dashicons-info" aria-hidden="true"></span><p><?php esc_html_e( 'This is a development preview. Test new permissions on staging before enabling changes to a production website.', 'bc-mcp-abilities' ); ?></p></div>
+					</section>
+					<section class="bc-tab-panel" id="bc-panel-connections" role="tabpanel" aria-labelledby="bc-tab-connections"><?php self::connections(); ?></section>
+					<section class="bc-tab-panel" id="bc-panel-abilities" role="tabpanel" aria-labelledby="bc-tab-abilities">
+						<div class="bc-section-header"><div><p class="bc-eyebrow"><?php esc_html_e( 'Permission controls', 'bc-mcp-abilities' ); ?></p><h2><?php esc_html_e( 'Abilities & access', 'bc-mcp-abilities' ); ?></h2><p><?php esc_html_e( 'Select exactly which write operations can be invoked by authenticated MCP clients.', 'bc-mcp-abilities' ); ?></p></div></div>
+						<div class="bc-alert"><span class="dashicons dashicons-shield" aria-hidden="true"></span><p><?php esc_html_e( 'Every write also requires WordPress administrator permissions and a confirmed tool call. Enabling a permission does not itself execute an operation.', 'bc-mcp-abilities' ); ?></p></div>
+						<div class="bc-card">
+							<form method="post" action="options.php" id="bc-permissions-form">
+								<?php settings_fields( 'bc_mcp_abilities' ); ?>
+								<input type="hidden" name="<?php echo esc_attr( BC_MCP_Abilities_Admin::OPTION ); ?>" value="" />
+								<div class="bc-permissions-toolbar">
+									<div class="bc-search-wrap"><span class="dashicons dashicons-search" aria-hidden="true"></span><input type="search" data-bc-search placeholder="<?php esc_attr_e( 'Search abilities...', 'bc-mcp-abilities' ); ?>" aria-label="<?php esc_attr_e( 'Search write abilities', 'bc-mcp-abilities' ); ?>" /></div>
+									<span class="bc-count"><strong data-bc-enabled-count><?php echo esc_html( (string) count( $enabled ) ); ?></strong> / <?php echo esc_html( (string) count( $writes ) ); ?> <?php esc_html_e( 'enabled', 'bc-mcp-abilities' ); ?></span>
+								</div>
+								<?php foreach ( $groups as $title => $slugs ) { self::ability_group( $title, $slugs, $writes ); } ?>
+								<p class="bc-search-empty" data-bc-no-results hidden><?php esc_html_e( 'No matching permissions found.', 'bc-mcp-abilities' ); ?></p>
+								<div class="bc-sticky-actions"><p><?php esc_html_e( 'Save changes to apply permission settings.', 'bc-mcp-abilities' ); ?></p><?php submit_button( __( 'Save permissions', 'bc-mcp-abilities' ), 'primary', 'submit', false ); ?></div>
+							</form>
+						</div>
+					</section>
+					<section class="bc-tab-panel" id="bc-panel-diagnostics" role="tabpanel" aria-labelledby="bc-tab-diagnostics"><?php self::diagnostics(); ?></section>
+					<section class="bc-tab-panel" id="bc-panel-claude" role="tabpanel" aria-labelledby="bc-tab-claude">
+						<div class="bc-section-header"><div><p class="bc-eyebrow"><?php esc_html_e( 'Desktop integration', 'bc-mcp-abilities' ); ?></p><h2><?php esc_html_e( 'Claude Desktop', 'bc-mcp-abilities' ); ?></h2><p><?php esc_html_e( 'Use the existing MCP Adapter bridge without changing the ChatGPT OAuth connection.', 'bc-mcp-abilities' ); ?></p></div></div>
+						<div class="bc-card bc-claude-legacy"><?php BC_MCP_Abilities_Claude::render(); ?></div>
+					</section>
+				</main>
+			</div>
+		</div>
+		<?php
+	}
+}
