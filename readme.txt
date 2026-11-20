@@ -14,7 +14,28 @@ Independent, permission-checked WordPress Abilities plus an optional built-in MC
 
 BC MCP Abilities registers 48 WordPress-native abilities in the pre-release development branch, covering content, media, WooCommerce, Rank Math and guarded Elementor operations. It includes a built-in MCP and OAuth connection that is disabled by default, and works without an external server. The official MCP Adapter remains optional for compatibility. All write abilities require an administrator opt-in and WordPress permission checks.
 
-This is development software. Test on staging only. Administrators may now hide specific read-only abilities from discovery and execution, and view a bounded seven-day activity log without recording tool arguments, content, response payloads, tokens or passwords.
+This is development software. Test on staging only. Administrators can hide individual read-only abilities from AI discovery and execution, and view a bounded seven-day activity log. The audit excludes prompts, tool inputs, response payloads, tokens and passwords.
+
+== Privacy & External Services ==
+
+This plugin stores optional OAuth client registration and token data, administrator-selected permissions, and at most 100 execution audit entries. Audit entries contain only the timestamp, numeric WordPress user ID, ability name, read/write type and outcome; they expire after up to seven days. Administrators can export or delete their local activity history in Settings.
+
+The built-in MCP endpoint runs on your own WordPress website. If you choose to connect an external AI client, its handling of prompts and returned website data is governed by that client's own terms and privacy policy. No external AI account or API key is needed merely to install this plugin.
+
+Google PageSpeed Insights is an optional read-only feature. When an authorized administrator runs this ability, the tested public page URL is sent from the WordPress server to Google's PageSpeed Insights API at https://www.googleapis.com/pagespeedonline/v5/runPagespeed . Google may retrieve that public page and return performance metrics. Responses are cached locally for one hour; cached requests do not contact Google. Google Privacy Policy: https://policies.google.com/privacy . PageSpeed API documentation: https://developers.google.com/speed/docs/insights/v5/get-started .
+
+The optional image-import write ability fetches an explicitly provided public HTTPS image URL from your WordPress server; it is disabled by default. All write abilities require administrator opt-in and the acting user's WordPress permissions.
+
+Uninstall removes plugin-owned OAuth state, permission configuration, activity logs and recovery metadata. It does not delete your WordPress content, products or media.
+
+== Supported Integrations ==
+
+- WordPress native Abilities API (6.9 or newer) and optional built-in OAuth MCP transport.
+- Optional official MCP Adapter for compatible clients.
+- Optional Elementor, WooCommerce, Rank Math and Yoast SEO functionality, requiring the corresponding plugin.
+- For modern Yoast SEO versions, SEO titles and descriptions are updated using Yoast's own Abilities API so its indexable data can be refreshed consistently.
+
+No Facebook, LinkedIn or YouTube social posting, scheduling or account API integration is included.
 
 == Installation ==
 

@@ -89,11 +89,24 @@ final class BC_MCP_Abilities_OAuth {
 	 * @return void
 	 */
 	public static function maybe_flush() {
-		if ( '2' === (string) get_option( 'bc_mcp_oauth_rewrite_version', '0' ) ) {
+		if ( '3' === (string) get_option( 'bc_mcp_oauth_rewrite_version', '0' ) ) {
 			return;
 		}
 		flush_rewrite_rules( false );
-		update_option( 'bc_mcp_oauth_rewrite_version', '2', false );
+		update_option( 'bc_mcp_oauth_rewrite_version', '3', false );
+	}
+
+	/**
+	 * Ensure the OAuth discovery routes are registered after activation,
+	 * including reactivation when old rewrite-version options survive.
+	 * Flushes once rather than on every request.
+	 *
+	 * @return void
+	 */
+	public static function activate() {
+		self::rewrite();
+		flush_rewrite_rules( false );
+		update_option( 'bc_mcp_oauth_rewrite_version', '3', false );
 	}
 
 	/**

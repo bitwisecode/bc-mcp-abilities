@@ -37,8 +37,8 @@ Release remains blocked until all gates pass.
 - [ ] Application Password authentication honors connected user's role
 - [ ] Elementor installed/disabled flows tested
 - [ ] No PHP warnings with WP_DEBUG on
-- [ ] Run real Yoast SEO + WooCommerce integration workflow with pricing/metadata round-trip and stale revision checks.
-- [ ] Verify Yoast indexables rebuild or refresh after metadata writes on staging
+- [x] Run real Yoast SEO + WooCommerce integration workflow with pricing/metadata round-trip and stale revision checks (previous CI; rerun against final commit).
+- [ ] Verify Yoast native post SEO rendered/indexable data reflects updated titles and descriptions in CI and on deployed staging site.
 - [ ] Proper uninstall retains content and removes only plugin-owned configuration with user consent
 
 ## WordPress.org release
@@ -49,3 +49,14 @@ Release remains blocked until all gates pass.
 - [ ] Screenshots and plugin icons added
 - [ ] Build a clean installable ZIP and test on fresh staging
 - [ ] No bundled developer dependencies in release ZIP
+
+## Current publication blockers (21 November 2026)
+
+- [ ] WPToolix WordPress agent currently reports no active BC MCP Abilities plugin and cannot find its plugin directory. Install/activate the tested ZIP via WordPress admin first, then retry OAuth checks.
+- [ ] Confirm protected-resource metadata endpoint returns JSON containing resource and authorization_servers; external probe currently gets redirected to the homepage.
+- [ ] Confirm live ChatGPT and Claude client connections after deployment, including permission changes and read-only discovery.
+- [ ] Replace both development version 0.1.0-dev and readme Stable tag with the identical numerical final version on the release candidate. WordPress.org's Stable tag requires numbers and periods.
+- [ ] Run WordPress.org readme validator and fresh WordPress staging acceptance, including admin mobile layout and multisite/security review.
+- [x] Source includes a GPLv2-or-later license notice.
+- [x] Readme documents external Google PageSpeed service, privacy, audit retention and optional client integrations.
+- [ ] Add plugin icon, banner and screenshots for a polished WordPress.org listing.
