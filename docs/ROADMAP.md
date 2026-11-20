@@ -2,7 +2,7 @@
 
 Reference: [Jobayer AI Agent](https://github.com/jobayerhossan/jobayer-wordpress-ai), v0.7.0. The competitor ZIP, Enable Abilities for MCP 2.17.1, was analyzed separately; its source has not been copied.
 
-## Implemented on the WordPress Abilities API (48 on pre-release branch, pending CI)
+## Implemented on the WordPress Abilities API (48 in version 1.0.0)
 
 - **Core:** site information, post/page search/read, create drafts, revision-guarded updates, list/restore revisions, bounded same-site HEAD checks, plus allowed public custom post types, draft creation and revision-guarded custom edits.
 - **Media:** list/read attachments, update image alternative text, download public HTTPS images into Media Library with MIME and 8 MB size limits.
@@ -22,12 +22,12 @@ All write abilities require a WordPress administrator and explicit per-ability o
 - Arbitrary Elementor document overwrite/JSON import with user-controlled widgets, because executable HTML, custom code and layout integrity require stricter safety design; a read-only JSON validator is now included.
 - Bulk role changes, plugin/theme installation, direct SQL and customer-data exports.
 
-## Standalone MCP and OAuth developer preview
+## Standalone MCP and OAuth
 
 - Native WordPress REST MCP endpoint, independent of the Adapter
 - OAuth 2.1-style authorization code with PKCE S256, client registration restricted to ChatGPT callbacks, refresh/revoke, OAuth discovery metadata and WordPress consent screen
-- Disabled by default pending tests and independent security review
-- Still requires real ChatGPT handshake, callback, token exchange, refresh, permission and third-party review tests before publication
+- Disabled by default until enabled by an administrator; permissions remain scoped to the WordPress user.
+- Verify the full authorized ChatGPT and Claude connection flows on a separate, clean test site before submission.
 
 ## Still to develop / harden before first public release
 
@@ -36,7 +36,7 @@ All write abilities require a WordPress administrator and explicit per-ability o
 3. **Implemented in security PR**: bounded first-party execution audit (100 entries / 7-day retention, admin-only CSV export and clear) logging only ability, user ID, type and outcome. Complete independent security verification before public release.
 4. **Implemented in security PR**: administrator-configurable read-only ability hiding. Hidden BC read operations are not registered, so they cannot appear in MCP/REST discovery or be executed. Test both WordPress and official MCP Adapter on staging.
 5. Expand role, content revision, inventory race, OAuth security, logged activity purge and third-party integration testing.
-6. Add final WP.org screenshots/icons, changelog and stable release package once all gates pass.
+6. Finish independent security review, v1.0.0 packaging and clean-site acceptance. WordPress.org listing artwork may be added through SVN after approval.
 
 ## Public plugin scope
 
@@ -44,7 +44,7 @@ Facebook, LinkedIn and YouTube integrations, scheduling, profile/page posting, m
 
 ## Admin experience
 
-The settings interface is being redesigned as a standalone, responsive WordPress dashboard with connection controls, searchable write permission groups, diagnostics, and combined ChatGPT/Claude OAuth URL instructions on the Connections screen, plus clear overview/status indicators. The legacy Claude extension download is no longer shown in the public admin dashboard. Existing option keys, WordPress capability checks, and nonce-based save handling remain unchanged.
+The settings interface is a standalone, responsive WordPress dashboard with connection controls, searchable write permission groups, diagnostics, and combined ChatGPT/Claude OAuth URL instructions on the Connections screen, plus clear overview/status indicators. The legacy Claude extension download is no longer shown in the public admin dashboard. Existing option keys, WordPress capability checks, and nonce-based save handling remain unchanged.
 
 ## Long-term integrations
 

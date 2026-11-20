@@ -41,6 +41,8 @@ foreach (
 $header = get_file_data( $plugin_dir . '/bc-mcp-abilities.php', array( 'Version' => 'Version' ) );
 $assert( isset( $header['Version'] ) && BC_MCP_ABILITIES_VERSION === $header['Version'], 'Plugin version header and constant must agree.' );
 $assert( false !== strpos( $readme, 'Stable tag: ' . $header['Version'] ), 'Readme stable tag and plugin header must agree.' );
+$assert( '1.0.0' === $header['Version'], 'The WordPress.org submission build must declare stable version 1.0.0.' );
+$assert( false !== strpos( $readme, '= 1.0.0 =' ), 'First public changelog must match version 1.0.0.' );
 
 BC_MCP_Abilities_Admin::register_setting();
 BC_MCP_Abilities_Connections::register_settings();

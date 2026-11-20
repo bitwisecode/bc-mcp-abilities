@@ -4,7 +4,7 @@ Tags: mcp, abilities, ai, automation
 Requires at least: 6.9
 Requires PHP: 7.4
 Tested up to: 7.1
-Stable tag: 0.1.0-dev
+Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,9 +12,11 @@ Independent, permission-checked WordPress Abilities plus an optional built-in MC
 
 == Description ==
 
-BC MCP Abilities registers 48 WordPress-native abilities in the pre-release development branch, covering content, media, WooCommerce, Rank Math and guarded Elementor operations. It includes a built-in MCP and OAuth connection that is disabled by default, and works without an external server. The official MCP Adapter remains optional for compatibility. All write abilities require an administrator opt-in and WordPress permission checks.
+BC MCP Abilities brings WordPress site management into compatible AI assistants using the native WordPress Abilities API. It registers 48 carefully scoped actions for reading and managing content, media, WooCommerce, Elementor, categories, menus, and SEO integrations.
 
-This is development software. Test on staging only. Administrators can hide individual read-only abilities from AI discovery and execution, and view a bounded seven-day activity log. The audit excludes prompts, tool inputs, response payloads, tokens and passwords.
+Connect ChatGPT through the built-in secure OAuth-based MCP server, or use a compatible MCP provider such as the official MCP Adapter. Core WordPress Abilities work without connecting an external AI assistant.
+
+The WordPress admin dashboard lets you configure connections, manage available read-only actions, enable individual editing permissions, and view limited activity history. All editing permissions are disabled by default; every action also follows the connected WordPress user's permissions.
 
 == Privacy & External Services ==
 
@@ -70,6 +72,8 @@ No. Every ability requires a logged-in WordPress user with appropriate permissio
 
 == Changelog ==
 
-= 0.1.0 =
-* Fix ChatGPT tool import: `bc-list-abilities` now publishes a valid JSON Schema (`properties: {}`); MCP protocol version negotiation; Authorization header fallback for Apache/LiteSpeed hosts; RFC 6750-compliant challenges; richer, privacy-safe connection diagnostics.
-* Developer preview: 48 abilities including guarded Yoast SEO metadata editing and WooCommerce individual product/variation pricing, plus scoped taxonomy, menu, diagnostic and Elementor operations. No unrestricted source editing.
+= 1.0.0 =
+* Initial release with 48 scoped WordPress Abilities, secure MCP/OAuth connection options, and a responsive settings dashboard.
+* Added user-permission and per-action editing controls, read-only exposure settings, protected activity history, and connection troubleshooting.
+* Included supported Elementor, WooCommerce, Rank Math, Yoast SEO, taxonomy, media, and classic navigation menu operations.
+* Enabled bounded inventory, SEO and pricing changes with revision checking and security safeguards.

@@ -2,9 +2,9 @@
 
 Native, independent WordPress Abilities API plugin developed by **BitwiseCode**. WordPress 6.9+ and PHP 7.4+ required. The [official MCP Adapter](https://wordpress.org/plugins/mcp-adapter/) is optional: it provides the MCP transport, while this plugin registers and executes abilities.
 
-> **Developer preview — do not deploy to production or submit to WordPress.org until quality checks and staging acceptance tests pass.** The Agent-parity expansion is under review in draft PR #7; production release still requires integration testing.
+> **Version 1.0.0 submission candidate.** Complete independent security review and fresh-site installation tests before submitting the plugin to WordPress.org. No public release has been published.
 
-## Registered abilities (45 in the pre-release development branch)
+## Registered abilities (48 in v1.0.0)
 
 | Module | Abilities |
 | --- | --- |
@@ -19,16 +19,16 @@ Native, independent WordPress Abilities API plugin developed by **BitwiseCode**.
 
 Full names are prefixed by `bc-mcp-abilities/`.
 
-## Standalone WordPress MCP and ChatGPT OAuth — developer preview
+## Standalone WordPress MCP and ChatGPT OAuth
 
 The plugin now contains an **independent WordPress MCP endpoint** at `/wp-json/bc-mcp/v1/server` and a namespaced OAuth authorization service at `/bc-mcp`. Neither depends on the official MCP Adapter. Both are disabled by default.
 
-1. On **staging**, open **Settings → BC MCP Abilities** and enable the built-in MCP endpoint and WordPress OAuth.
+1. In WordPress, open **Settings → BC MCP Abilities** and enable the built-in MCP endpoint and WordPress OAuth.
 2. In ChatGPT Plugins on web, use **Add custom MCP server**, paste the URL, select automatic OAuth client registration (DCR), and approve access through WordPress.
 3. First test discovery and a read-only ability.
 4. Keep all BC write abilities disabled until separate testing.
 
-The existing Claude OAuth MCP provider connection remains unchanged and can coexist with ChatGPT. Claude's OAuth MCP URL is supplied by a separately configured provider and is not created by the built-in ChatGPT-only OAuth route. This is experimental code until OAuth end-to-end acceptance testing and security review finish.
+The existing Claude OAuth MCP provider connection remains unchanged and can coexist with ChatGPT. Claude's OAuth MCP URL is supplied by a separately configured provider and is not created by the built-in ChatGPT-only OAuth route. For v1.0.0 submission, verify a fresh OAuth sign-in and an authenticated read-only call on the clean test site. Keep write actions disabled until each operation is specifically tested.
 
 ## Release security controls
 
@@ -42,15 +42,15 @@ The WordPress admin screen under **Settings → BC MCP Abilities** includes a re
 
 Taxonomy term changes and classic menu writes require explicit per-ability administrator opt-in. Term assignment requires an exact revision check; a menu item can reference only an existing permitted post or public taxonomy term, not an arbitrary external URL.
 
-## Additional pre-release SEO and commerce abilities
+## SEO and commerce abilities
 
-Yoast SEO support provides `yoast-seo-read` and administrator-opted-in `yoast-seo-update` for post/page SEO title, description and focus keyword values with exact metadata revision checks. Yoast may require an indexable refresh/reindex for search-facing output after editing its post meta.
+Yoast SEO support provides `yoast-seo-read` and administrator-opted-in `yoast-seo-update` for post/page SEO title, description and focus keyword values with exact metadata revision checks. SEO titles and descriptions use Yoast's native Abilities API when available to keep indexed and rendered values in sync.
 
 WooCommerce `wc-update-prices` changes only an individual simple product or variation regular/sale price. It requires the `pricing_revision` returned by `wc-product`, manage_woocommerce and edit_products capabilities, the product's edit_post permission and explicit admin opt-in. Pricing values must be nonnegative decimals and a sale price must be below the regular price; stale tokens are rejected. Bulk writes, customer information and unrelated product fields are out of scope.
 
 ## Setup
 
-1. Install on an isolated WordPress 6.9+ staging website.
+1. Install on a WordPress 6.9+ website. For submission QA, start with a clean WordPress test installation.
 2. Activate the plugin; **the MCP Adapter is not needed** for local WordPress Abilities API calls.
 3. Go to **Settings → BC MCP Abilities** to selectively enable write abilities. All writes are disabled by default.
 4. Optionally install and configure the official MCP Adapter, then connect an authenticated MCP client.
@@ -77,7 +77,7 @@ composer lint
 wp eval-file tests/smoke.php
 ```
 
-GitHub Actions provides PHP lint, WordPressCS, WordPress Plugin Check, and a disposable WordPress Abilities smoke test. A passing smoke test is not a substitute for a full editor/Elementor/WooCommerce integration test.
+GitHub Actions provides PHP lint, WordPressCS, WordPress Plugin Check, and a disposable WordPress Abilities smoke test. A passing smoke test is not a substitute for manual acceptance and independent security review.
 
 See [Agent parity inventory](docs/AGENT-PARITY.md), [security notes](docs/SECURITY.md), [quality checklist](docs/QA-CHECKLIST.md), [roadmap](docs/ROADMAP.md), and [competitor analysis](docs/COMPETITOR-REVIEW.md).
 
