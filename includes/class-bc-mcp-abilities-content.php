@@ -41,11 +41,11 @@ final class BC_MCP_Abilities_Content {
 	 * @return void
 	 */
 	public static function register() {
-		$int = array(
+		$int  = array(
 			'type'    => 'integer',
 			'minimum' => 1,
 		);
-		$str = array( 'type' => 'string' );
+		$str  = array( 'type' => 'string' );
 		$hash = array(
 			'type'    => 'string',
 			'pattern' => '^[a-f0-9]{64}$',
@@ -65,13 +65,23 @@ final class BC_MCP_Abilities_Content {
 			__( 'Search posts, pages or eligible public custom post types with individual resource permission checks.', 'bc-mcp-abilities' ),
 			self::schema(
 				array(
-					'search'    => array( 'type' => 'string', 'maxLength' => 200 ),
-					'post_type' => array( 'type' => 'string', 'maxLength' => 40 ),
+					'search'    => array(
+						'type'      => 'string',
+						'maxLength' => 200,
+					),
+					'post_type' => array(
+						'type'      => 'string',
+						'maxLength' => 40,
+					),
 					'status'    => array(
 						'type' => 'string',
 						'enum' => array( 'publish', 'draft', 'pending', 'future', 'private', 'any' ),
 					),
-					'per_page'  => array( 'type' => 'integer', 'minimum' => 1, 'maximum' => 50 ),
+					'per_page'  => array(
+						'type'    => 'integer',
+						'minimum' => 1,
+						'maximum' => 50,
+					),
 				)
 			),
 			array( __CLASS__, 'search' )
@@ -91,10 +101,24 @@ final class BC_MCP_Abilities_Content {
 			__( 'Create a draft in an eligible custom post type; never publish or grant capabilities.', 'bc-mcp-abilities' ),
 			self::schema(
 				array(
-					'post_type' => array( 'type' => 'string', 'minLength' => 1, 'maxLength' => 40 ),
-					'title'     => array( 'type' => 'string', 'minLength' => 1, 'maxLength' => 500 ),
-					'excerpt'   => array( 'type' => 'string', 'maxLength' => 5000 ),
-					'content'   => array( 'type' => 'string', 'maxLength' => 200000 ),
+					'post_type' => array(
+						'type'      => 'string',
+						'minLength' => 1,
+						'maxLength' => 40,
+					),
+					'title'     => array(
+						'type'      => 'string',
+						'minLength' => 1,
+						'maxLength' => 500,
+					),
+					'excerpt'   => array(
+						'type'      => 'string',
+						'maxLength' => 5000,
+					),
+					'content'   => array(
+						'type'      => 'string',
+						'maxLength' => 200000,
+					),
 				),
 				array( 'post_type', 'title' )
 			),
@@ -110,9 +134,18 @@ final class BC_MCP_Abilities_Content {
 				array(
 					'post_id'  => $int,
 					'revision' => $hash,
-					'title'    => array( 'type' => 'string', 'maxLength' => 500 ),
-					'excerpt'  => array( 'type' => 'string', 'maxLength' => 5000 ),
-					'content'  => array( 'type' => 'string', 'maxLength' => 200000 ),
+					'title'    => array(
+						'type'      => 'string',
+						'maxLength' => 500,
+					),
+					'excerpt'  => array(
+						'type'      => 'string',
+						'maxLength' => 5000,
+					),
+					'content'  => array(
+						'type'      => 'string',
+						'maxLength' => 200000,
+					),
 				),
 				array( 'post_id', 'revision' )
 			),
@@ -156,7 +189,13 @@ final class BC_MCP_Abilities_Content {
 	 * @return array<string,WP_Post_Type>
 	 */
 	public static function editable_types() {
-		$types  = get_post_types( array( 'public' => true, 'show_ui' => true ), 'objects' );
+		$types  = get_post_types(
+			array(
+				'public'  => true,
+				'show_ui' => true,
+			),
+			'objects'
+		);
 		$result = array();
 		foreach ( $types as $name => $type ) {
 			if ( in_array( $name, self::EXCLUDED, true ) || ! isset( $type->cap->edit_posts ) ) {
@@ -303,7 +342,7 @@ final class BC_MCP_Abilities_Content {
 			'post_excerpt' => wp_slash( sanitize_textarea_field( $input['excerpt'] ?? '' ) ),
 			'post_content' => wp_slash( wp_kses_post( $input['content'] ?? '' ) ),
 		);
-		$id = wp_insert_post( $values, true );
+		$id     = wp_insert_post( $values, true );
 		if ( is_wp_error( $id ) ) {
 			return $id;
 		}
@@ -338,12 +377,12 @@ final class BC_MCP_Abilities_Content {
 			if ( ! array_key_exists( $key, $input ) ) {
 				continue;
 			}
-			$property = array(
+			$property                    = array(
 				'title'   => 'post_title',
 				'excerpt' => 'post_excerpt',
 				'content' => 'post_content',
 			);
-			$clean = 'content' === $key ? wp_kses_post( $input[ $key ] ) : ( 'excerpt' === $key ? sanitize_textarea_field( $input[ $key ] ) : sanitize_text_field( $input[ $key ] ) );
+			$clean                       = 'content' === $key ? wp_kses_post( $input[ $key ] ) : ( 'excerpt' === $key ? sanitize_textarea_field( $input[ $key ] ) : sanitize_text_field( $input[ $key ] ) );
 			$values[ $property[ $key ] ] = wp_slash( $clean );
 		}
 		if ( 1 === count( $values ) ) {

@@ -35,18 +35,41 @@ final class BC_MCP_Abilities_Elementor_Agent {
 	 * @return void
 	 */
 	public static function register() {
-		$int = array( 'type' => 'integer', 'minimum' => 1 );
-		$id  = array( 'type' => 'string', 'pattern' => '^[a-zA-Z0-9_-]{1,64}$', 'maxLength' => 64 );
-		$revision = array( 'type' => 'string', 'pattern' => '^[a-f0-9]{64}$' );
-		$object = array( 'type' => 'object', 'additionalProperties' => true );
-		$position = array( 'type' => 'integer', 'minimum' => 0, 'maximum' => 1500 );
+		$int      = array(
+			'type'    => 'integer',
+			'minimum' => 1,
+		);
+		$id       = array(
+			'type'      => 'string',
+			'pattern'   => '^[a-zA-Z0-9_-]{1,64}$',
+			'maxLength' => 64,
+		);
+		$revision = array(
+			'type'    => 'string',
+			'pattern' => '^[a-f0-9]{64}$',
+		);
+		$object   = array(
+			'type'                 => 'object',
+			'additionalProperties' => true,
+		);
+		$position = array(
+			'type'    => 'integer',
+			'minimum' => 0,
+			'maximum' => 1500,
+		);
 
 		BC_MCP_Abilities::add(
 			'elementor-validate-json',
 			__( 'Validate Elementor Template JSON', 'bc-mcp-abilities' ),
 			__( 'Check the structure of an Elementor JSON template; never imports or executes its contents.', 'bc-mcp-abilities' ),
 			self::schema(
-				array( 'template_json' => array( 'type' => 'string', 'minLength' => 2, 'maxLength' => self::MAX_JSON ) ),
+				array(
+					'template_json' => array(
+						'type'      => 'string',
+						'minLength' => 2,
+						'maxLength' => self::MAX_JSON,
+					),
+				),
 				array( 'template_json' )
 			),
 			array( __CLASS__, 'validate_json' )
@@ -66,8 +89,15 @@ final class BC_MCP_Abilities_Elementor_Agent {
 			__( 'Create an empty draft post or page and initialize Elementor via its document API.', 'bc-mcp-abilities' ),
 			self::schema(
 				array(
-					'post_type' => array( 'type' => 'string', 'enum' => array( 'post', 'page' ) ),
-					'title'     => array( 'type' => 'string', 'minLength' => 1, 'maxLength' => 500 ),
+					'post_type' => array(
+						'type' => 'string',
+						'enum' => array( 'post', 'page' ),
+					),
+					'title'     => array(
+						'type'      => 'string',
+						'minLength' => 1,
+						'maxLength' => 500,
+					),
 				),
 				array( 'post_type', 'title' )
 			),
@@ -100,9 +130,15 @@ final class BC_MCP_Abilities_Elementor_Agent {
 				array(
 					'post_id'           => $int,
 					'expected_revision' => $revision,
-					'parent_id'         => array( 'type' => 'string', 'maxLength' => 64 ),
+					'parent_id'         => array(
+						'type'      => 'string',
+						'maxLength' => 64,
+					),
 					'position'          => $position,
-					'kind'              => array( 'type' => 'string', 'enum' => array( 'container', 'heading', 'text-editor', 'button', 'divider', 'spacer' ) ),
+					'kind'              => array(
+						'type' => 'string',
+						'enum' => array( 'container', 'heading', 'text-editor', 'button', 'divider', 'spacer' ),
+					),
 					'settings'          => $object,
 				),
 				array( 'post_id', 'expected_revision', 'kind' )
@@ -137,7 +173,10 @@ final class BC_MCP_Abilities_Elementor_Agent {
 					'post_id'           => $int,
 					'element_id'        => $id,
 					'expected_revision' => $revision,
-					'new_parent_id'     => array( 'type' => 'string', 'maxLength' => 64 ),
+					'new_parent_id'     => array(
+						'type'      => 'string',
+						'maxLength' => 64,
+					),
 					'position'          => $position,
 				),
 				array( 'post_id', 'element_id', 'expected_revision' )
@@ -370,19 +409,19 @@ final class BC_MCP_Abilities_Elementor_Agent {
 	/**
 	 * Update a unique widget's safe settings without replacing other fields.
 	 *
-	 * @param array $nodes   Element tree.
+	 * @param array  $nodes   Element tree.
 	 * @param string $id     Requested element.
-	 * @param array $changes Validated settings.
-	 * @param int   $matches Matched elements count.
+	 * @param array  $changes Validated settings.
+	 * @param int    $matches Matched elements count.
 	 * @return array
 	 */
 	private static function merge_element_settings( $nodes, $id, $changes, &$matches ) {
 		foreach ( $nodes as $index => $node ) {
 			if ( $node['id'] === $id ) {
 				++$matches;
-				$previous                   = isset( $node['settings'] ) && is_array( $node['settings'] ) ? $node['settings'] : array();
-				$node['settings']           = array_merge( $previous, $changes );
-				$nodes[ $index ]            = $node;
+				$previous         = isset( $node['settings'] ) && is_array( $node['settings'] ) ? $node['settings'] : array();
+				$node['settings'] = array_merge( $previous, $changes );
+				$nodes[ $index ]  = $node;
 				continue;
 			}
 			if ( ! empty( $node['elements'] ) ) {
@@ -444,7 +483,7 @@ final class BC_MCP_Abilities_Elementor_Agent {
 				$children = isset( $node['elements'] ) && is_array( $node['elements'] ) ? $node['elements'] : array();
 				array_splice( $children, min( $position, count( $children ) ), 0, array( $new_node ) );
 				$nodes[ $index ]['elements'] = $children;
-				$done = true;
+				$done                        = true;
 				return $nodes;
 			}
 			if ( ! empty( $node['elements'] ) ) {
@@ -650,7 +689,7 @@ final class BC_MCP_Abilities_Elementor_Agent {
 		if ( ! class_exists( '\Elementor\Plugin' ) || ! did_action( 'elementor/loaded' ) ) {
 			return new WP_Error( 'bc_mcp_elementor_unavailable', __( 'Elementor is not active.', 'bc-mcp-abilities' ) );
 		}
-		$type = (string) $input['post_type'];
+		$type   = (string) $input['post_type'];
 		$object = get_post_type_object( $type );
 		if ( ! $object || ! current_user_can( $object->cap->create_posts ) ) {
 			return new WP_Error( 'bc_mcp_elementor_create_denied', __( 'You do not have permission to create this document.', 'bc-mcp-abilities' ) );
@@ -715,7 +754,7 @@ final class BC_MCP_Abilities_Elementor_Agent {
 			return new WP_Error( 'bc_mcp_elementor_css_missing', __( 'Elementor CSS regeneration API is unavailable.', 'bc-mcp-abilities' ) );
 		}
 		try {
-			$css = \Elementor\Core\Files\CSS\Post::create( $id );
+			$css    = \Elementor\Core\Files\CSS\Post::create( $id );
 			$result = $css->update();
 			if ( is_wp_error( $result ) ) {
 				return new WP_Error( 'bc_mcp_elementor_css_failed', __( 'Elementor rejected the CSS regeneration.', 'bc-mcp-abilities' ) );
