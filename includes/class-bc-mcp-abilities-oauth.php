@@ -411,6 +411,7 @@ final class BC_MCP_Abilities_OAuth {
 		$input   = $is_post ? self::submitted() : self::query_input(); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth clients use state and PKCE, POST is nonce-protected below.
 		$auth    = self::validated_authorization( $input );
 		if ( is_wp_error( $auth ) ) {
+			self::trace( 'authorization', 'invalid_request', array( 'detail' => $auth->get_error_code() ) );
 			self::fail( $auth->get_error_code() );
 		}
 		if ( ! is_user_logged_in() ) {
@@ -515,21 +516,42 @@ final class BC_MCP_Abilities_OAuth {
 	}
 
 	/**
-	 * Write a bounded OAuth diagnostic event, without credentials or request identifiers.
+	 * Diagnostic events kept, newest last.
+	 */
+	const DEBUG_MAX_EVENTS = 50;
+
+	/**
+	 * Write a bounded diagnostic event, without credentials or request identifiers.
 	 *
-	 * @param string $event  Known protocol stage.
-	 * @param string $result Known stage outcome.
+	 * Only fixed vocabulary is stored: the stage, its result and optional
+	 * method/auth/detail labels chosen by this plugin. Never tokens, codes,
+	 * client IDs, cookies, user IDs, IP addresses, URLs or request bodies.
+	 *
+	 * @param string $event   Known protocol stage.
+	 * @param string $result  Known stage outcome.
+	 * @param array  $context Optional method, auth and detail labels.
 	 * @return void
 	 */
-	public static function trace( $event, $result ) {
+	public static function trace( $event, $result, $context = array() ) {
 		if ( '1' !== (string) get_option( 'bc_mcp_oauth_debug_enabled', '0' ) ) {
 			return;
 		}
 
 		$allowed_events  = array( 'registration', 'authorization', 'token', 'refresh', 'revoke', 'mcp' );
-		$allowed_results = array( 'received', 'registered', 'approved', 'denied', 'invalid_client', 'invalid_grant', 'invalid_resource', 'invalid_pkce_or_redirect', 'replay', 'issued', 'refreshed', 'revoked', 'unsupported_grant', 'initialized', 'listed', 'called', 'unauthorized', 'invalid_request', 'unknown_method' );
+		$allowed_results = array( 'received', 'registered', 'approved', 'denied', 'invalid_client', 'invalid_grant', 'invalid_resource', 'invalid_pkce_or_redirect', 'replay', 'issued', 'refreshed', 'revoked', 'unsupported_grant', 'initialized', 'listed', 'called', 'call_succeeded', 'call_failed', 'unauthorized', 'forbidden', 'invalid_request', 'unknown_method' );
 		if ( ! in_array( $event, $allowed_events, true ) || ! in_array( $result, $allowed_results, true ) ) {
 			return;
+		}
+
+		$entry = array(
+			'time'   => time(),
+			'event'  => $event,
+			'result' => $result,
+		);
+		foreach ( array( 'method', 'auth', 'detail' ) as $key ) {
+			if ( isset( $context[ $key ] ) && is_string( $context[ $key ] ) && preg_match( '~^[a-z0-9_/.-]{1,64}$~', $context[ $key ] ) ) {
+				$entry[ $key ] = $context[ $key ];
+			}
 		}
 
 		$events   = get_option( 'bc_mcp_oauth_debug_events', array() );
@@ -542,12 +564,8 @@ final class BC_MCP_Abilities_OAuth {
 				}
 			)
 		);
-		$events[] = array(
-			'time'   => time(),
-			'event'  => $event,
-			'result' => $result,
-		);
-		update_option( 'bc_mcp_oauth_debug_events', array_slice( $events, -25 ), false );
+		$events[] = $entry;
+		update_option( 'bc_mcp_oauth_debug_events', array_slice( $events, -self::DEBUG_MAX_EVENTS ), false );
 	}
 
 	/**
@@ -741,12 +759,24 @@ final class BC_MCP_Abilities_OAuth {
 	 * @return int|WP_Error
 	 */
 	public static function bearer_user( $header ) {
-		if ( ! self::enabled() || ! is_string( $header ) || ! preg_match( '/^Bearer ([a-f0-9]{64})$/i', trim( $header ), $match ) ) {
-			return new WP_Error( 'bc_mcp_oauth_invalid' );
+		if ( ! self::enabled() ) {
+			return new WP_Error( 'bc_mcp_oauth_disabled' );
 		}
-		$record = get_transient( 'bc_mcp_access_' . hash( 'sha256', $match[1] ) );
-		if ( ! is_array( $record ) || ( $record['resource'] ?? '' ) !== BC_MCP_Abilities_Server::endpoint() || ! in_array( 'mcp', explode( ' ', (string) ( $record['scope'] ?? '' ) ), true ) ) {
-			return new WP_Error( 'bc_mcp_oauth_invalid' );
+		if ( ! is_string( $header ) || '' === trim( $header ) ) {
+			return new WP_Error( 'bc_mcp_oauth_missing' );
+		}
+		if ( ! preg_match( '/^Bearer ([a-f0-9]{64})$/i', trim( $header ), $match ) ) {
+			return new WP_Error( 'bc_mcp_oauth_malformed' );
+		}
+		$record = get_transient( 'bc_mcp_access_' . hash( 'sha256', strtolower( $match[1] ) ) );
+		if ( ! is_array( $record ) ) {
+			return new WP_Error( 'bc_mcp_oauth_unknown' );
+		}
+		if ( ( $record['resource'] ?? '' ) !== BC_MCP_Abilities_Server::endpoint() ) {
+			return new WP_Error( 'bc_mcp_oauth_wrong_target' );
+		}
+		if ( ! in_array( 'mcp', explode( ' ', (string) ( $record['scope'] ?? '' ) ), true ) ) {
+			return new WP_Error( 'bc_mcp_oauth_scope' );
 		}
 		$id = isset( $record['user_id'] ) ? absint( $record['user_id'] ) : 0;
 		if ( ! $id || ! get_userdata( $id ) || ! user_can( $id, 'edit_posts' ) ) {

@@ -19,6 +19,21 @@ final class BC_MCP_Abilities_Connections {
 	 */
 	public static function init() {
 		add_action( 'admin_init', array( __CLASS__, 'register_settings' ) );
+		add_action( 'update_option_bc_mcp_oauth_debug_enabled', array( __CLASS__, 'clear_diagnostics' ), 10, 2 );
+	}
+
+	/**
+	 * Delete stored diagnostic events as soon as diagnostics are switched off.
+	 *
+	 * @param mixed $old_value Previous value.
+	 * @param mixed $value     New value.
+	 * @return void
+	 */
+	public static function clear_diagnostics( $old_value, $value ) {
+		unset( $old_value );
+		if ( '1' !== (string) $value ) {
+			delete_option( 'bc_mcp_oauth_debug_events' );
+		}
 	}
 
 	/**
@@ -96,7 +111,7 @@ final class BC_MCP_Abilities_Connections {
 					<strong><?php esc_html_e( 'Enable temporary OAuth connection diagnostics', 'bc-mcp-abilities' ); ?></strong>
 				</label>
 			</p>
-			<p class="description"><?php esc_html_e( 'Diagnostic events record only their stage, result and timestamp. No authorization codes, tokens, passwords, client IDs, URLs, user IDs or IP addresses are recorded. The last 25 events remain for up to 24 hours. Turn this off after testing.', 'bc-mcp-abilities' ); ?></p>
+			<p class="description"><?php esc_html_e( 'Diagnostic events record only fixed labels: stage, result, MCP method, whether an Authorization header was present, the token check outcome and a timestamp. No authorization codes, tokens, passwords, cookies, client IDs, URLs, user IDs, IP addresses or request bodies are recorded. The last 50 events remain for up to 24 hours and are deleted when diagnostics are turned off.', 'bc-mcp-abilities' ); ?></p>
 			<?php submit_button( __( 'Save connection settings', 'bc-mcp-abilities' ), 'secondary', 'submit', false ); ?>
 		</form>
 
@@ -107,19 +122,22 @@ final class BC_MCP_Abilities_Connections {
 		<?php endif; ?>
 
 		<?php if ( '1' === (string) get_option( 'bc_mcp_oauth_debug_enabled', '0' ) ) : ?>
-			<h3><?php esc_html_e( 'Recent OAuth connection stages', 'bc-mcp-abilities' ); ?></h3>
+			<h3><?php esc_html_e( 'Recent OAuth and MCP connection events', 'bc-mcp-abilities' ); ?></h3>
 			<?php
 			$events = get_option( 'bc_mcp_oauth_debug_events', array() );
-			$events = is_array( $events ) ? array_reverse( array_slice( $events, -25 ) ) : array();
+			$events = is_array( $events ) ? array_reverse( array_slice( $events, -BC_MCP_Abilities_OAuth::DEBUG_MAX_EVENTS ) ) : array();
 			?>
 			<?php if ( empty( $events ) ) : ?>
 				<p><?php esc_html_e( 'No recent diagnostic events. Try connecting ChatGPT and refresh this page.', 'bc-mcp-abilities' ); ?></p>
 			<?php else : ?>
-				<table class="widefat striped" style="max-width:650px">
+				<table class="widefat striped" style="max-width:900px">
 					<thead><tr>
 						<th><?php esc_html_e( 'Time (UTC)', 'bc-mcp-abilities' ); ?></th>
 						<th><?php esc_html_e( 'Stage', 'bc-mcp-abilities' ); ?></th>
 						<th><?php esc_html_e( 'Result', 'bc-mcp-abilities' ); ?></th>
+						<th><?php esc_html_e( 'MCP method', 'bc-mcp-abilities' ); ?></th>
+						<th><?php esc_html_e( 'Authorization', 'bc-mcp-abilities' ); ?></th>
+						<th><?php esc_html_e( 'Detail', 'bc-mcp-abilities' ); ?></th>
 					</tr></thead>
 					<tbody>
 						<?php foreach ( $events as $event ) : ?>
@@ -128,6 +146,9 @@ final class BC_MCP_Abilities_Connections {
 									<td><?php echo esc_html( gmdate( 'Y-m-d H:i:s', absint( $event['time'] ) ) ); ?></td>
 									<td><?php echo esc_html( sanitize_key( (string) ( $event['event'] ?? '' ) ) ); ?></td>
 									<td><?php echo esc_html( sanitize_key( (string) ( $event['result'] ?? '' ) ) ); ?></td>
+									<td><code><?php echo esc_html( (string) ( $event['method'] ?? '' ) ); ?></code></td>
+									<td><?php echo esc_html( (string) ( $event['auth'] ?? '' ) ); ?></td>
+									<td><?php echo esc_html( (string) ( $event['detail'] ?? '' ) ); ?></td>
 								</tr>
 							<?php endif; ?>
 						<?php endforeach; ?>
