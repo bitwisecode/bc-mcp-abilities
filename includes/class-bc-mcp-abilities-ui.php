@@ -81,7 +81,7 @@ final class BC_MCP_Abilities_UI {
 		<div class="bc-section-header">
 			<div>
 				<p class="bc-eyebrow"><?php esc_html_e( 'Connection settings', 'bc-mcp-abilities' ); ?></p>
-				<h2><?php esc_html_e( 'ChatGPT &amp; MCP server', 'bc-mcp-abilities' ); ?></h2>
+				<h2><?php esc_html_e( 'ChatGPT & MCP server', 'bc-mcp-abilities' ); ?></h2>
 				<p><?php esc_html_e( 'Connect ChatGPT directly to this WordPress site with the built-in MCP endpoint and OAuth authorization.', 'bc-mcp-abilities' ); ?></p>
 			</div>
 			<?php self::status( $server_on && $oauth_on && is_ssl() ); ?>
