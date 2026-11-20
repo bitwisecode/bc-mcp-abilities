@@ -358,7 +358,7 @@ final class BC_MCP_Abilities_OAuth {
 		if ( ! isset( $clients[ $client_id ] ) || ! in_array( $redirect, $clients[ $client_id ]['redirect_uris'], true ) || ! self::allowed_redirect( $redirect ) ) {
 			return new WP_Error( 'invalid_client' );
 		}
-		if ( 'code' !== $response || 'S256' !== $method || ! preg_match( '/^[a-zA-Z0-9_-]{43}$/', $challenge ) || $resource !== BC_MCP_Abilities_Server::endpoint() ) {
+		if ( 'code' !== $response || 'S256' !== $method || ! preg_match( '/^[a-zA-Z0-9_-]{43}$/', $challenge ) || BC_MCP_Abilities_Server::endpoint() !== $resource ) {
 			return new WP_Error( 'invalid_request' );
 		}
 		$scopes = array_values( array_filter( preg_split( '/\s+/', $scope ) ) );
@@ -497,6 +497,7 @@ final class BC_MCP_Abilities_OAuth {
 		if ( ! is_string( $verifier ) || 1 !== preg_match( '/^[A-Za-z0-9._~-]{43,128}$/', $verifier ) ) {
 			return false;
 		}
+		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- RFC 7636 PKCE S256 uses base64url of a SHA256 digest, never PHP code.
 		$actual = rtrim( strtr( base64_encode( hash( 'sha256', $verifier, true ) ), '+/', '-_' ), '=' );
 		return is_string( $challenge ) && hash_equals( $challenge, $actual );
 	}
@@ -583,7 +584,7 @@ final class BC_MCP_Abilities_OAuth {
 				self::fail( 'invalid_grant' );
 			}
 			$auth = $stored['auth'];
-			if ( $auth['client_id'] !== $client || $auth['redirect_uri'] !== self::field( 'redirect_uri', self::submitted() ) || $auth['resource'] !== $uri || ! self::pkce_valid( self::field( 'code_verifier', self::submitted() ), $auth['challenge'] ) ) {
+			if ( $auth['client_id'] !== $client || self::field( 'redirect_uri', self::submitted() ) !== $auth['redirect_uri'] || $auth['resource'] !== $uri || ! self::pkce_valid( self::field( 'code_verifier', self::submitted() ), $auth['challenge'] ) ) {
 				self::fail( 'invalid_grant' );
 			}
 			if ( ! self::consume_lock( $hash ) ) {
