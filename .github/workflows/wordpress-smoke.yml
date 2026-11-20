@@ -30,6 +30,10 @@ jobs:
           npx --yes @wordpress/env run cli wp eval-file /var/www/html/wp-content/plugins/bc-mcp-abilities/tests/agent-parity-smoke.php
           npx --yes @wordpress/env run cli wp eval-file /var/www/html/wp-content/plugins/bc-mcp-abilities/tests/admin-dashboard-smoke.php
           npx --yes @wordpress/env run cli wp eval-file /var/www/html/wp-content/plugins/bc-mcp-abilities/tests/taxonomy-menu-smoke.php
+          npx --yes @wordpress/env run cli wp eval-file /var/www/html/wp-content/plugins/bc-mcp-abilities/tests/activity-security-smoke.php
+          npx --yes @wordpress/env run cli wp option update bc_mcp_abilities_disabled_reads '["list-taxonomies"]' --format=json
+          npx --yes @wordpress/env run cli wp eval-file /var/www/html/wp-content/plugins/bc-mcp-abilities/tests/read-disabled-smoke.php
+          npx --yes @wordpress/env run cli wp option delete bc_mcp_abilities_disabled_reads
       - name: Stop disposable WordPress environment
         if: always()
         run: npx --yes @wordpress/env stop || true
