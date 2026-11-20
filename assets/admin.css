@@ -210,3 +210,47 @@
 #bc-mcp-admin .bc-readonly-item code { color: #56717c; font-size: 11px; overflow-wrap: anywhere; }
 #bc-mcp-admin .bc-readonly-item p { color: var(--bc-muted); font-size: 11px; margin: 8px 0 0; line-height: 1.55; }
 #bc-mcp-admin .bc-readonly-catalog > .bc-muted { margin: 0; padding: 16px 26px 22px; }
+
+/* Unified OAuth client cards, shared by ChatGPT and Claude. */
+#bc-mcp-admin .bc-client-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: stretch; }
+#bc-mcp-admin .bc-client-card { min-width: 0; display: flex; flex-direction: column; }
+#bc-mcp-admin .bc-client-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 17px; }
+#bc-mcp-admin .bc-client-heading h3 { color: var(--bc-ink); font-size: 19px; font-weight: 750; margin: 2px 0 0; }
+#bc-mcp-admin .bc-client-heading .bc-eyebrow { margin: 0; font-size: 10px; letter-spacing: .055em; }
+#bc-mcp-admin .bc-client-logo { display: grid; place-items: center; flex: 0 0 41px; height: 41px; border-radius: 11px; color: #fff; background: #172b42; font-size: 12px; font-weight: 800; letter-spacing: -.04em; }
+#bc-mcp-admin .bc-client-logo-claude { background: #d88964; font-size: 21px; }
+#bc-mcp-admin .bc-client-description { color: var(--bc-muted); line-height: 1.65; font-size: 12px; min-height: 58px; margin-bottom: 22px; }
+#bc-mcp-admin .bc-client-field-label { display: block; color: var(--bc-ink); font-size: 12px; font-weight: 700; margin-bottom: 9px; }
+#bc-mcp-admin .bc-client-card .bc-copy-field { flex-wrap: wrap; justify-content: flex-start; }
+#bc-mcp-admin .bc-client-card .bc-copy-field input { flex: 1 1 200px; }
+#bc-mcp-admin .bc-client-card .bc-copy-field .bc-copy-button { flex: 0 0 auto; }
+#bc-mcp-admin .bc-client-card .bc-steps { margin-top: 25px; margin-bottom: 2px; }
+#bc-mcp-admin .bc-client-note { background: #f5f8fc; border: 1px solid #e3eaf4; border-radius: 9px; color: #637389; padding: 12px; font-size: 11px; line-height: 1.6; margin: auto 0 0; }
+
+/* WordPress may insert the native "Settings saved." notice inside the first H1's container.
+   Use high-contrast text, even when the container is the dark hero. */
+#bc-mcp-admin .notice.notice-success {
+	background: #e8f8ee;
+	border-left: 4px solid #18945a;
+	border-radius: 7px;
+	color: #185735;
+	box-shadow: 0 1px 4px rgba(20, 90, 60, .08);
+	margin: 18px 0;
+}
+#bc-mcp-admin .notice.notice-success p,
+#bc-mcp-admin .bc-hero .notice.notice-success p {
+	color: #185735 !important;
+	font-size: 13px;
+	font-weight: 700;
+	line-height: 1.55;
+}
+#bc-mcp-admin .notice.notice-success .notice-dismiss::before { color: #185735; }
+#bc-mcp-admin .notice.notice-success .notice-dismiss:hover::before { color: #0a3921; }
+#bc-mcp-admin .bc-hero .notice.notice-success { max-width: 780px; }
+@media (max-width: 1150px) {
+	#bc-mcp-admin .bc-client-grid { grid-template-columns: 1fr; }
+	#bc-mcp-admin .bc-client-description { min-height: 0; }
+}
+@media (max-width: 520px) {
+	#bc-mcp-admin .bc-client-card .bc-copy-field .bc-copy-button { width: 100%; flex: 1 0 100%; }
+}
