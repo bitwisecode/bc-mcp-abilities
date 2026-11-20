@@ -146,7 +146,7 @@ final class BC_MCP_Abilities_Admin {
 			return array();
 		}
 
-		$values  = array_map( 'sanitize_key', $value );
+		$values  = array_map( 'sanitize_key', array_filter( $value, 'is_string' ) );
 		$allowed = array_keys( self::writable_abilities() );
 
 		return array_values( array_intersect( $allowed, $values ) );
@@ -163,7 +163,7 @@ final class BC_MCP_Abilities_Admin {
 			return array();
 		}
 		$catalog = BC_MCP_Abilities::read_catalog();
-		$values  = array_map( 'sanitize_key', $value );
+		$values  = array_map( 'sanitize_key', array_filter( $value, 'is_string' ) );
 		return array_values( array_intersect( array_keys( $catalog ), $values ) );
 	}
 
