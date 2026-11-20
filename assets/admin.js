@@ -79,8 +79,8 @@
 		});
 	});
 
-	var copy = root.querySelector('[data-bc-copy]');
-	if (copy) {
+	Array.prototype.slice.call(root.querySelectorAll('[data-bc-copy]')).forEach(function (copy) {
+		var originalLabel = copy.textContent;
 		copy.addEventListener('click', function () {
 			var input = document.getElementById(copy.getAttribute('data-bc-copy'));
 			if (!input) {
@@ -88,7 +88,7 @@
 			}
 			function copied() {
 				copy.textContent = 'Copied!';
-				window.setTimeout(function () { copy.textContent = 'Copy URL'; }, 1800);
+				window.setTimeout(function () { copy.textContent = originalLabel; }, 1800);
 			}
 			if (navigator.clipboard && window.isSecureContext) {
 				navigator.clipboard.writeText(input.value).then(copied, function () {
@@ -103,7 +103,7 @@
 				}
 			}
 		});
-	}
+	});
 
 	var search = root.querySelector('[data-bc-search]');
 	var controls = Array.prototype.slice.call(root.querySelectorAll('[data-bc-permission]'));
