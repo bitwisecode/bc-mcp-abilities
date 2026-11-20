@@ -43,3 +43,19 @@ jobs:
           echo "MCP response keys:"
           jq -r 'keys[]?' /tmp/mcp-result.json 2>/dev/null || true
           # Current site is expected to return 401 before the fix is installed.
+
+      - name: Confirm external token endpoint accepts OAuth form requests
+        shell: bash
+        run: |
+          set -euo pipefail
+          status=$(curl -sS --max-time 15 --max-redirs 0 \
+            -X POST -H "Content-Type: application/x-www-form-urlencoded" \
+            --data 'grant_type=authorization_code&client_id=invalid-diagnostic-client&code=invalid&code_verifier=invalid' \
+            -o /tmp/bc-token-probe.json -w '%{http_code}' \
+            'https://wptoolix.com/bc-mcp/oauth/token')
+          echo "OAuth token endpoint returned HTTP $status for intentionally invalid client"
+          if [[ "$status" != "400" ]]; then
+            echo "Token requests are not reaching the expected WordPress OAuth handler"
+            exit 1
+          fi
+          jq -e '.error == "invalid_client"' /tmp/bc-token-probe.json > /dev/null
