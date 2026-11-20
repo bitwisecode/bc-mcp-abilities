@@ -1,4 +1,12 @@
-# Security policy and technical limitations
+# Security policy
+
+## Reporting a vulnerability
+
+Please do not report security issues in public GitHub issues. Use **Report a vulnerability** on this repository's Security tab to send a private report to BitwiseCode. Include the affected version, steps to reproduce and the impact you observed. We aim to acknowledge reports within five working days.
+
+## Supported versions
+
+Security fixes are released for the latest version published on WordPress.org.
 
 ## Authentication and authorization
 
@@ -23,7 +31,7 @@ Write permissions are **off by default**. Tools may remain discoverable to autho
 
 ## Important limitations
 
-- Automated smoke tests do not establish production safety; test on a staging copy first.
+- Test changes on a copy of your site before enabling editing actions on a live site.
 - PHP_CodeSniffer, Plugin Check and WordPress 6.9 compatibility must all pass on the release commit.
 - The built-in connection requires HTTPS and pretty permalinks. Behind a TLS-terminating proxy, WordPress must be configured to detect HTTPS.
 - Disabling the built-in connection does not stop access through the core Abilities REST API or the official MCP Adapter; use the per-ability exposure and write controls to restrict those.
@@ -34,5 +42,3 @@ Write permissions are **off by default**. Tools may remain discoverable to autho
 - Read-only content/media abilities require WordPress permissions and per-resource checks. Administrators can hide individual read abilities from registration/discovery using the built-in exposure controls.
 - Execution audit logs retain only time, numeric user ID, safe ability identifier, read/write type and outcome, up to 100 entries for at most seven days. No requests, credentials, results or prompts are persisted.
 - No arbitrary PHP/JavaScript code editing, plugin/theme source writing, shell execution, direct SQL, or plugin installation abilities are included.
-
-Please report vulnerabilities privately to the BitwiseCode maintainer.

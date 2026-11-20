@@ -66,4 +66,16 @@ $assert( '0' === BC_MCP_Abilities_Connections::sanitize_toggle( array( '1' ) ), 
 $js = file_get_contents( $plugin_dir . '/assets/admin.js' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local bundled file for a disposable CI check.
 $assert( is_string( $js ) && false !== strpos( $js, '(function () {' ), 'Admin JavaScript must not create an unrestricted global namespace.' );
 
+// Shipped files must not mention internal projects, reviews or test hosts.
+$shipped = array_merge(
+	array( $plugin_dir . '/bc-mcp-abilities.php', $plugin_dir . '/readme.txt', $plugin_dir . '/uninstall.php', $plugin_dir . '/assets/admin.js', $plugin_dir . '/assets/admin.css' ),
+	glob( $plugin_dir . '/includes/*.php' )
+);
+foreach ( $shipped as $file ) {
+	$text = file_get_contents( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local bundled file for a disposable CI check.
+	foreach ( array( 'competitor', 'developer preview', 'submission candidate', 'staging', 'parity' ) as $internal ) {
+		$assert( false === stripos( (string) $text, $internal ), 'Internal reference "' . $internal . '" found in shipped file ' . basename( $file ) );
+	}
+}
+
 WP_CLI::success( 'Reviewer-derived prefix, disclosure, version, settings sanitation and WP_DEBUG regression gates passed.' );

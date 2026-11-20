@@ -1,8 +1,8 @@
 <?php
 /**
- * Functional tests for Jobayer Agent parity abilities on disposable WordPress.
+ * Functional tests for custom content, Elementor and diagnostics abilities on disposable WordPress.
  *
- * Run only on local wp-env: wp eval-file tests/agent-parity-smoke.php
+ * Run only on local wp-env: wp eval-file tests/extended-abilities-smoke.php
  *
  * @package BCMCPAbilities
  */
@@ -27,7 +27,7 @@ $admins = get_users(
 		'fields' => array( 'ID' ),
 	)
 );
-$assert( ! empty( $admins ), 'An administrator is required for the parity test.' );
+$assert( ! empty( $admins ), 'An administrator is required for this test.' );
 wp_set_current_user( $admins[0]->ID );
 
 register_post_type(
@@ -58,7 +58,7 @@ $slugs = array(
 	'pagespeed-audit',
 );
 foreach ( $slugs as $slug ) {
-	$assert( wp_get_ability( 'bc-mcp-abilities/' . $slug ), 'Missing Agent parity ability: ' . $slug );
+	$assert( wp_get_ability( 'bc-mcp-abilities/' . $slug ), 'Missing extended ability: ' . $slug );
 }
 
 $assert( true === wp_get_ability( 'bc-mcp-abilities/pagespeed-audit' )->check_permissions( array() ), 'Admin should be able to run PageSpeed audits.' );
@@ -100,7 +100,7 @@ $duplicate = BC_MCP_Abilities_Elementor_Agent::validate_json( array( 'template_j
 $assert( is_wp_error( $duplicate ), 'Duplicate Elementor node ID was not rejected.' );
 
 $denied_before = wp_get_ability( 'bc-mcp-abilities/create-custom-draft' )->check_permissions( array() );
-$assert( true !== $denied_before, 'Agent parity write must be disabled by default.' );
+$assert( true !== $denied_before, 'Extended write abilities must be disabled by default.' );
 
 // Enable exactly two draft-content writes for this disposable test site.
 update_option( BC_MCP_Abilities_Admin::OPTION, array( 'create-custom-draft', 'update-custom-content' ) );
@@ -142,4 +142,4 @@ unregister_post_type( 'bc_test_entry' );
 update_option( BC_MCP_Abilities_Admin::OPTION, $original_opt );
 wp_set_current_user( $original_user );
 
-WP_CLI::success( 'Agent parity: 13 new abilities, custom post type draft/update protections and Elementor JSON validation passed.' );
+WP_CLI::success( 'Extended abilities: 13 abilities, custom post type draft/update protections and Elementor JSON validation passed.' );

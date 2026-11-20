@@ -1,84 +1,49 @@
 # BC MCP Abilities
 
-Native, independent WordPress Abilities API plugin developed by **BitwiseCode**. WordPress 6.9+ and PHP 7.4+ required. The [official MCP Adapter](https://wordpress.org/plugins/mcp-adapter/) is optional: it provides the MCP transport, while this plugin registers and executes abilities.
+Permission-checked WordPress Abilities for AI assistants, by **BitwiseCode**. Requires WordPress 6.9+ and PHP 7.4+.
 
-> **Version 1.0.0 submission candidate.** Complete independent security review and fresh-site installation tests before submitting the plugin to WordPress.org. No public release has been published.
+The plugin registers 48 scoped abilities through the native WordPress Abilities API. Connect ChatGPT through the plugin's built-in MCP endpoint with WordPress sign-in (OAuth), or use any compatible MCP provider such as the official [MCP Adapter](https://wordpress.org/plugins/mcp-adapter/).
 
-## Registered abilities (48 in v1.0.0)
+## Abilities
 
 | Module | Abilities |
 | --- | --- |
 | WordPress | `site-info`, `list-content`, `get-content`, `create-draft`, `update-content`, `list-revisions`, `restore-revision`, `check-url`, `content-types`, `search-custom-content`, `get-custom-content`, `create-custom-draft`, `update-custom-content` |
 | Media | `list-media`, `get-media`, `update-media-alt`, `upload-image` |
 | Elementor | `elementor-document`, `elementor-get-element`, `elementor-update-text`, `elementor-undo`, `elementor-validate-json`, `elementor-export-json`, `elementor-create-document`, `elementor-update-settings`, `elementor-add-element`, `elementor-delete-element`, `elementor-move-element`, `elementor-regenerate-css` |
-| Rank Math | `rank-math-read`, `rank-math-update` |
-| WooCommerce | `wc-products`, `wc-product`, `wc-update-stock`, `wc-order-report` |
+| SEO | `rank-math-read`, `rank-math-update`, `yoast-seo-read`, `yoast-seo-update` |
+| WooCommerce | `wc-products`, `wc-product`, `wc-update-stock`, `wc-update-prices`, `wc-order-report` |
 | Taxonomies | `list-taxonomies`, `list-taxonomy-terms`, `get-post-terms`, `create-taxonomy-term`, `assign-post-terms` |
-| Classic menus | `list-menus`, `get-menu`, `create-menu`, `add-menu-item` |
+| Menus | `list-menus`, `get-menu`, `create-menu`, `add-menu-item` |
 | Diagnostics | `pagespeed-audit` |
 
-Full names are prefixed by `bc-mcp-abilities/`.
+Full names are prefixed with `bc-mcp-abilities/`. Elementor, WooCommerce, Rank Math and Yoast SEO abilities need the corresponding plugin.
 
-## Standalone WordPress MCP and ChatGPT OAuth
+## Permissions
 
-The plugin now contains an **independent WordPress MCP endpoint** at `/wp-json/bc-mcp/v1/server` and a namespaced OAuth authorization service at `/bc-mcp`. Neither depends on the official MCP Adapter. Both are disabled by default.
+- Every ability requires a signed-in WordPress user and checks that user's capabilities for each item.
+- All editing abilities are off by default. An administrator enables each one individually, and only administrators can run them.
+- Read-only abilities can be hidden individually, which removes them from every connection method.
+- Edits use revision tokens, so changes made in the meantime are never silently overwritten.
 
-1. In WordPress, open **Settings → BC MCP Abilities** and enable the built-in MCP endpoint and WordPress OAuth.
-2. In ChatGPT Plugins on web, use **Add custom MCP server**, paste the URL, select automatic OAuth client registration (DCR), and approve access through WordPress.
-3. First test discovery and a read-only ability.
-4. Keep all BC write abilities disabled until separate testing.
+## Connecting ChatGPT
 
-The existing Claude OAuth MCP provider connection remains unchanged and can coexist with ChatGPT. Claude's OAuth MCP URL is supplied by a separately configured provider and is not created by the built-in ChatGPT-only OAuth route. For v1.0.0 submission, verify a fresh OAuth sign-in and an authenticated read-only call on the clean test site. Keep write actions disabled until each operation is specifically tested.
+1. Open **Settings → BC MCP Abilities → Connections**.
+2. Turn on **Enable MCP connection** and **Secure WordPress sign-in**. HTTPS and pretty permalinks are required.
+3. In ChatGPT, add a custom MCP connection with the MCP server URL shown, choose automatic OAuth registration, then sign in to WordPress and approve access.
 
-## Release security controls
+Connected assistants are listed on the same screen, where they can be revoked individually or all at once. Changing a user's password or role disconnects that user.
 
-The administrator dashboard includes a read-only exposure denylist. Hiding a first-party read ability prevents it from registering on the next request, removing it from both MCP discovery and WordPress REST Abilities discovery, while keeping its switch available for re-enabling. Read abilities remain enabled by default and still follow WordPress capabilities.
-
-Activity History records only the ability slug, WordPress numeric user ID, read/write type, outcome and UTC timestamp. The history is bounded to 100 entries, filters entries older than seven days, and supports administrator-only CSV export and clear. Cron prunes expired persistent entries; WordPress cron must be operating for automatic cleanup when the dashboard is not visited. No arguments, content, response bodies, credentials, or tokens are recorded.
-
-## Admin dashboard
-
-The WordPress admin screen under **Settings → BC MCP Abilities** includes a responsive dashboard: setup overview, ChatGPT/OAuth connection controls, searchable write-ability permissions, bounded sanitized diagnostics, and Claude OAuth MCP URL guidance in the same Connections tab (without an extension download). Existing option names and security checks are preserved. The public plugin deliberately excludes Facebook, LinkedIn, and YouTube API integrations and social publishing.
-
-Taxonomy term changes and classic menu writes require explicit per-ability administrator opt-in. Term assignment requires an exact revision check; a menu item can reference only an existing permitted post or public taxonomy term, not an arbitrary external URL.
-
-## SEO and commerce abilities
-
-Yoast SEO support provides `yoast-seo-read` and administrator-opted-in `yoast-seo-update` for post/page SEO title, description and focus keyword values with exact metadata revision checks. SEO titles and descriptions use Yoast's native Abilities API when available to keep indexed and rendered values in sync.
-
-WooCommerce `wc-update-prices` changes only an individual simple product or variation regular/sale price. It requires the `pricing_revision` returned by `wc-product`, manage_woocommerce and edit_products capabilities, the product's edit_post permission and explicit admin opt-in. Pricing values must be nonnegative decimals and a sale price must be below the regular price; stale tokens are rejected. Bulk writes, customer information and unrelated product fields are out of scope.
-
-## Setup
-
-1. Install on a WordPress 6.9+ website. For submission QA, start with a clean WordPress test installation.
-2. Activate the plugin; **the MCP Adapter is not needed** for local WordPress Abilities API calls.
-3. Go to **Settings → BC MCP Abilities** to selectively enable write abilities. All writes are disabled by default.
-4. Optionally install and configure the official MCP Adapter, then connect an authenticated MCP client.
-5. Never give untrusted AI clients an administrator account or broad write access.
-
-Permissions are enforced by WordPress in addition to the per-ability write allowlist. The optional plugin integrations return a clear error when Elementor, WooCommerce, or Rank Math is absent.
-
-## Important safeguards
-
-- Scoped posts/pages and eligible public custom post types, with WordPress capability checks and revision-based conflict protection.
-- ACF arbitrary-field edits, theme/plugin source edits, arbitrary PHP/JavaScript execution, and shell commands are intentionally not provided.
-- Elementor offers guarded text edits, allowlisted widget settings, safe structure changes, JSON validation/export and CSS regeneration. Structural writes use one-step undo; arbitrary code widgets and unvalidated JSON import remain excluded.
-- WooCommerce inventory writes require enabled stock management and a matching inventory revision token; orders expose no customer PII.
-- Image uploads require administrator opt-in, public HTTPS sources, MIME validation and an 8 MB limit.
-- Rank Math updates check a metadata revision token before changing allowlisted fields.
-- Uninstall removes only BitwiseCode settings/recovery snapshots, not WordPress content.
-
-## Development and testing
+## Development
 
 ```bash
 composer install
 composer lint
-# On a disposable WordPress staging instance with WP-CLI:
-wp eval-file tests/smoke.php
+wp eval-file tests/smoke.php   # on a disposable WordPress site
 ```
 
-GitHub Actions provides PHP lint, WordPressCS, WordPress Plugin Check, and a disposable WordPress Abilities smoke test. A passing smoke test is not a substitute for manual acceptance and independent security review.
+GitHub Actions runs PHP lint (7.4–8.4), WordPress Coding Standards, Plugin Check, and integration tests with Elementor, WooCommerce and Yoast SEO.
 
-See [Agent parity inventory](docs/AGENT-PARITY.md), [security notes](docs/SECURITY.md), [quality checklist](docs/QA-CHECKLIST.md), [roadmap](docs/ROADMAP.md), and [competitor analysis](docs/COMPETITOR-REVIEW.md).
+See [SECURITY.md](SECURITY.md) for security details and how to report a vulnerability.
 
 License: GPL-2.0-or-later. Copyright 2026 BitwiseCode.

@@ -12,11 +12,24 @@ Permission-checked WordPress Abilities for AI agents, with an optional built-in 
 
 == Description ==
 
-BC MCP Abilities brings WordPress site management into compatible AI assistants using the native WordPress Abilities API. It registers 48 carefully scoped actions for reading and managing content, media, WooCommerce, Elementor, categories, menus, and SEO integrations.
+BC MCP Abilities lets AI assistants work with your WordPress site through the native WordPress Abilities API. It registers 48 scoped actions for reading and managing posts, pages, custom content, media, categories and tags, navigation menus, Elementor pages, WooCommerce products and SEO fields.
 
-Connect ChatGPT through the built-in secure OAuth-based MCP server, or use a compatible MCP provider such as the official MCP Adapter. Core WordPress Abilities work without connecting an external AI assistant.
+AI assistants reach these actions through MCP (Model Context Protocol). Connect ChatGPT through the plugin's built-in MCP endpoint and WordPress sign-in, or use a compatible MCP provider such as the official MCP Adapter. The abilities also work through the WordPress Abilities API without any AI assistant connected.
 
-The WordPress admin dashboard lets you configure connections, manage available read-only actions, enable individual editing permissions, and view limited activity history. All editing permissions are disabled by default; every action also follows the connected WordPress user's permissions.
+= Permissions you control =
+
+* All editing actions are off by default. An administrator enables each one individually.
+* Every action follows the connected WordPress user's own permissions, item by item.
+* Read-only actions can be hidden individually.
+* Edits check a revision token, so changes made by someone else in the meantime are never silently overwritten.
+* Elementor edits keep a one-step undo.
+
+= Connection management =
+
+* Users approve each AI assistant on a WordPress sign-in screen.
+* Administrators can see every connected assistant and revoke one or all of them.
+* Changing a user's password or role disconnects that user's assistants.
+* An activity history shows which actions ran, by which user and with what result, for up to seven days.
 
 == Privacy & External Services ==
 
@@ -55,8 +68,6 @@ Uninstall removes plugin-owned settings, registered OAuth clients, connection ap
 - Optional Elementor, WooCommerce, Rank Math and Yoast SEO functionality, requiring the corresponding plugin.
 - For modern Yoast SEO versions, SEO titles and descriptions are updated using Yoast's own Abilities API so its indexable data can be refreshed consistently.
 
-No Facebook, LinkedIn or YouTube social posting, scheduling or account API integration is included.
-
 == Installation ==
 
 1. Install on WordPress 6.9 or later.
@@ -66,18 +77,25 @@ No Facebook, LinkedIn or YouTube social posting, scheduling or account API integ
 
 == Frequently Asked Questions ==
 
-= Does it work without MCP Adapter? =
-Yes. WordPress registers these abilities through its native Abilities API. The plugin can also host an independent OAuth-protected MCP endpoint when enabled by a site administrator.
+= Does it work without the MCP Adapter? =
+Yes. WordPress registers these abilities through its native Abilities API. The plugin can also host its own OAuth-protected MCP endpoint when a site administrator enables it.
 
 = Does it allow anonymous management? =
-No. Every ability requires a logged-in WordPress user with appropriate permissions.
+No. Every ability requires a signed-in WordPress user with the appropriate permissions.
+
+= Can an AI assistant change my website? =
+Only if an administrator enables the specific editing action, and only for content the connected user is already allowed to edit. Editing actions can only be run by administrators.
+
+= What does the built-in connection require? =
+HTTPS and pretty permalinks (any setting other than Plain under Settings > Permalinks). If your site is behind a proxy or CDN, WordPress must detect HTTPS correctly.
+
+= How do I disconnect an AI assistant? =
+Go to Settings > BC MCP Abilities > Connections and revoke the connection, or choose Disconnect all assistants. Turning off the MCP connection or WordPress sign-in also disconnects everyone.
+
+= Does turning off the connection block every route? =
+It turns off the built-in ChatGPT connection. Actions remain available through the WordPress Abilities REST API and the official MCP Adapter to users who authenticate another way, such as with an Application Password. To restrict every route, hide read-only actions or leave editing actions disabled.
 
 == Changelog ==
 
 = 1.0.0 =
-* Initial release with 48 scoped WordPress Abilities, secure MCP/OAuth connection options, and a responsive settings dashboard.
-* Added user-permission and per-action editing controls, read-only exposure settings, protected activity history, and connection troubleshooting.
-* Included supported Elementor, WooCommerce, Rank Math, Yoast SEO, taxonomy, media, and classic navigation menu operations.
-* Enabled bounded inventory, SEO and pricing changes with revision checking and security safeguards.
-* Connection management: view and revoke connected assistants, automatic cleanup of unused client registrations, and automatic disconnection on password or role changes.
-* Declared WooCommerce High-Performance Order Storage compatibility.
+* Initial release.

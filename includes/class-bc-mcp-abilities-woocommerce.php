@@ -80,7 +80,7 @@ final class BC_MCP_Abilities_WooCommerce {
 		BC_MCP_Abilities::add(
 			'wc-order-report',
 			__( 'WooCommerce Order Report', 'bc-mcp-abilities' ),
-			__( 'Read order statuses and totals without customers names, emails, addresses or payment metadata.', 'bc-mcp-abilities' ),
+			__( 'Read order statuses and totals without customer names, emails, addresses or payment metadata.', 'bc-mcp-abilities' ),
 			array(
 				'type'                 => 'object',
 				'properties'           => array(

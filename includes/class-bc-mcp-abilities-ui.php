@@ -1,6 +1,6 @@
 <?php
 /**
- * Premium, accessible settings dashboard for BC MCP Abilities.
+ * Accessible settings dashboard for BC MCP Abilities.
  *
  * @package BCMCPAbilities
  */
@@ -82,7 +82,7 @@ final class BC_MCP_Abilities_UI {
 		<section class="bc-permission-group" data-bc-group>
 			<div class="bc-group-heading">
 				<h3><?php echo esc_html( $title ); ?></h3>
-				<span><?php echo esc_html( (string) count( $available ) ); ?> <?php esc_html_e( 'permissions', 'bc-mcp-abilities' ); ?></span>
+				<span><?php echo esc_html( sprintf( /* translators: %d: number of permissions. */ _n( '%d permission', '%d permissions', count( $available ), 'bc-mcp-abilities' ), count( $available ) ) ); ?></span>
 			</div>
 			<div class="bc-permission-list">
 				<?php foreach ( $available as $slug => $description ) : ?>
@@ -338,7 +338,7 @@ final class BC_MCP_Abilities_UI {
 		<details class="bc-card bc-readonly-catalog">
 			<summary>
 				<span><strong><?php esc_html_e( 'Read-only access', 'bc-mcp-abilities' ); ?></strong><small><?php esc_html_e( 'Choose which read-only actions are available to connected AI assistants.', 'bc-mcp-abilities' ); ?></small></span>
-				<span class="bc-readonly-number"><?php echo esc_html( (string) count( $items ) ); ?> <?php esc_html_e( 'read-only actions', 'bc-mcp-abilities' ); ?></span>
+				<span class="bc-readonly-number"><?php echo esc_html( sprintf( /* translators: %d: number of read-only actions. */ _n( '%d read-only action', '%d read-only actions', count( $items ), 'bc-mcp-abilities' ), count( $items ) ) ); ?></span>
 			</summary>
 			<form method="post" action="options.php" class="bc-read-exposure-form">
 				<?php settings_fields( 'bc_mcp_read_abilities' ); ?>
@@ -448,7 +448,7 @@ final class BC_MCP_Abilities_UI {
 		?>
 		<div class="wrap bc-mcp-admin" id="bc-mcp-admin">
 			<div class="bc-hero">
-				<div class="bc-hero-brand"><div class="bc-brand-mark" aria-hidden="true">BC</div><span><?php esc_html_e( 'BITWISECODE / WordPress', 'bc-mcp-abilities' ); ?></span></div>
+				<div class="bc-hero-brand"><div class="bc-brand-mark" aria-hidden="true">BC</div><span><?php esc_html_e( 'by BitwiseCode', 'bc-mcp-abilities' ); ?></span></div>
 				<div class="bc-hero-row">
 					<div><h1><?php esc_html_e( 'MCP Abilities', 'bc-mcp-abilities' ); ?></h1><p><?php esc_html_e( 'Manage AI connections, permissions, and activity for your WordPress website.', 'bc-mcp-abilities' ); ?></p></div>
 					<div class="bc-hero-version"><span><?php esc_html_e( 'WordPress integration', 'bc-mcp-abilities' ); ?></span></div>
@@ -466,7 +466,7 @@ final class BC_MCP_Abilities_UI {
 				</nav>
 				<main class="bc-workspace">
 					<section class="bc-tab-panel" id="bc-panel-overview" role="tabpanel" aria-labelledby="bc-tab-overview">
-						<div class="bc-section-header"><div><p class="bc-eyebrow"><?php esc_html_e( 'Account overview', 'bc-mcp-abilities' ); ?></p><h2><?php esc_html_e( 'Your website at a glance', 'bc-mcp-abilities' ); ?></h2><p><?php esc_html_e( 'See your available actions, manage access, and review connection activity in one place.', 'bc-mcp-abilities' ); ?></p></div></div>
+						<div class="bc-section-header"><div><p class="bc-eyebrow"><?php esc_html_e( 'Overview', 'bc-mcp-abilities' ); ?></p><h2><?php esc_html_e( 'Your website at a glance', 'bc-mcp-abilities' ); ?></h2><p><?php esc_html_e( 'See your available actions, manage access, and review connection activity in one place.', 'bc-mcp-abilities' ); ?></p></div></div>
 						<div class="bc-stats">
 							<div class="bc-stat"><span class="bc-stat-icon dashicons dashicons-admin-network" aria-hidden="true"></span><strong><?php echo esc_html( (string) $total ); ?></strong><span><?php esc_html_e( 'Available actions', 'bc-mcp-abilities' ); ?></span></div>
 							<div class="bc-stat"><span class="bc-stat-icon dashicons dashicons-lock" aria-hidden="true"></span><strong><?php echo esc_html( (string) count( $enabled ) ); ?> <small>/ <?php echo esc_html( (string) count( $writes ) ); ?></small></strong><span><?php esc_html_e( 'Enabled editing actions', 'bc-mcp-abilities' ); ?></span></div>
@@ -499,7 +499,7 @@ final class BC_MCP_Abilities_UI {
 								<?php settings_fields( 'bc_mcp_abilities' ); ?>
 								<input type="hidden" name="<?php echo esc_attr( BC_MCP_Abilities_Admin::OPTION ); ?>" value="" />
 								<div class="bc-permissions-toolbar">
-									<div class="bc-search-wrap"><span class="dashicons dashicons-search" aria-hidden="true"></span><input type="search" data-bc-search placeholder="<?php esc_attr_e( 'Search abilities...', 'bc-mcp-abilities' ); ?>" aria-label="<?php esc_attr_e( 'Search write abilities', 'bc-mcp-abilities' ); ?>" /></div>
+									<div class="bc-search-wrap"><span class="dashicons dashicons-search" aria-hidden="true"></span><input type="search" data-bc-search placeholder="<?php esc_attr_e( 'Search abilities…', 'bc-mcp-abilities' ); ?>" aria-label="<?php esc_attr_e( 'Search write abilities', 'bc-mcp-abilities' ); ?>" /></div>
 									<span class="bc-count"><strong data-bc-enabled-count><?php echo esc_html( (string) count( $enabled ) ); ?></strong> / <?php echo esc_html( (string) count( $writes ) ); ?> <?php esc_html_e( 'enabled', 'bc-mcp-abilities' ); ?></span>
 								</div>
 								<?php foreach ( $groups as $title => $slugs ) : ?>
