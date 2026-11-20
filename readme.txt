@@ -18,15 +18,31 @@ This is development software. Test on staging only. Administrators can hide indi
 
 == Privacy & External Services ==
 
-This plugin stores optional OAuth client registration and token data, administrator-selected permissions, and at most 100 execution audit entries. Audit entries contain only the timestamp, numeric WordPress user ID, ability name, read/write type and outcome; they expire after up to seven days. Administrators can export or delete their local activity history in Settings.
+BC MCP Abilities does not send website data to a central BitwiseCode service or use analytics trackers. Its MCP endpoint runs on the installed WordPress site. External requests occur only when an administrator chooses the corresponding feature or connects an external AI assistant. The services below are optional.
 
-The built-in MCP endpoint runs on your own WordPress website. If you choose to connect an external AI client, its handling of prompts and returned website data is governed by that client's own terms and privacy policy. No external AI account or API key is needed merely to install this plugin.
+= Google PageSpeed Insights (Google) =
 
-Google PageSpeed Insights is an optional read-only feature. When an authorized administrator runs this ability, the tested public page URL is sent from the WordPress server to Google's PageSpeed Insights API at https://www.googleapis.com/pagespeedonline/v5/runPagespeed . Google may retrieve that public page and return performance metrics. Responses are cached locally for one hour; cached requests do not contact Google. Google Privacy Policy: https://policies.google.com/privacy . PageSpeed API documentation: https://developers.google.com/speed/docs/insights/v5/get-started .
+Purpose: Run an on-demand performance and SEO audit of a public page on this website. When an authorized user invokes the PageSpeed ability, the WordPress server sends the publicly accessible page URL to Google's PageSpeed Insights API (https://www.googleapis.com/pagespeedonline/v5/runPagespeed). Google can fetch and analyze that URL and return Lighthouse and field performance data. No WordPress account passwords or private post content are sent by this ability. Requests do not happen automatically; results are cached locally for one hour.
 
-The optional image-import write ability fetches an explicitly provided public HTTPS image URL from your WordPress server; it is disabled by default. All write abilities require administrator opt-in and the acting user's WordPress permissions.
+Provider: Google. API terms: https://developers.google.com/terms . Privacy policy: https://policies.google.com/privacy . API information: https://developers.google.com/speed/docs/insights/v5/get-started .
 
-Uninstall removes plugin-owned OAuth state, permission configuration, activity logs and recovery metadata. It does not delete your WordPress content, products or media.
+= Optional AI assistants: ChatGPT and Claude =
+
+BC MCP Abilities does not require ChatGPT or Claude to be installed or connected. If a site administrator chooses to connect a supported third-party AI assistant, the assistant accesses this WordPress site's MCP endpoint using an authorized user account. The site sends responses to requested tools, which may include WordPress posts, pages, SEO information, product information or other information that the user is authorized to access. If editing permissions are explicitly enabled, the assistant may also send requested changes to WordPress. The external client may process the submitted prompts, tool inputs and returned information under that provider's policies. Connection requests and data transfers occur only when the external client is used; simply installing BC MCP Abilities does not send data to those providers.
+
+ChatGPT is provided by OpenAI. Terms: https://openai.com/policies/terms-of-use/ . Privacy: https://openai.com/policies/privacy-policy/ .
+
+Claude is provided by Anthropic. Terms and privacy documents: https://www.anthropic.com/legal . The optional Claude OAuth URL requires a compatible, separately installed MCP provider.
+
+= Optional image import from user-selected websites =
+
+When an authorized administrator explicitly enables and invokes the image-import ability, WordPress fetches a chosen publicly accessible HTTPS image URL from the external image host. This can reveal the requested URL and this server's public IP address to the remote host. The remote site's terms and privacy policy depend on the image source chosen by the administrator. No other images are imported automatically.
+
+= Local data and security history =
+
+The plugin stores connection configuration, registered OAuth clients, short-lived OAuth authorization/access data, administrator-selected ability permissions and at most 100 execution audit records. Audit entries include the timestamp, numeric WordPress user ID, action name, read/edit type and outcome, and expire after up to seven days. They do not contain prompts, request bodies, tokens, passwords or response data. Administrators can export or clear local audit history. Additional connection diagnostics are off unless enabled by an administrator, and retain sanitized events for no more than 24 hours.
+
+Uninstall removes plugin-owned settings, registered OAuth clients, audit history and Elementor recovery data. Temporary OAuth credentials expire automatically; existing access credentials become invalid after plugin removal. Uninstall does not delete ordinary WordPress posts, pages, products or media.
 
 == Supported Integrations ==
 
