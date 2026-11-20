@@ -81,8 +81,8 @@ final class BC_MCP_Abilities_Connections {
 		$endpoint  = BC_MCP_Abilities_Server::endpoint();
 		?>
 		<hr />
-		<h2><?php esc_html_e( 'Connect ChatGPT directly', 'bc-mcp-abilities' ); ?></h2>
-		<p><?php esc_html_e( 'Connect ChatGPT directly to WordPress using OAuth sign-in. No MCP Adapter, Node.js, external account or Terminal is required for this connection.', 'bc-mcp-abilities' ); ?></p>
+		<h2><?php esc_html_e( 'Connect ChatGPT', 'bc-mcp-abilities' ); ?></h2>
+		<p><?php esc_html_e( 'Connect ChatGPT to your WordPress website with secure sign-in, without installing a separate server.', 'bc-mcp-abilities' ); ?></p>
 
 		<?php if ( ! is_ssl() ) : ?>
 			<div class="notice notice-error inline"><p><?php esc_html_e( 'HTTPS is required. OAuth cannot be enabled over HTTP.', 'bc-mcp-abilities' ); ?></p></div>
@@ -95,20 +95,20 @@ final class BC_MCP_Abilities_Connections {
 			<p>
 				<label>
 					<input type="checkbox" name="<?php echo esc_attr( BC_MCP_Abilities_Server::OPTION ); ?>" value="1" <?php checked( $server_on ); ?>>
-					<strong><?php esc_html_e( 'Enable built-in MCP endpoint', 'bc-mcp-abilities' ); ?></strong>
+					<strong><?php esc_html_e( 'Enable MCP connection', 'bc-mcp-abilities' ); ?></strong>
 				</label>
 			</p>
 			<p>
 				<label>
 					<input type="checkbox" name="<?php echo esc_attr( BC_MCP_Abilities_OAuth::OPTION ); ?>" value="1" <?php checked( '1', get_option( BC_MCP_Abilities_OAuth::OPTION, '0' ) ); ?> <?php disabled( ! is_ssl() ); ?>>
-					<strong><?php esc_html_e( 'Enable WordPress OAuth authorization', 'bc-mcp-abilities' ); ?></strong>
+					<strong><?php esc_html_e( 'Enable secure WordPress sign-in', 'bc-mcp-abilities' ); ?></strong>
 				</label>
 			</p>
 			<input type="hidden" name="bc_mcp_oauth_debug_enabled" value="0">
 			<p>
 				<label>
 					<input type="checkbox" name="bc_mcp_oauth_debug_enabled" value="1" <?php checked( '1', get_option( 'bc_mcp_oauth_debug_enabled', '0' ) ); ?>>
-					<strong><?php esc_html_e( 'Enable temporary OAuth connection diagnostics', 'bc-mcp-abilities' ); ?></strong>
+					<strong><?php esc_html_e( 'Enable connection troubleshooting', 'bc-mcp-abilities' ); ?></strong>
 				</label>
 			</p>
 			<p class="description"><?php esc_html_e( 'Diagnostic events record only fixed labels: stage, result, MCP method, whether an Authorization header was present, the token check outcome and a timestamp. No authorization codes, tokens, passwords, cookies, client IDs, URLs, user IDs, IP addresses or request bodies are recorded. The last 50 events remain for up to 24 hours and are deleted when diagnostics are turned off.', 'bc-mcp-abilities' ); ?></p>
@@ -116,19 +116,19 @@ final class BC_MCP_Abilities_Connections {
 		</form>
 
 		<?php if ( $oauth_on ) : ?>
-			<p><strong><?php esc_html_e( 'Ready to test', 'bc-mcp-abilities' ); ?></strong></p>
+			<p><strong><?php esc_html_e( 'Connection settings enabled', 'bc-mcp-abilities' ); ?></strong></p>
 		<?php else : ?>
-			<p><em><?php esc_html_e( 'Not enabled yet. Enable both settings on a staging site before connecting.', 'bc-mcp-abilities' ); ?></em></p>
+			<p><em><?php esc_html_e( 'Enable the MCP connection and WordPress sign-in above before connecting an assistant.', 'bc-mcp-abilities' ); ?></em></p>
 		<?php endif; ?>
 
 		<?php if ( '1' === (string) get_option( 'bc_mcp_oauth_debug_enabled', '0' ) ) : ?>
-			<h3><?php esc_html_e( 'Recent OAuth and MCP connection events', 'bc-mcp-abilities' ); ?></h3>
+			<h3><?php esc_html_e( 'Recent connection activity', 'bc-mcp-abilities' ); ?></h3>
 			<?php
 			$events = get_option( 'bc_mcp_oauth_debug_events', array() );
 			$events = is_array( $events ) ? array_reverse( array_slice( $events, -BC_MCP_Abilities_OAuth::DEBUG_MAX_EVENTS ) ) : array();
 			?>
 			<?php if ( empty( $events ) ) : ?>
-				<p><?php esc_html_e( 'No recent diagnostic events. Try connecting ChatGPT and refresh this page.', 'bc-mcp-abilities' ); ?></p>
+				<p><?php esc_html_e( 'No connection events have been recorded yet. New events will appear when an assistant connects.', 'bc-mcp-abilities' ); ?></p>
 			<?php else : ?>
 				<table class="widefat striped" style="max-width:900px">
 					<thead><tr>
@@ -164,12 +164,12 @@ final class BC_MCP_Abilities_Connections {
 			<li><?php esc_html_e( 'In ChatGPT on the web, open Plugins and choose Add custom MCP server.', 'bc-mcp-abilities' ); ?></li>
 			<li><?php esc_html_e( 'Paste the MCP server URL shown above and select automatic OAuth registration (Dynamic Client Registration).', 'bc-mcp-abilities' ); ?></li>
 			<li><?php esc_html_e( 'Complete the WordPress sign-in and choose Authorize on the permission screen.', 'bc-mcp-abilities' ); ?></li>
-			<li><?php esc_html_e( 'Discover and test a read-only ability before enabling write abilities.', 'bc-mcp-abilities' ); ?></li>
+			<li><?php esc_html_e( 'Review available read-only actions before granting permission to edit your website.', 'bc-mcp-abilities' ); ?></li>
 		</ol>
-		<p><strong><?php esc_html_e( 'Claude remains available:', 'bc-mcp-abilities' ); ?></strong>
-			<?php esc_html_e( 'The working official MCP Adapter OAuth endpoint is separate and remains unchanged.', 'bc-mcp-abilities' ); ?>
+		<p><strong><?php esc_html_e( 'Claude connection:', 'bc-mcp-abilities' ); ?></strong>
+			<?php esc_html_e( 'Claude may use a separate compatible MCP provider. Manage its connection under Connections.', 'bc-mcp-abilities' ); ?>
 		</p>
-		<p class="description"><?php esc_html_e( 'Development preview: test OAuth and permissions on staging first. ChatGPT custom MCP availability depends on your ChatGPT plan or workspace.', 'bc-mcp-abilities' ); ?></p>
+		<p class="description"><?php esc_html_e( 'Custom MCP connection availability depends on your AI assistant account and workspace settings.', 'bc-mcp-abilities' ); ?></p>
 		<?php
 	}
 }
