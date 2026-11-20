@@ -171,6 +171,52 @@ final class BC_MCP_Abilities_UI {
 		<?php
 	}
 
+
+	/**
+	 * Render a transparent inventory of registered read-only operations.
+	 *
+	 * @return void
+	 */
+	private static function read_only_catalog() {
+		if ( ! function_exists( 'wp_get_abilities' ) ) {
+			return;
+		}
+		$items = array();
+		$write_slugs = BC_MCP_Abilities_Admin::writable_abilities();
+		foreach ( (array) wp_get_abilities() as $ability ) {
+			if ( ! is_object( $ability ) || ! method_exists( $ability, 'get_name' ) ) {
+				continue;
+			}
+			$name = $ability->get_name();
+			if ( 0 !== strpos( $name, 'bc-mcp-abilities/' ) ) {
+				continue;
+			}
+			$slug = substr( $name, strlen( 'bc-mcp-abilities/' ) );
+			if ( isset( $write_slugs[ $slug ] ) ) {
+				continue;
+			}
+			$items[] = $ability;
+		}
+		?>
+		<details class="bc-card bc-readonly-catalog">
+			<summary>
+				<span><strong><?php esc_html_e( 'Read-only ability catalog', 'bc-mcp-abilities' ); ?></strong><small><?php esc_html_e( 'Explore what authenticated WordPress users can inspect without changing data.', 'bc-mcp-abilities' ); ?></small></span>
+				<span class="bc-readonly-number"><?php echo esc_html( (string) count( $items ) ); ?> <?php esc_html_e( 'abilities', 'bc-mcp-abilities' ); ?></span>
+			</summary>
+			<div class="bc-readonly-list">
+				<?php foreach ( $items as $ability ) : ?>
+					<div class="bc-readonly-item">
+						<strong><?php echo esc_html( $ability->get_label() ); ?></strong>
+						<code><?php echo esc_html( $ability->get_name() ); ?></code>
+						<p><?php echo esc_html( $ability->get_description() ); ?></p>
+					</div>
+				<?php endforeach; ?>
+			</div>
+			<p class="bc-muted"><?php esc_html_e( 'Read-only access is enforced through each operation’s WordPress capability checks. No extra permission switch is provided here.', 'bc-mcp-abilities' ); ?></p>
+		</details>
+		<?php
+	}
+
 	/**
 	 * Render the dashboard.
 	 *
@@ -257,6 +303,7 @@ final class BC_MCP_Abilities_UI {
 					<section class="bc-tab-panel" id="bc-panel-abilities" role="tabpanel" aria-labelledby="bc-tab-abilities">
 						<div class="bc-section-header"><div><p class="bc-eyebrow"><?php esc_html_e( 'Permission controls', 'bc-mcp-abilities' ); ?></p><h2><?php esc_html_e( 'Abilities & access', 'bc-mcp-abilities' ); ?></h2><p><?php esc_html_e( 'Select exactly which write operations can be invoked by authenticated MCP clients.', 'bc-mcp-abilities' ); ?></p></div></div>
 						<div class="bc-alert"><span class="dashicons dashicons-shield" aria-hidden="true"></span><p><?php esc_html_e( 'Every write also requires WordPress administrator permissions and a confirmed tool call. Enabling a permission does not itself execute an operation.', 'bc-mcp-abilities' ); ?></p></div>
+						<?php self::read_only_catalog(); ?>
 						<div class="bc-card">
 							<form method="post" action="options.php" id="bc-permissions-form">
 								<?php settings_fields( 'bc_mcp_abilities' ); ?>
