@@ -12,7 +12,7 @@ Independent, permission-checked WordPress Abilities plus an optional built-in MC
 
 == Description ==
 
-BC MCP Abilities registers 35 WordPress-native abilities in the Agent-parity development branch, covering content, media, WooCommerce, Rank Math and guarded Elementor operations. It includes a built-in MCP and OAuth connection that is disabled by default, and works without an external server. The official MCP Adapter remains optional for compatibility. All write abilities require an administrator opt-in and WordPress permission checks.
+BC MCP Abilities registers 45 WordPress-native abilities in the pre-release development branch, covering content, media, WooCommerce, Rank Math and guarded Elementor operations. It includes a built-in MCP and OAuth connection that is disabled by default, and works without an external server. The official MCP Adapter remains optional for compatibility. All write abilities require an administrator opt-in and WordPress permission checks.
 
 This is development software. Test on staging only.
 
@@ -35,4 +35,4 @@ No. Every ability requires a logged-in WordPress user with appropriate permissio
 
 = 0.1.0 =
 * Fix ChatGPT tool import: `bc-list-abilities` now publishes a valid JSON Schema (`properties: {}`); MCP protocol version negotiation; Authorization header fallback for Apache/LiteSpeed hosts; RFC 6750-compliant challenges; richer, privacy-safe connection diagnostics.
-* Developer preview: 35 abilities, including new eligible custom post type operations and safe Elementor structure/JSON/CSS tools. No unrestricted source editing.
+* Developer preview: 45 abilities including scoped categories/tags, classic navigation menus, PageSpeed Insights and guarded Elementor operations. No unrestricted source editing.
