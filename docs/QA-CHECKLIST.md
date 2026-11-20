@@ -46,7 +46,7 @@ Release remains blocked until all gates pass.
 - [ ] Complete readme.txt and changelog
 - [ ] Copyright and license review
 - [ ] Plugin slug verified available
-- [ ] Screenshots and plugin icons added
+- [ ] After approval: prepare directory icon, banner and screenshots for WordPress.org SVN assets
 - [ ] Build a clean installable ZIP and test on fresh staging
 - [ ] No bundled developer dependencies in release ZIP
 
@@ -55,20 +55,24 @@ Release remains blocked until all gates pass.
 - [x] WPToolix WordPress agent confirmed BC MCP Abilities active after the 21 November 2026 upload.
 - [x] External GitHub OAuth metadata/MCP initialization/token validation probe passed on 21 November 2026. Re-run against the final release ZIP after deployment.
 - [ ] Confirm live ChatGPT and Claude client connections after deployment, including permission changes and read-only discovery.
-- [ ] Replace both development version 0.1.0-dev and readme Stable tag with the identical numerical final version on the release candidate. WordPress.org's Stable tag requires numbers and periods.
+- [x] Use matching v1.0.0 plugin header, version constant, readme Stable tag and changelog for the submission candidate.
 - [ ] Run WordPress.org readme validator and fresh WordPress staging acceptance, including admin mobile layout and multisite/security review.
 - [x] Source includes a GPLv2-or-later license notice.
 - [x] Readme documents external Google PageSpeed service, privacy, audit retention and optional client integrations.
-- [ ] Add plugin icon, banner and screenshots for a polished WordPress.org listing.
+- [ ] After approval: prepare the optional WordPress.org listing artwork.
 
-## Specific reviewer lessons from BC CourierHub BD (May 2026)
+## Final submission readiness for BC MCP Abilities v1.0.0
 
-See `docs/WORDPRESS-ORG-REVIEW-LESSONS.md` for the full historical cross-check.
-- [x] `Contributors: bitwisecode` matches the WordPress.org owner account.
-- [x] All plugin class names and public option identifiers use a distinctive BC MCP prefix. Dashboard JS runs inside an IIFE rather than declaring an unprefixed global.
-- [x] The readme now explains optional Google PageSpeed, ChatGPT, Claude, and user-selected image-host requests: purpose, outbound data, when requests occur and provider policy links.
-- [x] All WordPress Settings API options have a dedicated sanitization/allowlist callback; no opaque OAuth secrets are treated as ordinary text-field settings.
-- [x] OAuth bearer token validation now checks whether its issuing client still exists; uninstall unschedules plugin-owned OAuth cleanup events.
-- [ ] Verify live token reconnection after the next deployment of this security fix, then test fresh installation/deactivation/uninstall.
-- [ ] Check that admin notices remain limited to the BC settings screen, and that final reviewer instructions are concise and fully grounded.
-- [ ] Do not submit or tag until the numerical stable version matches in plugin header, constant, readme and release ZIP.
+- [x] The plugin header, version constant, readme Stable tag, and first-release changelog target v1.0.0.
+- [x] Contributors lists the WordPress.org author account, `bitwisecode`.
+- [x] The readme identifies optional third-party data transfers and provider terms/privacy links.
+- [x] WordPress Settings API flags and allowlists have strict sanitizers, and malformed nested values are rejected.
+- [x] PHP classes, WordPress options/hooks and browser scripts use plugin-specific identifiers.
+- [x] OAuth bearer tokens are rejected when their issuing client registration is removed.
+- [x] Uninstall clears the plugin's configuration and scheduled cleanup events without deleting WordPress content.
+- [x] WP_DEBUG-enabled clean WordPress smoke tests are included in CI.
+- [ ] Complete an independent AI/code-security review and resolve verified findings.
+- [ ] Perform the owner's planned fresh-site installation, permissions and end-to-end ChatGPT/Claude read/write tests.
+- [ ] Perform a fresh-site uninstall/reinstall test and confirm data removal without affecting normal content.
+- [ ] Check WordPress.org slug availability immediately before submission.
+- [ ] Submit the audited release ZIP only after final signoff. Add listing icons, banner and screenshots to the WordPress.org SVN assets directory after approval.
