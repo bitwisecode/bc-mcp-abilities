@@ -182,28 +182,69 @@ final class BC_MCP_Abilities_Release_Integrations {
 		if ( ! hash_equals( $state['revision'], (string) $input['expected_revision'] ) ) {
 			return new WP_Error( 'bc_mcp_yoast_conflict', __( 'Yoast SEO fields have changed; fetch the latest revision.', 'bc-mcp-abilities' ) );
 		}
-		$keys    = array(
-			'title'         => '_yoast_wpseo_title',
-			'description'   => '_yoast_wpseo_metadesc',
-			'focus_keyword' => '_yoast_wpseo_focuskw',
+		// Use Yoast's own Abilities API for title and description so the
+		// indexable presentation is refreshed by the owning plugin.
+		// Focus keyword is intentionally separate because Yoast's official
+		// update-post-seo-data ability does not permit writing keyphrases.
+		$map = array(
+			'title'       => 'seo_title',
+			'description' => 'meta_description',
 		);
-		$updates = array();
-		foreach ( $keys as $field => $key ) {
+		$native_input = array( 'post_id' => (int) $post->ID );
+		foreach ( $map as $field => $native_field ) {
 			if ( ! array_key_exists( $field, $input ) ) {
 				continue;
 			}
 			if ( ! is_string( $input[ $field ] ) || strlen( $input[ $field ] ) > 1000 ) {
 				return new WP_Error( 'bc_mcp_yoast_field_invalid', __( 'SEO field must be text within 1000 bytes.', 'bc-mcp-abilities' ) );
 			}
-			$updates[ $key ] = sanitize_text_field( $input[ $field ] );
+			$native_input[ $native_field ] = sanitize_text_field( $input[ $field ] );
 		}
-		if ( ! $updates ) {
+		$focus_supplied = array_key_exists( 'focus_keyword', $input );
+		if ( $focus_supplied && ( ! is_string( $input['focus_keyword'] ) || strlen( $input['focus_keyword'] ) > 1000 ) ) {
+			return new WP_Error( 'bc_mcp_yoast_field_invalid', __( 'Focus keyword must be text within 1000 bytes.', 'bc-mcp-abilities' ) );
+		}
+		if ( 1 === count( $native_input ) && ! $focus_supplied ) {
 			return new WP_Error( 'bc_mcp_yoast_empty', __( 'Supply at least one Yoast SEO field.', 'bc-mcp-abilities' ) );
 		}
-		foreach ( $updates as $key => $value ) {
-			update_post_meta( $post->ID, $key, $value );
+
+		// Match Yoast's own advanced-metadata permission requirement before
+		// running either the native ability or an existing focus-keyword edit.
+		if ( class_exists( 'WPSEO_Capability_Utils' ) && ! WPSEO_Capability_Utils::current_user_can( 'wpseo_edit_advanced_metadata' ) ) {
+			return new WP_Error( 'bc_mcp_yoast_capability', __( 'Advanced Yoast SEO metadata permission is required.', 'bc-mcp-abilities' ) );
 		}
-		return self::ok( self::yoast_state( $post->ID ) );
+
+		if ( count( $native_input ) > 1 ) {
+			$native = function_exists( 'wp_get_ability' ) ? wp_get_ability( 'yoast-seo/update-post-seo-data' ) : null;
+			if ( ! $native ) {
+				return new WP_Error( 'bc_mcp_yoast_native_missing', __( 'Update Yoast SEO to a version supporting native SEO data abilities before editing titles or descriptions.', 'bc-mcp-abilities' ) );
+			}
+			$result = $native->execute( $native_input );
+			if ( is_wp_error( $result ) ) {
+				return $result;
+			}
+			if ( ! is_array( $result ) || (int) ( $result['post_id'] ?? 0 ) !== (int) $post->ID ) {
+				return new WP_Error( 'bc_mcp_yoast_native_failed', __( 'Yoast SEO did not confirm the updated post.', 'bc-mcp-abilities' ) );
+			}
+		}
+
+		if ( $focus_supplied ) {
+			update_post_meta( $post->ID, '_yoast_wpseo_focuskw', sanitize_text_field( $input['focus_keyword'] ) );
+		}
+		$updated = self::yoast_state( $post->ID );
+		if ( count( $native_input ) > 1 ) {
+			$rendered = wp_get_ability( 'yoast-seo/get-post-seo-data' );
+			if ( $rendered ) {
+				$data = $rendered->execute( array( 'post_id' => (int) $post->ID ) );
+				if ( is_array( $data ) && isset( $data[0] ) && is_array( $data[0] ) ) {
+					$updated['rendered'] = array(
+						'seo_title'        => (string) ( $data[0]['seo_title_rendered'] ?? '' ),
+						'meta_description' => (string) ( $data[0]['meta_description_rendered'] ?? '' ),
+					);
+				}
+			}
+		}
+		return self::ok( $updated );
 	}
 
 	/**
