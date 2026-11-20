@@ -146,6 +146,9 @@ final class BC_MCP_Abilities_Connections {
 									<td><?php echo esc_html( gmdate( 'Y-m-d H:i:s', absint( $event['time'] ) ) ); ?></td>
 									<td><?php echo esc_html( sanitize_key( (string) ( $event['event'] ?? '' ) ) ); ?></td>
 									<td><?php echo esc_html( sanitize_key( (string) ( $event['result'] ?? '' ) ) ); ?></td>
+									<td><code><?php echo esc_html( (string) ( $event['method'] ?? '' ) ); ?></code></td>
+									<td><?php echo esc_html( (string) ( $event['auth'] ?? '' ) ); ?></td>
+									<td><?php echo esc_html( (string) ( $event['detail'] ?? '' ) ); ?></td>
 								</tr>
 							<?php endif; ?>
 						<?php endforeach; ?>
