@@ -57,6 +57,10 @@ foreach (
 	$assert( ! empty( $settings[ $option ]['sanitize_callback'] ), 'Registered setting missing a sanitize callback: ' . $option );
 }
 
+$assert( array( 'create-draft' ) === BC_MCP_Abilities_Admin::sanitize( array( 'create-draft', array( 'nested' ), 'invalid-action' ) ), 'Write allowlist sanitizer must reject nested and unknown values.' );
+$assert( array( 'site-info' ) === BC_MCP_Abilities_Admin::sanitize_disabled_reads( array( 'site-info', array( 'nested' ), 'invalid-action' ) ), 'Read denylist sanitizer must reject nested and unknown values.' );
+$assert( '0' === BC_MCP_Abilities_Connections::sanitize_toggle( array( '1' ) ), 'Connection flags must reject array input without conversion warnings.' );
+
 $js = file_get_contents( $plugin_dir . '/assets/admin.js' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local bundled file for a disposable CI check.
 $assert( is_string( $js ) && false !== strpos( $js, '(function () {' ), 'Admin JavaScript must not create an unrestricted global namespace.' );
 
