@@ -28,10 +28,19 @@ jobs:
               exit 1
             fi
             if [[ "$code" != "200" ]]; then
-              echo "Unexpected public metadata HTTP status from GitHub runner"
+              echo "::error::OAuth discovery returned HTTP $code. Verify BC MCP Abilities is installed and active on WPToolix."
               exit 1
             fi
-            jq -e 'type == "object"' /tmp/public-mcp.json >/dev/null
+            # The homepage can return 200 HTML after a bad rewrite. Reject
+            # that result even when curl reports an apparently successful code.
+            if [[ "$final_url" == "$base/" ]]; then
+              echo "::error::OAuth metadata redirected to the site homepage; the BC MCP plugin route is missing or a rewrite rule is not active."
+              exit 1
+            fi
+            if ! jq -e 'type == "object" and (has("resource") or has("issuer"))' /tmp/public-mcp.json >/dev/null; then
+              echo "::error::OAuth discovery did not return valid resource/authorization JSON. Check plugin activation and WordPress permalinks; do not force unrelated .htaccess rules."
+              exit 1
+            fi
           done
       - name: Probe unauthenticated MCP initialization safely (no writes)
         shell: bash
