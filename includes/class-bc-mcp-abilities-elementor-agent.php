@@ -466,8 +466,8 @@ final class BC_MCP_Abilities_Elementor_Agent {
 	 * Insert a node at root or inside an existing non-widget parent.
 	 *
 	 * @param array  $nodes    Element list.
-	 * @param string $parent   Parent element ID, or empty root.
-	 * @param array  $new      New element.
+	 * @param string $parent_id Parent element ID, or empty root.
+	 * @param array  $new_node  New element.
 	 * @param int    $position Zero-based position.
 	 * @param bool   $done     Whether insertion succeeded.
 	 * @return array
