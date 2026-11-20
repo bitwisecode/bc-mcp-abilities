@@ -1194,7 +1194,7 @@ final class BC_MCP_Abilities_OAuth {
 		$clients = self::clients();
 		if ( ! isset( $clients[ $client ] ) ) {
 			self::trace( 'token', 'invalid_client' );
-			self::fail( 'invalid_client', 401 );
+			self::fail( 'invalid_client' );
 		}
 		if ( '' !== $uri && BC_MCP_Abilities_Server::endpoint() !== $uri ) {
 			self::trace( 'token', 'invalid_resource' );
@@ -1304,7 +1304,7 @@ final class BC_MCP_Abilities_OAuth {
 		$client = self::field( 'client_id', self::submitted() );
 		$token  = self::field( 'token', self::submitted() );
 		if ( ! isset( self::clients()[ $client ] ) ) {
-			self::fail( 'invalid_client', 401 );
+			self::fail( 'invalid_client' );
 		}
 		if ( ! preg_match( '/^[a-f0-9]{64}$/', $token ) ) {
 			// RFC 7009: an unknown token is not an error.
