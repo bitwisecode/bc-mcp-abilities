@@ -59,6 +59,12 @@ $assert( false === strpos( $markup, 'Download Claude Extension' ), 'Legacy exten
 $assert( false === strpos( $markup, 'Settings saved successfully.' ), 'Duplicate success notice should not be rendered.' );
 $assert( false !== strpos( $markup, 'mcp/mcp-oauth-server' ), 'The separate Claude OAuth provider URL should be documented.' );
 $assert( 1 === substr_count( $markup, 'id="bc-panel-connections"' ), 'Connections panel should appear once.' );
+$assert( false !== strpos( $markup, 'Manage AI connections, permissions, and activity for your WordPress website.' ), 'Client-facing dashboard heading is missing.' );
+$assert( false !== strpos( $markup, 'The connection indicator reflects your saved settings.' ), 'Connection status must explain that it is configuration, not live authorization.' );
+foreach ( array( 'Developer preview', 'development preview', 'staging', 'Ready to test', 'test a read-only ability', 'Download Claude Extension', 'First Claude prompt:', 'demo website' ) as $forbidden ) {
+	$assert( false === stripos( $markup, $forbidden ), 'Development or demonstration copy visible in the settings dashboard: ' . $forbidden );
+}
+
 
 $assert( isset( BC_MCP_Abilities_Admin::writable_abilities()['create-draft'] ), 'Original ability registration missing.' );
 
