@@ -1,6 +1,6 @@
 <?php
 /**
- * Scoped Elementor document operations inspired by the existing Jobayer Agent.
+ * Scoped Elementor document operations: structure changes, settings, JSON tools and CSS.
  *
  * No unrestricted layout JSON writes, code widgets or arbitrary settings.
  *

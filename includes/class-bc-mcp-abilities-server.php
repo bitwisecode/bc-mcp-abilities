@@ -97,8 +97,8 @@ final class BC_MCP_Abilities_Server {
 	}
 
 	/**
-	 * Read the Authorization header, including the copies that Apache/LiteSpeed
-	 * CGI setups (e.g. Hostinger shared hosting) place in REDIRECT_HTTP_AUTHORIZATION.
+	 * Read the Authorization header, including the copies that some Apache and
+	 * LiteSpeed CGI setups place in REDIRECT_HTTP_AUTHORIZATION.
 	 *
 	 * @param WP_REST_Request $request Current request.
 	 * @return string
