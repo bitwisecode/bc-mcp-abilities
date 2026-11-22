@@ -350,7 +350,8 @@ final class BC_MCP_Abilities_OAuth {
 	}
 
 	/**
-	 * Match an exact allowed ChatGPT callback URL, never wildcard the host.
+	 * Accept only exact, documented ChatGPT and Claude OAuth return URLs.
+	 * Never allow arbitrary client-provided callback domains or URL components.
 	 *
 	 * @param string $uri Registered callback URL.
 	 * @return bool
@@ -360,11 +361,19 @@ final class BC_MCP_Abilities_OAuth {
 			return false;
 		}
 		$parts = wp_parse_url( $uri );
-		if ( ! is_array( $parts ) || 'https' !== ( $parts['scheme'] ?? '' ) || 'chatgpt.com' !== ( $parts['host'] ?? '' ) || isset( $parts['user'] ) || isset( $parts['pass'] ) || isset( $parts['port'] ) || isset( $parts['query'] ) || isset( $parts['fragment'] ) ) {
+		if ( ! is_array( $parts ) || 'https' !== ( $parts['scheme'] ?? '' ) || isset( $parts['user'] ) || isset( $parts['pass'] ) || isset( $parts['port'] ) || isset( $parts['query'] ) || isset( $parts['fragment'] ) ) {
 			return false;
 		}
-		return 1 === preg_match( '~^/connector/oauth/[a-zA-Z0-9_-]{6,128}$~', (string) ( $parts['path'] ?? '' ) )
-			|| '/connector_platform_oauth_redirect' === ( $parts['path'] ?? '' );
+		$host = $parts['host'] ?? '';
+		$path = $parts['path'] ?? '';
+		if ( 'claude.ai' === $host ) {
+			return '/api/mcp/auth_callback' === $path;
+		}
+		if ( 'chatgpt.com' !== $host ) {
+			return false;
+		}
+		return 1 === preg_match( '~^/connector/oauth/[a-zA-Z0-9_-]{6,128}$~', $path )
+			|| '/connector_platform_oauth_redirect' === $path;
 	}
 
 	/*
