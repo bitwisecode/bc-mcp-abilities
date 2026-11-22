@@ -12,9 +12,13 @@ Permission-checked WordPress Abilities for AI agents, with an optional built-in 
 
 == Description ==
 
-BC MCP Abilities lets AI assistants work with your WordPress site through the native WordPress Abilities API. It registers 48 scoped actions for reading and managing posts, pages, custom content, media, categories and tags, navigation menus, Elementor pages, WooCommerce products and SEO fields.
+BC MCP Abilities lets AI assistants work with your WordPress site through the native WordPress Abilities API. It registers 54 scoped actions for reading and managing posts, pages, custom content, media, categories and tags, navigation menus, Elementor pages, WooCommerce products, SEO fields and Rank Math redirections.
 
 AI assistants reach these actions through MCP (Model Context Protocol). Connect ChatGPT or Claude through the plugin's built-in MCP endpoint and WordPress sign-in, or use a compatible MCP provider such as the official MCP Adapter. The abilities also work through the WordPress Abilities API without any AI assistant connected.
+
+= Rank Math redirect management =
+
+When the Rank Math Redirections module is active, administrators can use six additional abilities to list, check, create, update, delete and bulk-import exact-match 301 rules. Bulk imports are preview-first (maximum 50 items per call), check for duplicate sources and require a matching inventory revision before applying. Editing permissions remain off until individually enabled. Redirect destinations must be on the same WordPress site.
 
 = Permissions you control =
 

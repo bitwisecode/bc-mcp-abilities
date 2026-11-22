@@ -32,6 +32,7 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-perf
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-taxonomies.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-menus.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-release-integrations.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-bc-mcp-abilities-rank-math-redirects.php';
 BC_MCP_Abilities_Admin::init();
 BC_MCP_Abilities_Audit::init();
 BC_MCP_Abilities::init();
@@ -58,3 +59,4 @@ add_action( 'wp_abilities_api_init', array( 'BC_MCP_Abilities_Performance', 'reg
 add_action( 'wp_abilities_api_init', array( 'BC_MCP_Abilities_Taxonomies', 'register' ), 20 );
 add_action( 'wp_abilities_api_init', array( 'BC_MCP_Abilities_Menus', 'register' ), 20 );
 add_action( 'wp_abilities_api_init', array( 'BC_MCP_Abilities_Release_Integrations', 'register' ), 20 );
+add_action( 'wp_abilities_api_init', array( 'BC_MCP_Abilities_Rank_Math_Redirects', 'register' ), 20 );
