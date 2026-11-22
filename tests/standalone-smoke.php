@@ -36,7 +36,7 @@ $allow = array(
 	'https://chatgpt.com/connector_platform_oauth_redirect',
 );
 foreach ( $allow as $uri ) {
-	$expect( BC_MCP_Abilities_OAuth::allowed_redirect( $uri ), 'Expected safe ChatGPT callback rejected.' );
+	$expect( BC_MCP_Abilities_OAuth::allowed_redirect( $uri ), 'Expected safe OAuth callback rejected.' );
 }
 $block = array(
 	'http://chatgpt.com/connector/oauth/testcallbackid123',
@@ -44,6 +44,14 @@ $block = array(
 	'https://evil.example/connector/oauth/testcallbackid123',
 	'https://chatgpt.com/connector/oauth/testcallbackid123?next=https://evil.example',
 	'https://chatgpt.com/connector/oauth/../../evil',
+	'http://claude.ai/api/mcp/auth_callback',
+	'https://claude.ai.evil.example/api/mcp/auth_callback',
+	'https://claude.ai/api/mcp/auth_callback/extra',
+	'https://claude.ai/api/mcp/auth_callback?next=https://evil.example',
+	'https://claude.ai/api/mcp/auth_callback#fragment',
+	'https://claude.ai:443/api/mcp/auth_callback',
+	'https://claude.ai@evil.example/api/mcp/auth_callback',
+	'https://evil.example/api/mcp/auth_callback',
 );
 foreach ( $block as $uri ) {
 	$expect( ! BC_MCP_Abilities_OAuth::allowed_redirect( $uri ), 'Unsafe callback was accepted.' );
