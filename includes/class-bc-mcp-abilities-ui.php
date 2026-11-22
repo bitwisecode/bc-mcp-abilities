@@ -115,7 +115,7 @@ final class BC_MCP_Abilities_UI {
 		$oauth_on     = '1' === (string) get_option( BC_MCP_Abilities_OAuth::OPTION, '0' );
 		$debug_on     = '1' === (string) get_option( 'bc_mcp_oauth_debug_enabled', '0' );
 		$endpoint     = BC_MCP_Abilities_Server::endpoint();
-		$claude_oauth = rest_url( 'mcp/mcp-oauth-server' );
+		$claude_oauth = $endpoint;
 		?>
 		<div class="bc-section-header">
 			<div>
@@ -174,24 +174,24 @@ final class BC_MCP_Abilities_UI {
 			<div class="bc-card bc-client-card">
 				<div class="bc-client-heading">
 					<span class="bc-client-logo bc-client-logo-claude" aria-hidden="true">C</span>
-					<div><p class="bc-eyebrow"><?php esc_html_e( 'Additional connection option', 'bc-mcp-abilities' ); ?></p><h3><?php esc_html_e( 'Claude', 'bc-mcp-abilities' ); ?></h3></div>
+					<div><p class="bc-eyebrow"><?php esc_html_e( 'WordPress connection', 'bc-mcp-abilities' ); ?></p><h3><?php esc_html_e( 'Claude', 'bc-mcp-abilities' ); ?></h3></div>
 				</div>
-				<p class="bc-client-description"><?php esc_html_e( 'Connect Claude using a compatible WordPress MCP provider that supports secure sign-in.', 'bc-mcp-abilities' ); ?></p>
+				<p class="bc-client-description"><?php esc_html_e( 'Connect Claude using the built-in BC MCP connection and your WordPress account.', 'bc-mcp-abilities' ); ?></p>
 				<label class="bc-client-field-label" for="bc-claude-oauth-url"><?php esc_html_e( 'Claude connection URL', 'bc-mcp-abilities' ); ?></label>
 				<div class="bc-copy-field">
-					<input id="bc-claude-oauth-url" type="text" value="<?php echo esc_attr( $claude_oauth ); ?>" readonly aria-label="<?php esc_attr_e( 'Claude OAuth MCP provider URL', 'bc-mcp-abilities' ); ?>" />
+					<input id="bc-claude-oauth-url" type="text" value="<?php echo esc_attr( $claude_oauth ); ?>" readonly aria-label="<?php esc_attr_e( 'Claude MCP server URL', 'bc-mcp-abilities' ); ?>" />
 					<button class="button bc-copy-button" type="button" data-bc-copy="bc-claude-oauth-url"><?php esc_html_e( 'Copy URL', 'bc-mcp-abilities' ); ?></button>
 				</div>
 				<ol class="bc-steps">
-					<li><?php esc_html_e( 'Ensure your OAuth-compatible MCP provider is installed and enabled.', 'bc-mcp-abilities' ); ?></li>
-					<li><?php esc_html_e( 'Add the connection URL in Claude, then sign in to WordPress when prompted.', 'bc-mcp-abilities' ); ?></li>
-					<li><?php esc_html_e( 'If Claude is already connected, you can continue using your current connection URL.', 'bc-mcp-abilities' ); ?></li>
+					<li><?php esc_html_e( 'Turn on MCP connection and secure WordPress sign-in above.', 'bc-mcp-abilities' ); ?></li>
+					<li><?php esc_html_e( 'In Claude, add a remote custom connector and use the URL shown above.', 'bc-mcp-abilities' ); ?></li>
+					<li><?php esc_html_e( 'Sign in to WordPress and approve Claude when prompted.', 'bc-mcp-abilities' ); ?></li>
 				</ol>
-				<p class="bc-client-note"><?php esc_html_e( 'This Claude URL is provided by a separate, optional MCP integration. It will work only when that provider is installed and enabled.', 'bc-mcp-abilities' ); ?></p>
+				<p class="bc-client-note"><?php esc_html_e( 'ChatGPT and Claude use the same MCP endpoint. MCP Adapter is not required for this built-in connection.', 'bc-mcp-abilities' ); ?></p>
 			</div>
 		</div>
 		<?php self::connected_assistants(); ?>
-		<p class="bc-muted"><?php esc_html_e( 'These settings control the built-in ChatGPT connection only. Read-only and enabled editing actions also remain available, under the same WordPress permissions, through the WordPress Abilities REST API and the official MCP Adapter to users who authenticate with an Application Password. Hide read-only actions or disable editing actions under Abilities & permissions to restrict every connection method.', 'bc-mcp-abilities' ); ?></p>
+		<p class="bc-muted"><?php esc_html_e( 'These settings control the built-in ChatGPT and Claude OAuth connections. WordPress Abilities and a separately installed MCP Adapter may also expose approved actions through other authentication methods. Hide read-only actions and disable editing permissions under Abilities & permissions to restrict access across connection methods.', 'bc-mcp-abilities' ); ?></p>
 		<p class="bc-muted"><?php esc_html_e( 'The connection indicator reflects your saved settings. It does not confirm that an external AI assistant is connected.', 'bc-mcp-abilities' ); ?></p>
 		<?php
 	}
