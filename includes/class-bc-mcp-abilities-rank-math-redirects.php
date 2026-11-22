@@ -10,11 +10,19 @@ defined( 'ABSPATH' ) || exit;
 final class BC_MCP_Abilities_Rank_Math_Redirects {
 
 	private static function schema( $properties = array(), $required = array() ) {
-		return array( 'type' => 'object', 'properties' => $properties, 'required' => $required, 'additionalProperties' => false );
+		return array(
+			'type'                 => 'object',
+			'properties'           => $properties,
+			'required'             => $required,
+			'additionalProperties' => false,
+		);
 	}
 
 	private static function ok( $data ) {
-		return array( 'success' => true, 'data' => $data );
+		return array(
+			'success' => true,
+			'data'    => $data,
+		);
 	}
 
 	private static function available() {
@@ -28,26 +36,109 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 	}
 
 	public static function register() {
-		$str = array( 'type' => 'string', 'maxLength' => 2048 );
-		$id = array( 'type' => 'integer', 'minimum' => 1 );
-		$rev = array( 'type' => 'string', 'pattern' => '^[a-f0-9]{64}$' );
-		$rule = array(
-			'type' => 'object',
-			'properties' => array( 'source' => $str, 'destination' => $str ),
-			'required' => array( 'source', 'destination' ),
+		$str         = array(
+			'type'      => 'string',
+			'maxLength' => 2048,
+		);
+		$id          = array(
+			'type'    => 'integer',
+			'minimum' => 1,
+		);
+		$rev         = array(
+			'type'    => 'string',
+			'pattern' => '^[a-f0-9]{64}$',
+		);
+		$rule        = array(
+			'type'                 => 'object',
+			'properties'           => array(
+				'source'      => $str,
+				'destination' => $str,
+			),
+			'required'             => array( 'source', 'destination' ),
 			'additionalProperties' => false,
 		);
 		$definitions = array(
-			array( 'rankmath-list-redirects', 'List Rank Math Redirects', 'Read the existing redirects, their sources, destinations, statuses and revision tokens.', self::schema( array( 'page' => $id, 'per_page' => array( 'type' => 'integer', 'minimum' => 1, 'maximum' => 100 ) ) ), 'list_redirects', true ),
+			array(
+				'rankmath-list-redirects',
+				'List Rank Math Redirects',
+				'Read the existing redirects, their sources, destinations, statuses and revision tokens.',
+				self::schema(
+					array(
+						'page'     => $id,
+						'per_page' => array(
+							'type'    => 'integer',
+							'minimum' => 1,
+							'maximum' => 100,
+						),
+					)
+				),
+				'list_redirects',
+				true,
+			),
 			array( 'rankmath-check-redirect', 'Check Rank Math Redirect', 'Find any existing redirect whose exact source matches the supplied legacy path.', self::schema( array( 'source' => $str ), array( 'source' ) ), 'check_redirect', true ),
-			array( 'rankmath-create-redirect', 'Create Rank Math 301 Redirect', 'Create a single exact 301 redirect without replacing an existing source.', self::schema( array( 'source' => $str, 'destination' => $str ), array( 'source', 'destination' ) ), 'create_redirect', false ),
-			array( 'rankmath-update-redirect', 'Update Rank Math Redirect', 'Update a redirect destination using its current revision token, preserving its sources.', self::schema( array( 'id' => $id, 'expected_revision' => $rev, 'destination' => $str ), array( 'id', 'expected_revision', 'destination' ) ), 'update_redirect', false ),
-			array( 'rankmath-delete-redirect', 'Delete Rank Math Redirect', 'Permanently delete one redirect by ID with revision protection.', self::schema( array( 'id' => $id, 'expected_revision' => $rev ), array( 'id', 'expected_revision' ) ), 'delete_redirect', false ),
-			array( 'rankmath-bulk-import-redirects', 'Bulk Import Rank Math 301 Redirects', 'Preview up to 50 exact redirects, detect duplicate/conflicting sources and optionally import only new rules.', self::schema( array(
-				'rules' => array( 'type' => 'array', 'minItems' => 1, 'maxItems' => 50, 'items' => $rule ),
-				'apply' => array( 'type' => 'boolean' ),
-				'expected_inventory_revision' => $rev,
-			), array( 'rules' ) ), 'bulk_import', false ),
+			array(
+				'rankmath-create-redirect',
+				'Create Rank Math 301 Redirect',
+				'Create a single exact 301 redirect without replacing an existing source.',
+				self::schema(
+					array(
+						'source'      => $str,
+						'destination' => $str,
+					),
+					array( 'source', 'destination' )
+				),
+				'create_redirect',
+				false,
+			),
+			array(
+				'rankmath-update-redirect',
+				'Update Rank Math Redirect',
+				'Update a redirect destination using its current revision token, preserving its sources.',
+				self::schema(
+					array(
+						'id'                => $id,
+						'expected_revision' => $rev,
+						'destination'       => $str,
+					),
+					array( 'id', 'expected_revision', 'destination' )
+				),
+				'update_redirect',
+				false,
+			),
+			array(
+				'rankmath-delete-redirect',
+				'Delete Rank Math Redirect',
+				'Permanently delete one redirect by ID with revision protection.',
+				self::schema(
+					array(
+						'id'                => $id,
+						'expected_revision' => $rev,
+					),
+					array( 'id', 'expected_revision' )
+				),
+				'delete_redirect',
+				false,
+			),
+			array(
+				'rankmath-bulk-import-redirects',
+				'Bulk Import Rank Math 301 Redirects',
+				'Preview up to 50 exact redirects, detect duplicate/conflicting sources and optionally import only new rules.',
+				self::schema(
+					array(
+						'rules'                       => array(
+							'type'     => 'array',
+							'minItems' => 1,
+							'maxItems' => 50,
+							'items'    => $rule,
+						),
+						'apply'                       => array( 'type' => 'boolean' ),
+						'expected_inventory_revision' => $rev,
+					),
+					array( 'rules' )
+				),
+				'bulk_import',
+				false,
+			),
 		);
 		foreach ( $definitions as $def ) {
 			BC_MCP_Abilities::add( $def[0], __( $def[1], 'bc-mcp-abilities' ), __( $def[2], 'bc-mcp-abilities' ), $def[3], array( __CLASS__, $def[4] ), $def[5] );
@@ -99,19 +190,33 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 	}
 
 	private static function normalized( $record ) {
-		$sources = maybe_unserialize( isset( $record['sources'] ) ? $record['sources'] : array() );
-		$sources = is_array( $sources ) ? $sources : array();
-		$record['sources'] = $sources;
-		$record['revision'] = hash( 'sha256', wp_json_encode( array(
-			(int) $record['id'], $sources, (string) $record['url_to'], (string) $record['header_code'], (string) $record['status'],
-		) ) );
+		$sources            = maybe_unserialize( isset( $record['sources'] ) ? $record['sources'] : array() );
+		$sources            = is_array( $sources ) ? $sources : array();
+		$record['sources']  = $sources;
+		$record['revision'] = hash(
+			'sha256',
+			wp_json_encode(
+				array(
+					(int) $record['id'],
+					$sources,
+					(string) $record['url_to'],
+					(string) $record['header_code'],
+					(string) $record['status'],
+				)
+			)
+		);
 		return $record;
 	}
 
 	private static function inventory() {
 		$rows = array();
 		for ( $page = 1; $page <= 100; ++$page ) {
-			$batch = \RankMath\Redirections\DB::get_redirections( array( 'limit' => 100, 'paged' => $page ) );
+			$batch = \RankMath\Redirections\DB::get_redirections(
+				array(
+					'limit' => 100,
+					'paged' => $page,
+				)
+			);
 			if ( ! isset( $batch['redirections'] ) || ! is_array( $batch['redirections'] ) ) {
 				return new WP_Error( 'bc_mcp_redirect_read', 'Unable to read the Rank Math redirect inventory.' );
 			}
@@ -129,9 +234,17 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 	}
 
 	private static function inventory_revision( $rows ) {
-		return hash( 'sha256', wp_json_encode( array_map( static function ( $r ) {
-			return array( (int) $r['id'], $r['revision'] );
-		}, $rows ) ) );
+		return hash(
+			'sha256',
+			wp_json_encode(
+				array_map(
+					static function ( $r ) {
+						return array( (int) $r['id'], $r['revision'] );
+					},
+					$rows
+				)
+			)
+		);
 	}
 
 	private static function source_matches( $rows, $source ) {
@@ -153,30 +266,60 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 
 	public static function list_redirects( $input ) {
 		$check = self::available();
-		if ( is_wp_error( $check ) ) { return $check; }
+		if ( is_wp_error( $check ) ) {
+			return $check; }
 		$rows = self::inventory();
-		if ( is_wp_error( $rows ) ) { return $rows; }
+		if ( is_wp_error( $rows ) ) {
+			return $rows; }
 		$page = isset( $input['page'] ) ? max( 1, (int) $input['page'] ) : 1;
 		$size = isset( $input['per_page'] ) ? min( 100, max( 1, (int) $input['per_page'] ) ) : 50;
-		return self::ok( array( 'total' => count( $rows ), 'page' => $page, 'per_page' => $size, 'inventory_revision' => self::inventory_revision( $rows ), 'items' => array_slice( $rows, ( $page - 1 ) * $size, $size ) ) );
+		return self::ok(
+			array(
+				'total'              => count( $rows ),
+				'page'               => $page,
+				'per_page'           => $size,
+				'inventory_revision' => self::inventory_revision( $rows ),
+				'items'              => array_slice( $rows, ( $page - 1 ) * $size, $size ),
+			)
+		);
 	}
 
 	public static function check_redirect( $input ) {
 		$check = self::available();
-		if ( is_wp_error( $check ) ) { return $check; }
+		if ( is_wp_error( $check ) ) {
+			return $check; }
 		$source = self::path( $input['source'] );
-		if ( is_wp_error( $source ) ) { return $source; }
+		if ( is_wp_error( $source ) ) {
+			return $source; }
 		$rows = self::inventory();
-		if ( is_wp_error( $rows ) ) { return $rows; }
+		if ( is_wp_error( $rows ) ) {
+			return $rows; }
 		$matches = self::source_matches( $rows, $source );
-		return self::ok( array( 'source' => $source, 'exists' => ! empty( $matches ), 'items' => $matches, 'inventory_revision' => self::inventory_revision( $rows ) ) );
+		return self::ok(
+			array(
+				'source'             => $source,
+				'exists'             => ! empty( $matches ),
+				'items'              => $matches,
+				'inventory_revision' => self::inventory_revision( $rows ),
+			)
+		);
 	}
 
 	private static function insert( $source, $destination ) {
-		$item = \RankMath\Redirections\Redirection::from( array(
-			'sources' => array( array( 'pattern' => $source, 'comparison' => 'exact', 'ignore' => '' ) ),
-			'url_to' => home_url( $destination ), 'header_code' => '301', 'status' => 'active',
-		) );
+		$item = \RankMath\Redirections\Redirection::from(
+			array(
+				'sources'     => array(
+					array(
+						'pattern'    => $source,
+						'comparison' => 'exact',
+						'ignore'     => '',
+					),
+				),
+				'url_to'      => home_url( $destination ),
+				'header_code' => '301',
+				'status'      => 'active',
+			)
+		);
 		if ( ! $item->has_sources() || $item->is_infinite_loop() ) {
 			return new WP_Error( 'bc_mcp_redirect_invalid', 'Rank Math rejected the redirect source or detected a loop.' );
 		}
@@ -189,19 +332,31 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 
 	public static function create_redirect( $input ) {
 		$check = self::available();
-		if ( is_wp_error( $check ) ) { return $check; }
+		if ( is_wp_error( $check ) ) {
+			return $check; }
 		$source = self::path( $input['source'] );
-		if ( is_wp_error( $source ) ) { return $source; }
+		if ( is_wp_error( $source ) ) {
+			return $source; }
 		$dest = self::destination( $input['destination'], $source );
-		if ( is_wp_error( $dest ) ) { return $dest; }
+		if ( is_wp_error( $dest ) ) {
+			return $dest; }
 		$rows = self::inventory();
-		if ( is_wp_error( $rows ) ) { return $rows; }
+		if ( is_wp_error( $rows ) ) {
+			return $rows; }
 		if ( self::source_matches( $rows, $source ) ) {
 			return new WP_Error( 'bc_mcp_redirect_duplicate', 'A Rank Math redirect already handles this exact source; read it before making changes.' );
 		}
 		$id = self::insert( $source, $dest );
-		if ( is_wp_error( $id ) ) { return $id; }
-		return self::ok( array( 'id' => $id, 'source' => $source, 'destination' => $dest, 'header_code' => 301 ) );
+		if ( is_wp_error( $id ) ) {
+			return $id; }
+		return self::ok(
+			array(
+				'id'          => $id,
+				'source'      => $source,
+				'destination' => $dest,
+				'header_code' => 301,
+			)
+		);
 	}
 
 	private static function current( $id, $revision ) {
@@ -218,31 +373,46 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 
 	public static function update_redirect( $input ) {
 		$check = self::available();
-		if ( is_wp_error( $check ) ) { return $check; }
+		if ( is_wp_error( $check ) ) {
+			return $check; }
 		$record = self::current( absint( $input['id'] ), $input['expected_revision'] );
-		if ( is_wp_error( $record ) ) { return $record; }
+		if ( is_wp_error( $record ) ) {
+			return $record; }
 		$dest = self::destination( $input['destination'] );
-		if ( is_wp_error( $dest ) ) { return $dest; }
+		if ( is_wp_error( $dest ) ) {
+			return $dest; }
 		foreach ( $record['sources'] as $source ) {
 			if ( '/' . trim( (string) $source['pattern'], '/' ) . '/' === $dest ) {
 				return new WP_Error( 'bc_mcp_redirect_loop', 'Destination matches an existing source.' );
 			}
 		}
-		$item = \RankMath\Redirections\Redirection::from( array(
-			'id' => (int) $record['id'], 'sources' => $record['sources'],
-			'url_to' => home_url( $dest ), 'header_code' => $record['header_code'], 'status' => $record['status'],
-		) );
+		$item = \RankMath\Redirections\Redirection::from(
+			array(
+				'id'          => (int) $record['id'],
+				'sources'     => $record['sources'],
+				'url_to'      => home_url( $dest ),
+				'header_code' => $record['header_code'],
+				'status'      => $record['status'],
+			)
+		);
 		if ( ! $item->save() ) {
 			return new WP_Error( 'bc_mcp_redirect_save', 'Rank Math could not update this redirect.' );
 		}
-		return self::ok( array( 'id' => (int) $record['id'], 'destination' => $dest ) );
+		return self::ok(
+			array(
+				'id'          => (int) $record['id'],
+				'destination' => $dest,
+			)
+		);
 	}
 
 	public static function delete_redirect( $input ) {
 		$check = self::available();
-		if ( is_wp_error( $check ) ) { return $check; }
+		if ( is_wp_error( $check ) ) {
+			return $check; }
 		$record = self::current( absint( $input['id'] ), $input['expected_revision'] );
-		if ( is_wp_error( $record ) ) { return $record; }
+		if ( is_wp_error( $record ) ) {
+			return $record; }
 		$deleted = \RankMath\Redirections\DB::delete( array( (int) $record['id'] ) );
 		if ( ! $deleted ) {
 			return new WP_Error( 'bc_mcp_redirect_delete', 'Could not delete the Rank Math redirect.' );
@@ -252,39 +422,67 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 
 	public static function bulk_import( $input ) {
 		$check = self::available();
-		if ( is_wp_error( $check ) ) { return $check; }
+		if ( is_wp_error( $check ) ) {
+			return $check; }
 		$rows = self::inventory();
-		if ( is_wp_error( $rows ) ) { return $rows; }
-		$rev = self::inventory_revision( $rows );
+		if ( is_wp_error( $rows ) ) {
+			return $rows; }
+		$rev   = self::inventory_revision( $rows );
 		$apply = ! empty( $input['apply'] );
 		if ( $apply && ( empty( $input['expected_inventory_revision'] ) || ! hash_equals( $rev, $input['expected_inventory_revision'] ) ) ) {
 			return new WP_Error( 'bc_mcp_redirect_inventory_conflict', 'Preview the current inventory and supply its revision token before applying the import.' );
 		}
 		$prepared = array();
-		$seen = array();
-		$issues = array();
+		$seen     = array();
+		$issues   = array();
 		foreach ( $input['rules'] as $index => $rule ) {
 			$source = self::path( $rule['source'] );
-			$dest = is_wp_error( $source ) ? $source : self::destination( $rule['destination'], $source );
+			$dest   = is_wp_error( $source ) ? $source : self::destination( $rule['destination'], $source );
 			if ( is_wp_error( $source ) || is_wp_error( $dest ) ) {
-				$issues[] = array( 'row' => $index + 1, 'reason' => 'invalid_source_or_destination' );
+				$issues[] = array(
+					'row'    => $index + 1,
+					'reason' => 'invalid_source_or_destination',
+				);
 				continue;
 			}
 			$key = strtolower( $source );
 			if ( isset( $seen[ $key ] ) ) {
-				$issues[] = array( 'row' => $index + 1, 'reason' => 'duplicate_in_batch' );
+				$issues[] = array(
+					'row'    => $index + 1,
+					'reason' => 'duplicate_in_batch',
+				);
 				continue;
 			}
 			$seen[ $key ] = true;
-			$matches = self::source_matches( $rows, $source );
+			$matches      = self::source_matches( $rows, $source );
 			if ( $matches ) {
-				$issues[] = array( 'row' => $index + 1, 'reason' => 'existing_redirect', 'existing_ids' => array_map( static function( $r ) { return (int) $r['id']; }, $matches ) );
+				$issues[] = array(
+					'row'          => $index + 1,
+					'reason'       => 'existing_redirect',
+					'existing_ids' => array_map(
+						static function ( $r ) {
+							return (int) $r['id'];
+						},
+						$matches
+					),
+				);
 				continue;
 			}
-			$prepared[] = array( 'source' => $source, 'destination' => $dest );
+			$prepared[] = array(
+				'source'      => $source,
+				'destination' => $dest,
+			);
 		}
 		if ( ! $apply ) {
-			return self::ok( array( 'dry_run' => true, 'inventory_revision' => $rev, 'ready' => $prepared, 'issues' => $issues, 'ready_count' => count( $prepared ) ) );
+			return self::ok(
+				array(
+					'dry_run'            => true,
+					'inventory_revision' => $rev,
+					'ready'              => $prepared,
+					'issues'             => $issues,
+					'ready_count'        => count( $prepared ),
+				)
+			);
 		}
 		// Fail closed: do not partially apply a batch containing known conflicts.
 		if ( $issues ) {
@@ -294,10 +492,26 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 		foreach ( $prepared as $rule ) {
 			$id = self::insert( $rule['source'], $rule['destination'] );
 			if ( is_wp_error( $id ) ) {
-				return new WP_Error( 'bc_mcp_redirect_partial_import', 'Import stopped after a save failure; review the created list before retrying.', array( 'created' => $created, 'failed' => $rule['source'] ) );
+				return new WP_Error(
+					'bc_mcp_redirect_partial_import',
+					'Import stopped after a save failure; review the created list before retrying.',
+					array(
+						'created' => $created,
+						'failed'  => $rule['source'],
+					)
+				);
 			}
-			$created[] = array( 'id' => $id, 'source' => $rule['source'], 'destination' => $rule['destination'] );
+			$created[] = array(
+				'id'          => $id,
+				'source'      => $rule['source'],
+				'destination' => $rule['destination'],
+			);
 		}
-		return self::ok( array( 'created_count' => count( $created ), 'created' => $created ) );
+		return self::ok(
+			array(
+				'created_count' => count( $created ),
+				'created'       => $created,
+			)
+		);
 	}
 }
