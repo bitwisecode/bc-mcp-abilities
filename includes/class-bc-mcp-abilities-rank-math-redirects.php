@@ -7,8 +7,18 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Administrator-gated Rank Math redirection tools for WordPress Abilities.
+ */
 final class BC_MCP_Abilities_Rank_Math_Redirects {
 
+	/**
+	 * Build strict JSON object schema.
+	 *
+	 * @param array $properties Schema properties.
+	 * @param array $required Required keys.
+	 * @return array
+	 */
 	private static function schema( $properties = array(), $required = array() ) {
 		return array(
 			'type'                 => 'object',
@@ -18,6 +28,12 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 		);
 	}
 
+	/**
+	 * Wrap successful ability output.
+	 *
+	 * @param mixed $data Function input.
+	 * @return mixed
+	 */
 	private static function ok( $data ) {
 		return array(
 			'success' => true,
@@ -25,6 +41,11 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 		);
 	}
 
+	/**
+	 * Ensure the current administrator can use Rank Math redirections.
+	 *
+	 * @return mixed
+	 */
 	private static function available() {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return new WP_Error( 'bc_mcp_redirect_forbidden', 'Administrator permission is required.' );
@@ -35,6 +56,11 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 		return true;
 	}
 
+	/**
+	 * Register six redirection abilities.
+	 *
+	 * @return void
+	 */
 	public static function register() {
 		$str         = array(
 			'type'      => 'string',
@@ -60,8 +86,8 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 		$definitions = array(
 			array(
 				'rankmath-list-redirects',
-				'List Rank Math Redirects',
-				'Read the existing redirects, their sources, destinations, statuses and revision tokens.',
+				__( 'List Rank Math Redirects', 'bc-mcp-abilities' ),
+				__( 'Read the existing redirects, their sources, destinations, statuses and revision tokens.', 'bc-mcp-abilities' ),
 				self::schema(
 					array(
 						'page'     => $id,
@@ -75,11 +101,11 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 				'list_redirects',
 				true,
 			),
-			array( 'rankmath-check-redirect', 'Check Rank Math Redirect', 'Find any existing redirect whose exact source matches the supplied legacy path.', self::schema( array( 'source' => $str ), array( 'source' ) ), 'check_redirect', true ),
+			array( 'rankmath-check-redirect', __( 'Check Rank Math Redirect', 'bc-mcp-abilities' ), __( 'Find any existing redirect whose exact source matches the supplied legacy path.', 'bc-mcp-abilities' ), self::schema( array( 'source' => $str ), array( 'source' ) ), 'check_redirect', true ),
 			array(
 				'rankmath-create-redirect',
-				'Create Rank Math 301 Redirect',
-				'Create a single exact 301 redirect without replacing an existing source.',
+				__( 'Create Rank Math 301 Redirect', 'bc-mcp-abilities' ),
+				__( 'Create a single exact 301 redirect without replacing an existing source.', 'bc-mcp-abilities' ),
 				self::schema(
 					array(
 						'source'      => $str,
@@ -92,8 +118,8 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 			),
 			array(
 				'rankmath-update-redirect',
-				'Update Rank Math Redirect',
-				'Update a redirect destination using its current revision token, preserving its sources.',
+				__( 'Update Rank Math Redirect', 'bc-mcp-abilities' ),
+				__( 'Update a redirect destination using its current revision token, preserving its sources.', 'bc-mcp-abilities' ),
 				self::schema(
 					array(
 						'id'                => $id,
@@ -107,8 +133,8 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 			),
 			array(
 				'rankmath-delete-redirect',
-				'Delete Rank Math Redirect',
-				'Permanently delete one redirect by ID with revision protection.',
+				__( 'Delete Rank Math Redirect', 'bc-mcp-abilities' ),
+				__( 'Permanently delete one redirect by ID with revision protection.', 'bc-mcp-abilities' ),
 				self::schema(
 					array(
 						'id'                => $id,
@@ -121,8 +147,8 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 			),
 			array(
 				'rankmath-bulk-import-redirects',
-				'Bulk Import Rank Math 301 Redirects',
-				'Preview up to 50 exact redirects, detect duplicate/conflicting sources and optionally import only new rules.',
+				__( 'Bulk Import Rank Math 301 Redirects', 'bc-mcp-abilities' ),
+				__( 'Preview up to 50 exact redirects, detect duplicate/conflicting sources and optionally import only new rules.', 'bc-mcp-abilities' ),
 				self::schema(
 					array(
 						'rules'                       => array(
@@ -141,10 +167,16 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 			),
 		);
 		foreach ( $definitions as $def ) {
-			BC_MCP_Abilities::add( $def[0], __( $def[1], 'bc-mcp-abilities' ), __( $def[2], 'bc-mcp-abilities' ), $def[3], array( __CLASS__, $def[4] ), $def[5] );
+			BC_MCP_Abilities::add( $def[0], $def[1], $def[2], $def[3], array( __CLASS__, $def[4] ), $def[5] );
 		}
 	}
 
+	/**
+	 * Validate and normalize a legacy source path.
+	 *
+	 * @param mixed $value Function input.
+	 * @return mixed
+	 */
 	private static function path( $value ) {
 		if ( ! is_string( $value ) || strlen( $value ) > 2048 || '' === $value || '/' !== $value[0] ) {
 			return new WP_Error( 'bc_mcp_redirect_source', 'The source must be a local absolute path beginning with /.' );
@@ -159,6 +191,13 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 		return '/' . $path . '/';
 	}
 
+	/**
+	 * Validate a same-site destination.
+	 *
+	 * @param mixed $value Function input.
+	 * @param mixed $source Function input.
+	 * @return mixed
+	 */
 	private static function destination( $value, $source = '' ) {
 		if ( ! is_string( $value ) || strlen( $value ) > 2048 ) {
 			return new WP_Error( 'bc_mcp_redirect_destination', 'Invalid redirect destination.' );
@@ -177,7 +216,7 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 			$value = isset( $parts['path'] ) ? $parts['path'] : '/';
 		}
 		if ( '/' === $value ) {
-			return $source === '/' ? new WP_Error( 'bc_mcp_redirect_loop', 'Source and destination must differ.' ) : '/';
+			return '/' === $source ? new WP_Error( 'bc_mcp_redirect_loop', 'Source and destination must differ.' ) : '/';
 		}
 		$path = self::path( $value );
 		if ( is_wp_error( $path ) ) {
@@ -189,6 +228,12 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 		return $path;
 	}
 
+	/**
+	 * Normalize a Rank Math record and calculate its revision.
+	 *
+	 * @param mixed $record Function input.
+	 * @return mixed
+	 */
 	private static function normalized( $record ) {
 		$sources            = maybe_unserialize( isset( $record['sources'] ) ? $record['sources'] : array() );
 		$sources            = is_array( $sources ) ? $sources : array();
@@ -208,6 +253,11 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 		return $record;
 	}
 
+	/**
+	 * Read the complete untrashed Rank Math redirect inventory.
+	 *
+	 * @return mixed
+	 */
 	private static function inventory() {
 		$rows = array();
 		for ( $page = 1; $page <= 100; ++$page ) {
@@ -233,6 +283,12 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 		return $rows;
 	}
 
+	/**
+	 * Calculate a stable inventory revision for optimistic locking.
+	 *
+	 * @param mixed $rows Function input.
+	 * @return mixed
+	 */
 	private static function inventory_revision( $rows ) {
 		return hash(
 			'sha256',
@@ -247,6 +303,13 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 		);
 	}
 
+	/**
+	 * Find exact redirect sources that conflict with the requested path.
+	 *
+	 * @param mixed $rows Function input.
+	 * @param mixed $source Function input.
+	 * @return mixed
+	 */
 	private static function source_matches( $rows, $source ) {
 		$matches = array();
 		foreach ( $rows as $record ) {
@@ -264,6 +327,12 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 		return $matches;
 	}
 
+	/**
+	 * Return a paginated list of existing Rank Math redirects.
+	 *
+	 * @param mixed $input Function input.
+	 * @return mixed
+	 */
 	public static function list_redirects( $input ) {
 		$check = self::available();
 		if ( is_wp_error( $check ) ) {
@@ -284,6 +353,12 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 		);
 	}
 
+	/**
+	 * Check a legacy source path for existing Rank Math redirects.
+	 *
+	 * @param mixed $input Function input.
+	 * @return mixed
+	 */
 	public static function check_redirect( $input ) {
 		$check = self::available();
 		if ( is_wp_error( $check ) ) {
@@ -305,6 +380,13 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 		);
 	}
 
+	/**
+	 * Insert a new redirect through Rank Math's own model.
+	 *
+	 * @param mixed $source Function input.
+	 * @param mixed $destination Function input.
+	 * @return mixed
+	 */
 	private static function insert( $source, $destination ) {
 		$item = \RankMath\Redirections\Redirection::from(
 			array(
@@ -330,6 +412,12 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 		return (int) $id;
 	}
 
+	/**
+	 * Create one exact-match permanent redirection.
+	 *
+	 * @param mixed $input Function input.
+	 * @return mixed
+	 */
 	public static function create_redirect( $input ) {
 		$check = self::available();
 		if ( is_wp_error( $check ) ) {
@@ -359,6 +447,13 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 		);
 	}
 
+	/**
+	 * Load and verify an existing redirect's revision.
+	 *
+	 * @param mixed $id Function input.
+	 * @param mixed $revision Function input.
+	 * @return mixed
+	 */
 	private static function current( $id, $revision ) {
 		$record = \RankMath\Redirections\DB::get_redirection_by_id( $id );
 		if ( ! $record || 'trashed' === $record['status'] ) {
@@ -371,6 +466,12 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 		return $record;
 	}
 
+	/**
+	 * Update an existing Rank Math redirect destination.
+	 *
+	 * @param mixed $input Function input.
+	 * @return mixed
+	 */
 	public static function update_redirect( $input ) {
 		$check = self::available();
 		if ( is_wp_error( $check ) ) {
@@ -406,6 +507,12 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 		);
 	}
 
+	/**
+	 * Remove one revision-verified Rank Math redirect.
+	 *
+	 * @param mixed $input Function input.
+	 * @return mixed
+	 */
 	public static function delete_redirect( $input ) {
 		$check = self::available();
 		if ( is_wp_error( $check ) ) {
@@ -420,6 +527,12 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 		return self::ok( array( 'deleted_id' => (int) $record['id'] ) );
 	}
 
+	/**
+	 * Preview or apply a guarded batch of exact-match redirects.
+	 *
+	 * @param mixed $input Function input.
+	 * @return mixed
+	 */
 	public static function bulk_import( $input ) {
 		$check = self::available();
 		if ( is_wp_error( $check ) ) {
