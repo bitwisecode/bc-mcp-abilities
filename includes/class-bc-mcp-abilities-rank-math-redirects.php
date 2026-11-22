@@ -21,7 +21,7 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return new WP_Error( 'bc_mcp_redirect_forbidden', 'Administrator permission is required.' );
 		}
-		if ( ! class_exists( '\\RankMath\\Redirections\\DB' ) || ! class_exists( '\\RankMath\\Redirections\\Redirection' ) ) {
+		if ( ! class_exists( '\RankMath\Redirections\DB' ) || ! class_exists( '\RankMath\Redirections\Redirection' ) ) {
 			return new WP_Error( 'bc_mcp_redirect_unavailable', 'Activate the Rank Math Redirections module before using this ability.' );
 		}
 		return true;
@@ -96,7 +96,7 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 	private static function inventory() {
 		$rows = array();
 		for ( $page = 1; $page <= 100; ++$page ) {
-			$batch = \\RankMath\\Redirections\\DB::get_redirections( array( 'limit' => 100, 'paged' => $page ) );
+			$batch = \RankMath\Redirections\DB::get_redirections( array( 'limit' => 100, 'paged' => $page ) );
 			if ( ! isset( $batch['redirections'] ) || ! is_array( $batch['redirections'] ) ) {
 				return new WP_Error( 'bc_mcp_redirect_read', 'Unable to read the Rank Math redirect inventory.' );
 			}
@@ -158,7 +158,7 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 	}
 
 	private static function insert( $source, $destination ) {
-		$item = \\RankMath\\Redirections\\Redirection::from( array(
+		$item = \RankMath\Redirections\Redirection::from( array(
 			'sources' => array( array( 'pattern' => $source, 'comparison' => 'exact', 'ignore' => '' ) ),
 			'url_to' => home_url( $destination ), 'header_code' => '301', 'status' => 'active',
 		) );
@@ -190,7 +190,7 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 	}
 
 	private static function current( $id, $revision ) {
-		$record = \\RankMath\\Redirections\\DB::get_redirection_by_id( $id );
+		$record = \RankMath\Redirections\DB::get_redirection_by_id( $id );
 		if ( ! $record || 'trashed' === $record['status'] ) {
 			return new WP_Error( 'bc_mcp_redirect_missing', 'Redirect no longer exists.' );
 		}
@@ -213,7 +213,7 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 				return new WP_Error( 'bc_mcp_redirect_loop', 'Destination matches an existing source.' );
 			}
 		}
-		$item = \\RankMath\\Redirections\\Redirection::from( array(
+		$item = \RankMath\Redirections\Redirection::from( array(
 			'id' => (int) $record['id'], 'sources' => $record['sources'],
 			'url_to' => home_url( $dest ), 'header_code' => $record['header_code'], 'status' => $record['status'],
 		) );
@@ -228,7 +228,7 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 		if ( is_wp_error( $check ) ) { return $check; }
 		$record = self::current( absint( $input['id'] ), $input['expected_revision'] );
 		if ( is_wp_error( $record ) ) { return $record; }
-		$deleted = \\RankMath\\Redirections\\DB::delete( array( (int) $record['id'] ) );
+		$deleted = \RankMath\Redirections\DB::delete( array( (int) $record['id'] ) );
 		if ( ! $deleted ) {
 			return new WP_Error( 'bc_mcp_redirect_delete', 'Could not delete the Rank Math redirect.' );
 		}
