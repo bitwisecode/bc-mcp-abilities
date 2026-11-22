@@ -2,7 +2,7 @@
 
 Permission-checked WordPress Abilities for AI assistants, by **BitwiseCode**. Requires WordPress 6.9+ and PHP 7.4+.
 
-The plugin registers 48 scoped abilities through the native WordPress Abilities API. Connect ChatGPT through the plugin's built-in MCP endpoint with WordPress sign-in (OAuth), or use any compatible MCP provider such as the official [MCP Adapter](https://wordpress.org/plugins/mcp-adapter/).
+The plugin registers 48 scoped abilities through the native WordPress Abilities API. Connect ChatGPT or Claude through the plugin's built-in OAuth-protected MCP endpoint, or use any compatible MCP provider such as the optional official [MCP Adapter](https://wordpress.org/plugins/mcp-adapter/).
 
 ## Abilities
 
@@ -31,6 +31,8 @@ Full names are prefixed with `bc-mcp-abilities/`. Elementor, WooCommerce, Rank M
 1. Open **Settings → BC MCP Abilities → Connections**.
 2. Turn on **Enable MCP connection** and **Secure WordPress sign-in**. HTTPS and pretty permalinks are required.
 3. In ChatGPT, add a custom MCP connection with the MCP server URL shown, choose automatic OAuth registration, then sign in to WordPress and approve access.
+
+For Claude, add a custom remote connector in Claude and enter the **same built-in URL** shown for ChatGPT. The plugin supports Claude's exact published OAuth callback, without requiring MCP Adapter.
 
 Connected assistants are listed on the same screen, where they can be revoked individually or all at once. Changing a user's password or role disconnects that user.
 

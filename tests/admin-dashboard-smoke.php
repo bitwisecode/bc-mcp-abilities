@@ -57,8 +57,10 @@ $assert( 1 === substr_count( $markup, 'id="bc-mcp-admin"' ), 'Dashboard rendered
 $assert( false === strpos( $markup, 'id="bc-tab-claude"' ), 'Unnecessary standalone Claude tab remains.' );
 $assert( false === strpos( $markup, 'Download Claude Extension' ), 'Legacy extension download should not appear in the dashboard.' );
 $assert( false === strpos( $markup, 'Settings saved successfully.' ), 'Duplicate success notice should not be rendered.' );
-$assert( false !== strpos( $markup, 'mcp/mcp-oauth-server' ), 'The separate Claude OAuth provider URL should be documented.' );
 $assert( 1 === substr_count( $markup, 'id="bc-panel-connections"' ), 'Connections panel should appear once.' );
+$assert( false === strpos( $markup, '/wp-json/mcp/mcp-oauth-server' ), 'Claude must not display a provider URL that BC MCP Abilities does not register.' );
+$assert( false !== strpos( $markup, 'ChatGPT and Claude use the same MCP endpoint.' ), 'Built-in shared MCP URL guidance missing.' );
+
 $assert( false !== strpos( $markup, 'Manage AI connections, permissions, and activity for your WordPress website.' ), 'Client-facing dashboard heading is missing.' );
 $assert( false !== strpos( $markup, 'The connection indicator reflects your saved settings.' ), 'Connection status must explain that it is configuration, not live authorization.' );
 foreach ( array( 'Developer preview', 'development preview', 'staging', 'Ready to test', 'test a read-only ability', 'Download Claude Extension', 'First Claude prompt:', 'demo website' ) as $forbidden ) {
