@@ -72,10 +72,25 @@ final class BC_MCP_Abilities_Rank_Math_Redirects {
 		if ( ! is_string( $value ) || strlen( $value ) > 2048 ) {
 			return new WP_Error( 'bc_mcp_redirect_destination', 'Invalid redirect destination.' );
 		}
-		// Restrict mutations to safe local WordPress routes: no external or protocol-relative destinations.
+		// Accept a local path or an absolute URL on this exact WordPress host.
+		if ( preg_match( '~^https?://~i', $value ) ) {
+			$parts = wp_parse_url( $value );
+			$home  = wp_parse_url( home_url() );
+			if ( ! is_array( $parts ) || ! is_array( $home ) || ! isset( $parts['host'], $home['host'] )
+				|| strtolower( $parts['host'] ) !== strtolower( $home['host'] )
+				|| isset( $parts['user'] ) || isset( $parts['pass'] )
+				|| isset( $parts['query'] ) || isset( $parts['fragment'] )
+				|| ( isset( $parts['port'] ) ? (int) $parts['port'] : null ) !== ( isset( $home['port'] ) ? (int) $home['port'] : null ) ) {
+				return new WP_Error( 'bc_mcp_redirect_destination', 'Only same-site, query-free destinations are supported.' );
+			}
+			$value = isset( $parts['path'] ) ? $parts['path'] : '/';
+		}
+		if ( '/' === $value ) {
+			return $source === '/' ? new WP_Error( 'bc_mcp_redirect_loop', 'Source and destination must differ.' ) : '/';
+		}
 		$path = self::path( $value );
 		if ( is_wp_error( $path ) ) {
-			return new WP_Error( 'bc_mcp_redirect_destination', 'Destination must be a safe, same-site, non-home path.' );
+			return new WP_Error( 'bc_mcp_redirect_destination', 'Destination must be a safe same-site path or URL.' );
 		}
 		if ( $path === $source ) {
 			return new WP_Error( 'bc_mcp_redirect_loop', 'Source and destination must differ.' );
