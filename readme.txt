@@ -14,7 +14,7 @@ Permission-checked WordPress Abilities for AI agents, with an optional built-in 
 
 BC MCP Abilities lets AI assistants work with your WordPress site through the native WordPress Abilities API. It registers 48 scoped actions for reading and managing posts, pages, custom content, media, categories and tags, navigation menus, Elementor pages, WooCommerce products and SEO fields.
 
-AI assistants reach these actions through MCP (Model Context Protocol). Connect ChatGPT through the plugin's built-in MCP endpoint and WordPress sign-in, or use a compatible MCP provider such as the official MCP Adapter. The abilities also work through the WordPress Abilities API without any AI assistant connected.
+AI assistants reach these actions through MCP (Model Context Protocol). Connect ChatGPT or Claude through the plugin's built-in MCP endpoint and WordPress sign-in, or use a compatible MCP provider such as the official MCP Adapter. The abilities also work through the WordPress Abilities API without any AI assistant connected.
 
 = Permissions you control =
 
@@ -47,7 +47,7 @@ BC MCP Abilities does not require ChatGPT or Claude to be installed or connected
 
 ChatGPT is provided by OpenAI. Terms: https://openai.com/policies/terms-of-use/ . Privacy: https://openai.com/policies/privacy-policy/ .
 
-Claude is provided by Anthropic. Consumer terms: https://www.anthropic.com/legal/consumer-terms . Privacy policy: https://www.anthropic.com/legal/privacy . The optional Claude OAuth URL requires a compatible, separately installed MCP provider.
+Claude is provided by Anthropic. Consumer terms: https://www.anthropic.com/legal/consumer-terms . Privacy policy: https://www.anthropic.com/legal/privacy . Claude custom remote connectors and ChatGPT can use the same BC MCP Abilities OAuth endpoint when enabled, without installing MCP Adapter.
 
 = Optional image import from user-selected websites =
 
@@ -93,9 +93,10 @@ HTTPS and pretty permalinks (any setting other than Plain under Settings > Perma
 Go to Settings > BC MCP Abilities > Connections and revoke the connection, or choose Disconnect all assistants. Turning off the MCP connection or WordPress sign-in also disconnects everyone.
 
 = Does turning off the connection block every route? =
-It turns off the built-in ChatGPT connection. Actions remain available through the WordPress Abilities REST API and the official MCP Adapter to users who authenticate another way, such as with an Application Password. To restrict every route, hide read-only actions or leave editing actions disabled.
+It turns off the built-in ChatGPT and Claude connections. Actions remain available through the WordPress Abilities REST API and the official MCP Adapter to users who authenticate another way, such as with an Application Password. To restrict every route, hide read-only actions or leave editing actions disabled.
 
 == Changelog ==
 
 = 1.0.0 =
 * Initial release.
+* ChatGPT and Claude can use the same built-in OAuth-protected MCP endpoint without MCP Adapter.
